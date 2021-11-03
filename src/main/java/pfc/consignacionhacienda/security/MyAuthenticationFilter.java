@@ -1,0 +1,117 @@
+package pfc.consignacionhacienda.security;
+
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.net.httpserver.Headers;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.config.core.GrantedAuthorityDefaults;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.servlet.function.ServerRequest;
+import pfc.consignacionhacienda.exceptions.user.InvalidCredentialsException;
+import pfc.consignacionhacienda.exceptions.user.UserNotFoundException;
+import pfc.consignacionhacienda.model.User;
+
+import javax.servlet.*;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+public class MyAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
+    private static final Logger logger = LoggerFactory.getLogger(MyAuthenticationFilter.class);
+    private final AuthenticationManager authenticationManager;
+
+    public MyAuthenticationFilter(AuthenticationManager authMgr ){
+        this.authenticationManager = authMgr;
+        setFilterProcessesUrl(SecurityConstants.AUTH_LOGIN_URL);
+    }
+
+    @Override
+    public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) {
+
+        String username = request.getParameter("username");
+        String password = request.getParameter("password");
+
+        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(username, password);
+        //TODO cambiar por un JSON.
+        try {
+            //Realizamos la autenticacion con MyAuthenticationProvider y capturamos posibles excepciones.
+            return authenticationManager.authenticate(authenticationToken);
+        } catch (UserNotFoundException exception) {
+            response.setStatus(HttpStatus.NOT_FOUND.value());
+            try {
+                response.setContentType("application/text");
+                response.setCharacterEncoding("UTF-8");
+                response.getWriter().print(exception.getMessage());
+                response.getWriter().flush();
+            } catch (IOException e) {
+                response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            }
+        } catch (InvalidCredentialsException exception) {
+            response.setStatus(HttpStatus.BAD_REQUEST.value());
+            response.setContentType("application/text");
+            response.setCharacterEncoding("UTF-8");
+            try {
+                response.getWriter().println(exception.getMessage());
+                response.getWriter().flush();
+            } catch (IOException e) {
+                response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            }
+
+        } catch (Exception exception) {
+            response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+        }
+        return null;
+    }
+
+    @Override
+    public void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain, Authentication authentication) throws ServletException, IOException {
+
+       //Si la autenticacion fue exitosa, armamos el JWT que revolvemos a la app cliente.
+        Principal principal = (Principal) authentication.getPrincipal();
+        User usuario = new User();
+        usuario.setName(principal.getName());
+        usuario.setUsername(principal.getUsername());
+        usuario.setId(principal.getId());
+
+        byte[] signingKey = SecurityConstants.JWT_SECRET.getBytes();
+        String token = Jwts.builder()
+                        .signWith(Keys.hmacShaKeyFor(signingKey), SignatureAlgorithm.HS512)
+                        .setHeaderParam("typ", SecurityConstants.TOKEN_TYPE)
+                        .setIssuer(SecurityConstants.TOKEN_ISSUER)
+                        .setAudience(SecurityConstants.TOKEN_AUDIENCE)
+                        .setSubject(usuario.getName())
+                        .claim("uid", usuario.getId())
+                        .claim("username", usuario.getUsername())
+                        .setExpiration(new Date(System.currentTimeMillis() + 86400000)) //un dia
+                        .claim("rol", authentication.getAuthorities())
+                        .compact();
+        logger.debug(token);
+
+        LinkedHashMap<String,String> map = new LinkedHashMap<>();
+        map.put("access_token", token);
+        ObjectMapper objectMapper = new ObjectMapper();
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().println(objectMapper.writeValueAsString(map));
+
+        //Seguimos con los filtro, o terminamos en el REST.
+        filterChain.doFilter(request, response);
+    }
+}
