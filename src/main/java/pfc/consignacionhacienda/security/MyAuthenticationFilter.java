@@ -34,7 +34,7 @@ import java.util.stream.Stream;
 public class MyAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     private static final Logger logger = LoggerFactory.getLogger(MyAuthenticationFilter.class);
     private final AuthenticationManager authenticationManager;
-
+    private String error = "";
     public MyAuthenticationFilter(AuthenticationManager authMgr ){
         this.authenticationManager = authMgr;
         setFilterProcessesUrl(SecurityConstants.AUTH_LOGIN_URL);
@@ -42,31 +42,58 @@ public class MyAuthenticationFilter extends UsernamePasswordAuthenticationFilter
 
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) {
-
+        LinkedHashMap<String, String> map = new LinkedHashMap<>();
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        //TODO decidir
+        //Si los parametros vienen como query params
         String username = request.getParameter("username");
         String password = request.getParameter("password");
-
+        //Si la peticion viene en el body
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            User user = mapper.readValue(request.getInputStream(),User.class);
+            try{
+                username = user.getUsername();
+                password = user.getPassword();
+                logger.debug(user.toString());
+                if(username == null || password == null){
+                    throw  new NullPointerException();
+                }
+            }catch (NullPointerException e){
+                try {
+                    response.setStatus(HttpStatus.BAD_REQUEST.value());
+                    error = "Existen parametros nulos.";
+                    map.put("error", error);
+                    response.getWriter().println(mapper.writeValueAsString(map));
+                    response.getWriter().flush();
+                } catch (IOException ex) {
+                    response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+                    ex.printStackTrace();
+                }
+            }
+        } catch (IOException e) {
+            response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            try {
+                error = "Error al obtener parametros desde la solicitud HTTP.";
+                map.put("error", error);
+                response.getWriter().println(mapper.writeValueAsString(map));
+                response.getWriter().flush();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(username, password);
-        //TODO cambiar por un JSON.
+
         try {
             //Realizamos la autenticacion con MyAuthenticationProvider y capturamos posibles excepciones.
             return authenticationManager.authenticate(authenticationToken);
-        } catch (UserNotFoundException exception) {
-            response.setStatus(HttpStatus.NOT_FOUND.value());
-            try {
-                response.setContentType("application/text");
-                response.setCharacterEncoding("UTF-8");
-                response.getWriter().print(exception.getMessage());
-                response.getWriter().flush();
-            } catch (IOException e) {
-                response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
-            }
         } catch (InvalidCredentialsException exception) {
             response.setStatus(HttpStatus.BAD_REQUEST.value());
-            response.setContentType("application/text");
-            response.setCharacterEncoding("UTF-8");
             try {
-                response.getWriter().println(exception.getMessage());
+                error = exception.getMessage();
+                map.put("error", error);
+                response.getWriter().println(mapper.writeValueAsString(map));
                 response.getWriter().flush();
             } catch (IOException e) {
                 response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
@@ -74,8 +101,6 @@ public class MyAuthenticationFilter extends UsernamePasswordAuthenticationFilter
 
         } catch (Exception exception) {
             response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
-            response.setContentType("application/json");
-            response.setCharacterEncoding("UTF-8");
         }
         return null;
     }

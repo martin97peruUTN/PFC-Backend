@@ -37,31 +37,41 @@ public class MyAuthorizationFilter extends BasicAuthenticationFilter{
                                     HttpServletResponse res,
                                     FilterChain chain) throws IOException, ServletException {
         String header = req.getHeader(SecurityConstants.TOKEN_HEADER);
+        if(!req.getRequestURI().equals("/api/login")) {
+            if ((header == null || !header.startsWith(SecurityConstants.TOKEN_PREFIX))) {
+                error = "No se encontro token de acceso";
+                LinkedHashMap<String, String> map = new LinkedHashMap<>();
+                map.put("error", "Acceso denegado. " + error);
+                ObjectMapper objectMapper = new ObjectMapper();
+                error = objectMapper.writeValueAsString(map);
+                res.setContentType("application/json");
+                res.setStatus(HttpStatus.FORBIDDEN.value());
+                res.getWriter().println(error);
+                res.getWriter().flush();
+                chain.doFilter(req, res);
+                return;
+            }
 
-        if (header == null || !header.startsWith(SecurityConstants.TOKEN_PREFIX)) {
-            chain.doFilter(req, res);
-            return;
-        }
-
-        UsernamePasswordAuthenticationToken authentication = getAuthentication(req);
-        if(authentication == null){
-            LinkedHashMap<String,String> map = new LinkedHashMap<>();
-            map.put("error", "Acceso denegado. " + error);
-            ObjectMapper objectMapper = new ObjectMapper();
-            error = objectMapper.writeValueAsString(map);
-            res.setContentType("application/json");
-            res.setStatus(HttpStatus.FORBIDDEN.value());
-            res.getWriter().println(error);
-            res.getWriter().flush();
-        }else{
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            UsernamePasswordAuthenticationToken authentication = getAuthentication(req);
+            if (authentication == null) {
+                LinkedHashMap<String, String> map = new LinkedHashMap<>();
+                map.put("error", "Acceso denegado. " + error);
+                ObjectMapper objectMapper = new ObjectMapper();
+                error = objectMapper.writeValueAsString(map);
+                res.setContentType("application/json");
+                res.setStatus(HttpStatus.FORBIDDEN.value());
+                res.getWriter().println(error);
+                res.getWriter().flush();
+            } else {
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
         }
         chain.doFilter(req, res);
     }
 
     private UsernamePasswordAuthenticationToken getAuthentication(HttpServletRequest request) {
         String token = request.getHeader(SecurityConstants.TOKEN_HEADER);
-        if (!(token.isBlank()) && token.startsWith(SecurityConstants.TOKEN_PREFIX)) {
+        if (token != null && token.startsWith(SecurityConstants.TOKEN_PREFIX)) {
             // parse the token.
             try {
                 byte[] signingKey = SecurityConstants.JWT_SECRET.getBytes();
