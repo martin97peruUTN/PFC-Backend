@@ -45,10 +45,7 @@ public class MyAuthenticationFilter extends UsernamePasswordAuthenticationFilter
         LinkedHashMap<String, String> map = new LinkedHashMap<>();
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        //TODO decidir
-        //Si los parametros vienen como query params
-        String username = request.getParameter("username");
-        String password = request.getParameter("password");
+        String username = null, password = null;
         //Si la peticion viene en el body
         ObjectMapper mapper = new ObjectMapper();
         try {

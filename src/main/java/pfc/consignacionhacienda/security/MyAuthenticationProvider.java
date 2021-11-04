@@ -11,6 +11,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.crypto.password.Pbkdf2PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
@@ -37,13 +40,13 @@ public class MyAuthenticationProvider implements AuthenticationProvider {
         //Este metodo se encarga de verificar que el usario existe en la base de datos y compara sus contraseñas.
         String username = authentication.getName();
         String password = authentication.getCredentials().toString();
+        final PasswordEncoder pwEncoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
         Optional<User> userOpt = userService.findByUsername(username);
-
         if(userOpt.isEmpty()){
             throw new InvalidCredentialsException("Las credenciales son inválidas");
         }
         User user = userOpt.get();
-        if(!user.getPassword().equals(password)){
+        if(!pwEncoder.matches(password, user.getPassword())){
             throw new InvalidCredentialsException("Las credenciales son inválidas");
         }
 
