@@ -35,7 +35,7 @@ public class MyAuthorizationFilter extends BasicAuthenticationFilter{
     @Override
     protected void doFilterInternal(HttpServletRequest req,
                                     HttpServletResponse res,
-                                    FilterChain chain) throws IOException, ServletException {
+                                    FilterChain chain) throws IOException {
         String header = req.getHeader(SecurityConstants.TOKEN_HEADER);
         if(!req.getRequestURI().equals("/api/login")) {
             if ((header == null || !header.startsWith(SecurityConstants.TOKEN_PREFIX))) {
@@ -48,7 +48,7 @@ public class MyAuthorizationFilter extends BasicAuthenticationFilter{
                 res.setStatus(HttpStatus.FORBIDDEN.value());
                 res.getWriter().println(error);
                 res.getWriter().flush();
-                chain.doFilter(req, res);
+//                chain.doFilter(req, res);
                 return;
             }
 
@@ -66,7 +66,7 @@ public class MyAuthorizationFilter extends BasicAuthenticationFilter{
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         }
-        chain.doFilter(req, res);
+//        chain.doFilter(req, res);
     }
 
     private UsernamePasswordAuthenticationToken getAuthentication(HttpServletRequest request) {
@@ -74,9 +74,8 @@ public class MyAuthorizationFilter extends BasicAuthenticationFilter{
         if (token != null && token.startsWith(SecurityConstants.TOKEN_PREFIX)) {
             // parse the token.
             try {
-                byte[] signingKey = SecurityConstants.JWT_SECRET.getBytes();
                 Jws<Claims> parsedToken = Jwts.parserBuilder().
-                                                setSigningKey(signingKey)
+                                                setSigningKey(SecurityConstants.JWT_SECRET)
                                                 .build()
                                                 .parseClaimsJws(token.replace(SecurityConstants.TOKEN_PREFIX,""));
                 List<SimpleGrantedAuthority> authorities;
@@ -98,7 +97,7 @@ public class MyAuthorizationFilter extends BasicAuthenticationFilter{
                     if(parsedToken.getBody().get("uid") != null){
                         usuario.setId(Integer.parseInt(parsedToken.getBody().get("uid").toString()));
                     }
-                    logger.debug("Usuario obtenido desde JWT: " + usuario.toString());
+                    logger.debug("Usuario obtenido desde JWT: " + usuario);
                     return  new UsernamePasswordAuthenticationToken(usuario, null, authorities);
                 }
             } catch (ExpiredJwtException exception){

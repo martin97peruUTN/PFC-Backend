@@ -112,9 +112,8 @@ public class MyAuthenticationFilter extends UsernamePasswordAuthenticationFilter
         usuario.setUsername(principal.getUsername());
         usuario.setId(principal.getId());
 
-        byte[] signingKey = SecurityConstants.JWT_SECRET.getBytes();
         String token = Jwts.builder()
-                        .signWith(Keys.hmacShaKeyFor(signingKey), SignatureAlgorithm.HS512)
+                        .signWith(SecurityConstants.JWT_SECRET, SignatureAlgorithm.HS512)
                         .setHeaderParam("typ", SecurityConstants.TOKEN_TYPE)
                         .setIssuer(SecurityConstants.TOKEN_ISSUER)
                         .setAudience(SecurityConstants.TOKEN_AUDIENCE)
