@@ -35,7 +35,7 @@ public class MyAuthorizationFilter extends BasicAuthenticationFilter{
     @Override
     protected void doFilterInternal(HttpServletRequest req,
                                     HttpServletResponse res,
-                                    FilterChain chain) throws IOException {
+                                    FilterChain chain) throws IOException, ServletException {
         String header = req.getHeader(SecurityConstants.TOKEN_HEADER);
         if(!req.getRequestURI().equals("/api/login")) {
             if ((header == null || !header.startsWith(SecurityConstants.TOKEN_PREFIX))) {
@@ -64,9 +64,9 @@ public class MyAuthorizationFilter extends BasicAuthenticationFilter{
                 res.getWriter().flush();
             } else {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+                chain.doFilter(req, res);
             }
         }
-//        chain.doFilter(req, res);
     }
 
     private UsernamePasswordAuthenticationToken getAuthentication(HttpServletRequest request) {
