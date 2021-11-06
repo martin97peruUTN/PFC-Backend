@@ -13,6 +13,7 @@ import pfc.consignacionhacienda.exceptions.user.InvalidCredentialsException;
 import pfc.consignacionhacienda.exceptions.user.UserNotFoundException;
 import pfc.consignacionhacienda.model.User;
 import pfc.consignacionhacienda.services.user.UserService;
+import pfc.consignacionhacienda.utils.ChangePassword;
 import pfc.consignacionhacienda.utils.JwtToken;
 
 import java.util.Map;
@@ -58,5 +59,25 @@ public class UserRest {
             return ResponseEntity.badRequest().build();
         }
     }
-    
+
+    @PostMapping("/{id}/modificarpass")
+    public ResponseEntity<?> changePassword(@PathVariable Integer id, @RequestBody ChangePassword changePassword){
+        if(changePassword == null || changePassword.getNewPassword() == null || changePassword.getNewPassword().isBlank() || changePassword.getOldPassword() == null ||changePassword.getOldPassword().isBlank() || changePassword.getNewPassword().equals(changePassword.getOldPassword())){
+            return ResponseEntity.badRequest().build();
+        }
+        try {
+            userService.changePasswordById(id, changePassword);
+            return ResponseEntity.ok("Contraseña modificada correctamente");
+        }catch (UserNotFoundException e){
+            logger.error(e.getMessage());
+            return ResponseEntity.notFound().build();
+        }catch (InvalidCredentialsException e){
+            logger.error(e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }catch (Exception e){
+            logger.error(e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+
+    }
 }

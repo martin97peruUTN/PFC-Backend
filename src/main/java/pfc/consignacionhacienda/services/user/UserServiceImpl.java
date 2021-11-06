@@ -14,7 +14,9 @@ import pfc.consignacionhacienda.exceptions.user.InvalidCredentialsException;
 import pfc.consignacionhacienda.exceptions.user.UserNotFoundException;
 import pfc.consignacionhacienda.model.User;
 import pfc.consignacionhacienda.security.SecurityConstants;
+import pfc.consignacionhacienda.utils.ChangePassword;
 import pfc.consignacionhacienda.utils.JwtToken;
+import pfc.consignacionhacienda.utils.MyPasswordEncoder;
 
 import java.lang.reflect.Field;
 import java.util.Date;
@@ -83,5 +85,23 @@ public class UserServiceImpl implements UserService {
             return new JwtToken(map.get("access_token"));
         }
         throw new UserNotFoundException("El usuario con id: "+ id +" no existe");
+    }
+
+    @Override
+    public void changePasswordById(Integer id, ChangePassword changePassword) {
+        Optional<User> userOpt = userDAO.findById(id);
+
+        if(userOpt.isPresent()){
+            User user = userOpt.get();
+            String oldDBpassword = user.getPassword();
+            String newPasswordEncoded = MyPasswordEncoder.getPasswordEncoder().encode(changePassword.getNewPassword());
+            if(newPasswordEncoded.equals(oldDBpassword)){
+                throw new InvalidCredentialsException("Las contraseñas deben ser distintas");
+            }
+            user.setPassword(newPasswordEncoded);
+            userDAO.save(user);
+        }else{
+            throw new UserNotFoundException("Usuario con id: " + id + " no encontrado.");
+        }
     }
 }
