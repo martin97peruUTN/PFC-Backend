@@ -60,7 +60,7 @@ public class UserRest {
         }
     }
 
-    @PostMapping("/{id}/modificarpass")
+    @PatchMapping("/{id}/modificarpass")
     public ResponseEntity<?> changePassword(@PathVariable Integer id, @RequestBody ChangePassword changePassword){
         if(changePassword == null || changePassword.getNewPassword() == null || changePassword.getNewPassword().isBlank() || changePassword.getOldPassword() == null ||changePassword.getOldPassword().isBlank() || changePassword.getNewPassword().equals(changePassword.getOldPassword())){
             return ResponseEntity.badRequest().build();
