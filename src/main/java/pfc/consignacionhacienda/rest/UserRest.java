@@ -1,5 +1,6 @@
 package pfc.consignacionhacienda.rest;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.coyote.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +17,7 @@ import pfc.consignacionhacienda.services.user.UserService;
 import pfc.consignacionhacienda.utils.ChangePassword;
 import pfc.consignacionhacienda.utils.JwtToken;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @RestController
@@ -67,7 +69,11 @@ public class UserRest {
         }
         try {
             userService.changePasswordById(id, changePassword);
-            return ResponseEntity.ok("Contraseña modificada correctamente");
+            LinkedHashMap<String, String> resultado = new LinkedHashMap<>();
+            resultado.put("msg","Contraseña modificada correctamente");
+            ObjectMapper objectMapper = new ObjectMapper();
+            String res = objectMapper.writeValueAsString(resultado);
+            return ResponseEntity.ok(res);
         }catch (UserNotFoundException e){
             logger.error(e.getMessage());
             return ResponseEntity.notFound().build();

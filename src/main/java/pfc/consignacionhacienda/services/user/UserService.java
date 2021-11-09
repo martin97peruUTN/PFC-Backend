@@ -16,4 +16,6 @@ public interface UserService {
     JwtToken updateUserById(Integer id, Map<Object, Object> fields);
 
     void changePasswordById(Integer id, ChangePassword changePassword);
+
+    User saveUser(User u);
 }

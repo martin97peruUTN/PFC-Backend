@@ -6,7 +6,9 @@ import org.apache.el.util.ReflectionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ReflectionUtils;
 import pfc.consignacionhacienda.dao.UserDAO;
@@ -16,7 +18,6 @@ import pfc.consignacionhacienda.model.User;
 import pfc.consignacionhacienda.security.SecurityConstants;
 import pfc.consignacionhacienda.utils.ChangePassword;
 import pfc.consignacionhacienda.utils.JwtToken;
-import pfc.consignacionhacienda.utils.MyPasswordEncoder;
 
 import java.lang.reflect.Field;
 import java.util.Date;
@@ -31,6 +32,12 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserDAO userDAO;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private Authentication authentication;
 
     @Override
     public Optional<User> findByUsername(String username) {
@@ -67,7 +74,7 @@ public class UserServiceImpl implements UserService {
                     }
                 }
             });
-            user = userDAO.save(finalUser);
+            user = saveUser(finalUser);
             String token = Jwts.builder()
                     .signWith(SecurityConstants.JWT_SECRET, SignatureAlgorithm.HS512)
                     .setHeaderParam("typ", SecurityConstants.TOKEN_TYPE)
@@ -77,7 +84,7 @@ public class UserServiceImpl implements UserService {
                     .claim("uid", user.getId())
                     .claim("username", user.getUsername())
                     .setExpiration(new Date(System.currentTimeMillis() + 86400000)) //un dia
-                    .claim("rol", SecurityContextHolder.getContext().getAuthentication().getAuthorities())
+                    .claim("rol", authentication.getAuthorities())
                     .compact();
 
             LinkedHashMap<String,String> map = new LinkedHashMap<>();
@@ -94,14 +101,21 @@ public class UserServiceImpl implements UserService {
         if(userOpt.isPresent()){
             User user = userOpt.get();
             String oldDBpassword = user.getPassword();
-            String newPasswordEncoded = MyPasswordEncoder.getPasswordEncoder().encode(changePassword.getNewPassword());
-            if(newPasswordEncoded.equals(oldDBpassword)){
+            String newPasswordEncoded = passwordEncoder.encode(changePassword.getNewPassword());
+            if(!passwordEncoder.matches(changePassword.getOldPassword(), oldDBpassword)){
+                throw new InvalidCredentialsException("La contraseña antigua ingresada es diferente a su contraseña actual.");
+            }
+            if(passwordEncoder.matches(changePassword.getNewPassword(), oldDBpassword)){
                 throw new InvalidCredentialsException("Las contraseñas deben ser distintas");
             }
             user.setPassword(newPasswordEncoded);
-            userDAO.save(user);
+            saveUser(user);
         }else{
             throw new UserNotFoundException("Usuario con id: " + id + " no encontrado.");
         }
+    }
+
+    public User saveUser(User user){
+        return userDAO.save(user);
     }
 }

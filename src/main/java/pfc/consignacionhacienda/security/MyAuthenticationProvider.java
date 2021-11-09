@@ -22,7 +22,6 @@ import pfc.consignacionhacienda.exceptions.user.UserNotFoundException;
 import pfc.consignacionhacienda.model.User;
 import pfc.consignacionhacienda.rest.login.LogInRest;
 import pfc.consignacionhacienda.services.user.UserService;
-import pfc.consignacionhacienda.utils.MyPasswordEncoder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,6 +35,9 @@ public class MyAuthenticationProvider implements AuthenticationProvider {
     @Autowired
     UserService userService;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         //Este metodo se encarga de verificar que el usario existe en la base de datos y compara sus contraseñas.
@@ -47,7 +49,8 @@ public class MyAuthenticationProvider implements AuthenticationProvider {
             throw new InvalidCredentialsException("Las credenciales son inválidas");
         }
         User user = userOpt.get();
-        if(!MyPasswordEncoder.getPasswordEncoder().matches(password, user.getPassword())){
+        logger.debug(passwordEncoder.encode(password));
+        if(!passwordEncoder.matches(password, user.getPassword())){
             throw new InvalidCredentialsException("Las credenciales son inválidas");
         }
 
