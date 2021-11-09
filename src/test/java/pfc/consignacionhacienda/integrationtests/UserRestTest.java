@@ -6,6 +6,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -20,6 +21,8 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.client.RestTemplate;
 import pfc.consignacionhacienda.model.User;
 import pfc.consignacionhacienda.services.user.UserService;
@@ -46,7 +49,10 @@ public class UserRestTest {
     @Autowired
     private UserService userService;
 
-    @MockBean
+    @Mock
+    private SecurityContext securityContext;
+
+    @Mock
     private Authentication authenticationMock;
 
     @BeforeEach
@@ -60,6 +66,9 @@ public class UserRestTest {
         userService.saveUser(u);
         List<GrantedAuthority> authorities = new ArrayList<>();
         authorities.add(new SimpleGrantedAuthority("Rol"));
+//        when(authenticationMock.getAuthorities()).thenReturn((List)authorities);
+        SecurityContextHolder.setContext(securityContext);
+        when(securityContext.getAuthentication()).thenReturn(authenticationMock);
         when(authenticationMock.getAuthorities()).thenReturn((List)authorities);
     }
 

@@ -4,13 +4,17 @@ import org.aspectj.lang.annotation.Before;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.test.context.support.WithMockUser;
 import pfc.consignacionhacienda.exceptions.user.InvalidCredentialsException;
 import pfc.consignacionhacienda.exceptions.user.UserNotFoundException;
 import pfc.consignacionhacienda.model.User;
@@ -35,8 +39,11 @@ public class UserServiceImplTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    @MockBean
-    private Authentication authenticationMock;
+    @Mock
+    SecurityContext securityContext;
+
+    @Mock
+    Authentication authentication;
 
     @BeforeEach
     public void initTest(){
@@ -49,7 +56,9 @@ public class UserServiceImplTest {
         userService.saveUser(u);
         List<GrantedAuthority> authorities = new ArrayList<>();
         authorities.add(new SimpleGrantedAuthority("Rol"));
-        when(authenticationMock.getAuthorities()).thenReturn((List)authorities);
+        SecurityContextHolder.setContext(securityContext);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getAuthorities()).thenReturn((List)authorities);
     }
 
     //Tests de cambio de password

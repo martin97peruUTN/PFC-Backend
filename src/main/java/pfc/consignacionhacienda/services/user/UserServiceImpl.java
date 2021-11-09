@@ -36,8 +36,8 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private Authentication authentication;
+//    @Autowired
+//    private Authentication authentication;
 
     @Override
     public Optional<User> findByUsername(String username) {
@@ -84,7 +84,7 @@ public class UserServiceImpl implements UserService {
                     .claim("uid", user.getId())
                     .claim("username", user.getUsername())
                     .setExpiration(new Date(System.currentTimeMillis() + 86400000)) //un dia
-                    .claim("rol", authentication.getAuthorities())
+                    .claim("rol", SecurityContextHolder.getContext().getAuthentication().getAuthorities())
                     .compact();
 
             LinkedHashMap<String,String> map = new LinkedHashMap<>();
