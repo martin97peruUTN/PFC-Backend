@@ -24,6 +24,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.client.RestTemplate;
+import pfc.consignacionhacienda.exceptions.user.DuplicateUsernameException;
 import pfc.consignacionhacienda.model.User;
 import pfc.consignacionhacienda.services.user.UserService;
 import pfc.consignacionhacienda.utils.ChangePassword;
@@ -63,7 +64,11 @@ public class UserRestTest {
         u.setName("testUser");
         u.setUsername("test");
         u.setRol("Administrador");
-        userService.saveUser(u);
+        try {
+            userService.saveUser(u);
+        } catch (DuplicateUsernameException e) {
+            e.printStackTrace();
+        }
         List<GrantedAuthority> authorities = new ArrayList<>();
         authorities.add(new SimpleGrantedAuthority("Rol"));
 //        when(authenticationMock.getAuthorities()).thenReturn((List)authorities);

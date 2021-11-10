@@ -15,6 +15,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
+import pfc.consignacionhacienda.exceptions.user.DuplicateUsernameException;
 import pfc.consignacionhacienda.exceptions.user.InvalidCredentialsException;
 import pfc.consignacionhacienda.exceptions.user.UserNotFoundException;
 import pfc.consignacionhacienda.model.User;
@@ -39,14 +40,8 @@ public class UserServiceImplTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    @Mock
-    SecurityContext securityContext;
-
-    @Mock
-    Authentication authentication;
-
     @BeforeEach
-    public void initTest(){
+    public void initTest() throws DuplicateUsernameException {
         User u = userService.findUserById(1);
         //pass encoded: 1234
         u.setPassword("$2a$10$.K6U/unji7nI/Xvqfj5Z7efTBTN9/xbGuNj1n96d2ZCeANpJqR2uC");
@@ -54,11 +49,6 @@ public class UserServiceImplTest {
         u.setUsername("test");
         u.setRol("Administrador");
         userService.saveUser(u);
-        List<GrantedAuthority> authorities = new ArrayList<>();
-        authorities.add(new SimpleGrantedAuthority("Rol"));
-        SecurityContextHolder.setContext(securityContext);
-        when(securityContext.getAuthentication()).thenReturn(authentication);
-        when(authentication.getAuthorities()).thenReturn((List)authorities);
     }
 
     //Tests de cambio de password
@@ -67,7 +57,11 @@ public class UserServiceImplTest {
         String oldPassword = "1234";
         String newPassword = "nueva";
         ChangePassword changePassword = new ChangePassword(oldPassword, newPassword);
-        userService.changePasswordById(1, changePassword);
+        try {
+            userService.changePasswordById(1, changePassword);
+        } catch (DuplicateUsernameException e) {
+            e.printStackTrace();
+        }
         User u = userService.findUserById(1);
         System.out.println(u.getPassword());
         Assertions.assertTrue(passwordEncoder.matches(changePassword.getNewPassword(),u.getPassword()));
@@ -102,7 +96,11 @@ public class UserServiceImplTest {
         String nameEdited = "userEdited";
         Map<Object, Object> map = new LinkedHashMap<>();
         map.put("name", nameEdited);
-        userService.updateUserById(1, map);
+        try {
+            userService.updateUserById(1, map);
+        } catch (DuplicateUsernameException e) {
+            e.printStackTrace();
+        }
         User userEdited = userService.findUserById(1);
         assertEquals(userEdited.getName(), nameEdited);
     }
@@ -124,7 +122,11 @@ public class UserServiceImplTest {
         String otherAttribute = "value";
         Map<Object, Object> map = new LinkedHashMap<>();
         map.put("otroAtributo", otherAttribute);
-        userService.updateUserById(1, map);
+        try {
+            userService.updateUserById(1, map);
+        } catch (DuplicateUsernameException e) {
+            e.printStackTrace();
+        }
         User userEdited = userService.findUserById(1);
         assertEquals(userToEdit.toString(),userEdited.toString());
     }

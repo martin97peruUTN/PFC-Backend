@@ -29,7 +29,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure( HttpSecurity http ) throws Exception {
-        logger.debug("Entra aqui");
         http.cors().and()
             .authorizeRequests()
             .antMatchers(HttpMethod.GET,"/api/test").hasAuthority("Rol")

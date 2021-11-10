@@ -12,18 +12,17 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ReflectionUtils;
 import pfc.consignacionhacienda.dao.UserDAO;
+import pfc.consignacionhacienda.exceptions.user.DuplicateUsernameException;
 import pfc.consignacionhacienda.exceptions.user.InvalidCredentialsException;
 import pfc.consignacionhacienda.exceptions.user.UserNotFoundException;
 import pfc.consignacionhacienda.model.User;
+import pfc.consignacionhacienda.security.Principal;
 import pfc.consignacionhacienda.security.SecurityConstants;
 import pfc.consignacionhacienda.utils.ChangePassword;
 import pfc.consignacionhacienda.utils.JwtToken;
 
 import java.lang.reflect.Field;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -54,7 +53,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public JwtToken updateUserById(Integer id, Map<Object, Object> fields) {
+    public JwtToken updateUserById(Integer id, Map<Object, Object> fields) throws DuplicateUsernameException {
         Optional<User> userOpt = userDAO.findById(id);
 
         if(fields.containsKey("id")){
@@ -84,7 +83,7 @@ public class UserServiceImpl implements UserService {
                     .claim("uid", user.getId())
                     .claim("username", user.getUsername())
                     .setExpiration(new Date(System.currentTimeMillis() + 86400000)) //un dia
-                    .claim("rol", SecurityContextHolder.getContext().getAuthentication().getAuthorities())
+                    .claim("rol", SecurityContextHolder.getContext().getAuthentication()==null? List.of("Rol"):SecurityContextHolder.getContext().getAuthentication().getAuthorities())
                     .compact();
 
             LinkedHashMap<String,String> map = new LinkedHashMap<>();
@@ -95,7 +94,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void changePasswordById(Integer id, ChangePassword changePassword) {
+    public void changePasswordById(Integer id, ChangePassword changePassword) throws DuplicateUsernameException {
         Optional<User> userOpt = userDAO.findById(id);
 
         if(userOpt.isPresent()){
@@ -115,7 +114,17 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    public User saveUser(User user){
+    public User saveUser(User user) throws DuplicateUsernameException {
+        Optional<User> u = findByUsername(user.getUsername());
+        if(u.isPresent()){
+            if(user.getId()!=null){
+                if(user.getId().equals(u.get().getId())){
+                    return userDAO.save(user);
+                }
+                throw new DuplicateUsernameException("Ya existe un usuario con este username.");
+            }
+            throw new DuplicateUsernameException("Ya existe un usuario con este username.");
+        }
         return userDAO.save(user);
     }
 }

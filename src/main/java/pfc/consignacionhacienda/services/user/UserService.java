@@ -1,5 +1,6 @@
 package pfc.consignacionhacienda.services.user;
 
+import pfc.consignacionhacienda.exceptions.user.DuplicateUsernameException;
 import pfc.consignacionhacienda.exceptions.user.UserNotFoundException;
 import pfc.consignacionhacienda.model.User;
 import pfc.consignacionhacienda.utils.ChangePassword;
@@ -13,9 +14,9 @@ public interface UserService {
 
     User findUserById(Integer id) throws UserNotFoundException;
 
-    JwtToken updateUserById(Integer id, Map<Object, Object> fields);
+    JwtToken updateUserById(Integer id, Map<Object, Object> fields) throws DuplicateUsernameException;
 
-    void changePasswordById(Integer id, ChangePassword changePassword);
+    void changePasswordById(Integer id, ChangePassword changePassword) throws DuplicateUsernameException;
 
-    User saveUser(User u);
+    User saveUser(User u) throws DuplicateUsernameException;
 }

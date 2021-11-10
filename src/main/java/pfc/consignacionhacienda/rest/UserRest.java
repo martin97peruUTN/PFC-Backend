@@ -2,6 +2,7 @@ package pfc.consignacionhacienda.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.coyote.Response;
+import org.apache.http.protocol.HTTP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
+import pfc.consignacionhacienda.exceptions.user.DuplicateUsernameException;
 import pfc.consignacionhacienda.exceptions.user.InvalidCredentialsException;
 import pfc.consignacionhacienda.exceptions.user.UserNotFoundException;
 import pfc.consignacionhacienda.model.User;
@@ -29,7 +31,6 @@ public class UserRest {
 
     @GetMapping("/{id}")
     public ResponseEntity<User> getUserById(@PathVariable Integer id){
-
         try{
             logger.debug(userService.findUserById(id).toString());
             return ResponseEntity.ok(userService.findUserById(id));
@@ -50,6 +51,9 @@ public class UserRest {
                 return ResponseEntity.notFound().build();
             } catch (InvalidCredentialsException e){
                 return ResponseEntity.badRequest().build();
+            }catch (DuplicateUsernameException e) {
+                logger.error(e.getMessage());
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }catch (Exception e) {
 //                logger.error(e.printStackTrace());
                 e.printStackTrace();
@@ -80,6 +84,9 @@ public class UserRest {
         }catch (InvalidCredentialsException e){
             logger.error(e.getMessage());
             return ResponseEntity.badRequest().build();
+        }catch (DuplicateUsernameException e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }catch (Exception e){
             logger.error(e.getMessage());
             return ResponseEntity.internalServerError().build();
