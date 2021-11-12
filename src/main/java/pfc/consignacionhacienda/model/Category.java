@@ -11,6 +11,9 @@ public class Category {
     @Column(nullable = false)
     private String name;
 
+    @Column
+    private boolean deleted;
+
     public Integer getId() {
         return id;
     }
@@ -27,11 +30,20 @@ public class Category {
         this.name = name;
     }
 
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
+    }
+
     @Override
     public String toString() {
         return "Category{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
+                ", deleted=" + deleted +
                 '}';
     }
 }

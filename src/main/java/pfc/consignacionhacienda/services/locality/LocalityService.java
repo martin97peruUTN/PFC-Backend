@@ -10,6 +10,9 @@ import java.util.List;
 
 public interface LocalityService {
     Locality getLocalityById(Integer id) throws LocalityNotFoundException;
+    
+    List<Locality> getAllAvailablesLocalities();
+
     Page<Locality> getAllLocalitiesByPages(Integer pageNumber, Integer limit);
     List<Locality> getAllLocalities();
     Locality saveLocality(Locality locality) throws BadHttpRequest, pfc.consignacionhacienda.exceptions.BadHttpRequest;

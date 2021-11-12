@@ -27,9 +27,13 @@ public class LocalityServiceImpl implements  LocalityService{
     }
 
     @Override
+    public List<Locality> getAllAvailablesLocalities() {
+        return localityDAO.findByDeletedNotNullAndDeletedFalse();
+    }
+
+    @Override
     public Page<Locality> getAllLocalitiesByPages(Integer pageNumber, Integer limit) {
-        Page<Locality> localities = localityDAO.findAll(PageRequest.of(pageNumber,limit));
-        return localities;
+        return localityDAO.findByDeletedNotNullAndDeletedFalse(PageRequest.of(pageNumber,limit));
     }
 
     @Override
@@ -51,6 +55,9 @@ public class LocalityServiceImpl implements  LocalityService{
             throw new BadHttpRequest("El parametro {id} no coincide con el id de la localidad que se esta por modificar.");
         }
         Locality l = getLocalityById(id);
+        if(l.isDeleted()){
+            throw new LocalityNotFoundException("La localidad con id: " + id + " no existe");
+        }
         l.setName(locality.getName());
         return saveLocality(l);
     }
@@ -58,7 +65,10 @@ public class LocalityServiceImpl implements  LocalityService{
     @Override
     public Locality deleteLocalityById(Integer id) throws LocalityNotFoundException {
         Locality l = getLocalityById(id);
-        localityDAO.deleteById(id);
-        return l;
+        if(l.isDeleted()){
+            throw new LocalityNotFoundException("La localidad con id: " + id + " no existe");
+        }
+        l.setDeleted(true);
+        return localityDAO.save(l);
     }
 }

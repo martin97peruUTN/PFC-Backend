@@ -14,6 +14,9 @@ public interface CategoryService {
     Category getCategoryById(Integer id) throws CategoryNotFoundException;
     Page<Category> getAllCategoriesByPages(Integer pageNumber, Integer limit);
     List<Category> getAllCategories();
+
+    List<Category> getAllAvailablesCategories();
+
     Category saveCategory(Category category) throws BadHttpRequest;
     Category updateCategoryById(Integer id, Category category) throws CategoryNotFoundException, BadHttpRequest;
     Category deleteCategoryById(Integer id) throws InternalServerException, CategoryNotFoundException;
