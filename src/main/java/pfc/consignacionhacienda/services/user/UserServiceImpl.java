@@ -79,7 +79,9 @@ public class UserServiceImpl implements UserService {
                     .setHeaderParam("typ", SecurityConstants.TOKEN_TYPE)
                     .setIssuer(SecurityConstants.TOKEN_ISSUER)
                     .setAudience(SecurityConstants.TOKEN_AUDIENCE)
-                    .setSubject(user.getName())
+                    .setSubject(user.getName() + ' ' + user.getLastname())
+                    .claim("name", user.getName())
+                    .claim("lastname", user.getLastname())
                     .claim("uid", user.getId())
                     .claim("username", user.getUsername())
                     .setExpiration(new Date(System.currentTimeMillis() + 86400000)) //un dia
