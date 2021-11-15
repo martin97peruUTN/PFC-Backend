@@ -16,12 +16,14 @@ import java.util.Collection;
 public class Principal implements UserDetails {
 
     private String name;
+    private String lastname;
     private String username;
     private String password;
     private Integer id;
 
     public Principal (User user){
         name = user.getName();
+        lastname = user.getLastname();
         username = user.getUsername();
         password = user.getPassword();
         id = user.getId();
@@ -67,5 +69,13 @@ public class Principal implements UserDetails {
 
     public Integer getId() {
         return id;
+    }
+
+    public String getLastname() {
+        return lastname;
+    }
+
+    public void setLastname(String lastname) {
+        this.lastname = lastname;
     }
 }

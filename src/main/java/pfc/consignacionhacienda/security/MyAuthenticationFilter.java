@@ -109,15 +109,20 @@ public class MyAuthenticationFilter extends UsernamePasswordAuthenticationFilter
         Principal principal = (Principal) authentication.getPrincipal();
         User usuario = new User();
         usuario.setName(principal.getName());
+        usuario.setLastname(principal.getLastname());
         usuario.setUsername(principal.getUsername());
         usuario.setId(principal.getId());
+
+        ObjectMapper objectMapper = new ObjectMapper();
 
         String token = Jwts.builder()
                         .signWith(SecurityConstants.JWT_SECRET, SignatureAlgorithm.HS512)
                         .setHeaderParam("typ", SecurityConstants.TOKEN_TYPE)
                         .setIssuer(SecurityConstants.TOKEN_ISSUER)
                         .setAudience(SecurityConstants.TOKEN_AUDIENCE)
-                        .setSubject(usuario.getName())
+                        .setSubject(usuario.getName() + ' ' + usuario.getLastname())
+                        .claim("name", usuario.getName())
+                        .claim("lastname", usuario.getLastname())
                         .claim("uid", usuario.getId())
                         .claim("username", usuario.getUsername())
                         .setExpiration(new Date(System.currentTimeMillis() + 86400000)) //un dia
@@ -127,7 +132,7 @@ public class MyAuthenticationFilter extends UsernamePasswordAuthenticationFilter
 
         LinkedHashMap<String,String> map = new LinkedHashMap<>();
         map.put("access_token", token);
-        ObjectMapper objectMapper = new ObjectMapper();
+
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         response.getWriter().println(objectMapper.writeValueAsString(map));
