@@ -13,4 +13,6 @@ public interface LocalityDAO extends JpaRepository<Locality, Integer> {
     Page<Locality> findByDeletedNotNullAndDeletedFalse(Pageable of);
 
     List<Locality> findByDeletedNotNullAndDeletedFalse();
+
+    Page<Locality> findByDeletedNotNullAndDeletedFalseAndNameContaining(Pageable of, String name);
 }

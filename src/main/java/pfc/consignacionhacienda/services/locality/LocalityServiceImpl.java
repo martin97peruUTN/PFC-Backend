@@ -71,4 +71,9 @@ public class LocalityServiceImpl implements  LocalityService{
         l.setDeleted(true);
         return localityDAO.save(l);
     }
+
+    @Override
+    public Page<Locality> getLocalitiesByName(Integer pageNumber, Integer limit, String localitySearchName) {
+        return localityDAO.findByDeletedNotNullAndDeletedFalseAndNameContaining(PageRequest.of(pageNumber,limit), localitySearchName);
+    }
 }

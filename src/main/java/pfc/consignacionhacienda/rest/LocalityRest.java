@@ -39,9 +39,14 @@ public class LocalityRest {
     @GetMapping()
     public ResponseEntity<Page<Locality>> getAllLocalities(
             @RequestParam(required = false, defaultValue = "0") Integer page,
-            @RequestParam(required = false, defaultValue = "10") Integer limit){
+            @RequestParam(required = false, defaultValue = "10") Integer limit,
+            @RequestParam(required = false, name = "name", defaultValue = "") String localitySearchName){
         try {
-            return ResponseEntity.ok(localityService.getAllLocalitiesByPages(page,limit));
+            if(localitySearchName.isBlank()){
+                return ResponseEntity.ok(localityService.getAllLocalitiesByPages(page,limit));
+            }else{
+                return ResponseEntity.ok(localityService.getLocalitiesByName(page, limit, localitySearchName));
+            }
         }catch (Exception e){
             logger.error(e.getMessage());
             return ResponseEntity.internalServerError().build();

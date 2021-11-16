@@ -18,4 +18,6 @@ public interface LocalityService {
     Locality saveLocality(Locality locality) throws BadHttpRequest, pfc.consignacionhacienda.exceptions.BadHttpRequest;
     Locality updateLocalityById(Integer id, Locality locality) throws LocalityNotFoundException, pfc.consignacionhacienda.exceptions.BadHttpRequest;
     Locality deleteLocalityById(Integer id) throws InternalServerException, LocalityNotFoundException;
+
+    Page<Locality> getLocalitiesByName(Integer pageNumber, Integer limit, String localitySearchName);
 }
