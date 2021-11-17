@@ -9,10 +9,9 @@ import org.springframework.web.bind.annotation.*;
 import pfc.consignacionhacienda.exceptions.BadHttpRequest;
 import pfc.consignacionhacienda.exceptions.InternalServerException;
 import pfc.consignacionhacienda.exceptions.locality.LocalityNotFoundException;
+import pfc.consignacionhacienda.exceptions.user.InvalidCredentialsException;
 import pfc.consignacionhacienda.model.Locality;
 import pfc.consignacionhacienda.services.locality.LocalityService;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/locality")
@@ -47,7 +46,10 @@ public class LocalityRest {
             }else{
                 return ResponseEntity.ok(localityService.getLocalitiesByName(page, limit, localitySearchName));
             }
-        }catch (Exception e){
+        } catch (InvalidCredentialsException e){
+            logger.error(e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e){
             logger.error(e.getMessage());
             return ResponseEntity.internalServerError().build();
         }

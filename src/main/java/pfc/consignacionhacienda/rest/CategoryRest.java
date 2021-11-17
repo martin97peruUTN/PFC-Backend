@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import pfc.consignacionhacienda.exceptions.BadHttpRequest;
 import pfc.consignacionhacienda.exceptions.InternalServerException;
 import pfc.consignacionhacienda.exceptions.category.CategoryNotFoundException;
+import pfc.consignacionhacienda.exceptions.user.InvalidCredentialsException;
 import pfc.consignacionhacienda.model.Category;
 import pfc.consignacionhacienda.services.category.CategoryService;
 
@@ -39,6 +40,9 @@ public class CategoryRest {
             @RequestParam(required = false, defaultValue = "10") Integer limit){
         try {
             return ResponseEntity.ok(categoryService.getAllCategoriesByPages(page,limit));
+        }catch (InvalidCredentialsException e){
+            logger.error(e.getMessage());
+            return ResponseEntity.badRequest().build();
         }catch (Exception e){
             logger.error(e.getMessage());
             return ResponseEntity.internalServerError().build();
