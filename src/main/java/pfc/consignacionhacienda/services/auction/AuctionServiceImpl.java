@@ -49,12 +49,13 @@ public class AuctionServiceImpl implements AuctionService{
                 throw new HttpUnauthorizedException("Usted no tiene acceso a este remate.");
             }
         }
+        auction.setFinished(false);
         return auctionDAO.save(auction);
     }
 
     @Override
     public List<Auction> getAllAuctions() {
-        return auctionDAO.findByDeletedNullOrDeletedFalse();
+        return auctionDAO.findAll();
     }
 
     @Override
