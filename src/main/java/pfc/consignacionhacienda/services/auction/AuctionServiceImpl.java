@@ -90,15 +90,6 @@ public class AuctionServiceImpl implements AuctionService{
     }
 
     @Override
-    public Auction getNotDeletedAuctionById(Integer id) throws AuctionNotFoundException {
-        Optional<Auction> auctionOpt = auctionDAO.findByIdAndDeletedNullOrDeletedFalse(id);
-        if(auctionOpt.isPresent()){
-            return auctionOpt.get();
-        }
-        throw new AuctionNotFoundException("No existe un remate con id: " + id);
-    }
-
-    @Override
     public Auction deleteAuctionById(Integer id) throws AuctionNotFoundException, HttpUnauthorizedException, HttpForbidenException {
         Auction auction = getAuctionById(id);
         if(auction.getFinished()){

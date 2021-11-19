@@ -87,7 +87,7 @@ public class AuctionRest {
     @GetMapping("/{id}")
     public ResponseEntity<Auction> getAuctionById(@PathVariable Integer id){
         try {
-            return ResponseEntity.ok(auctionService.getNotDeletedAuctionById(id));
+            return ResponseEntity.ok(auctionService.getAuctionById(id));
         } catch (AuctionNotFoundException e) {
             logger.error(e.getMessage());
             return ResponseEntity.notFound().build();

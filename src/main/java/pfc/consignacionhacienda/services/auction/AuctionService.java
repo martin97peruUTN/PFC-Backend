@@ -17,7 +17,6 @@ public interface AuctionService {
     List<Auction> getAllNotDeletedAuctions();
     Page<Auction> getAllNotDeletedAuctionsByPage(Integer page, Integer limit) throws InvalidCredentialsException;
     Auction getAuctionById(Integer id) throws AuctionNotFoundException;
-    Auction getNotDeletedAuctionById(Integer id) throws AuctionNotFoundException;
     Auction deleteAuctionById(Integer id) throws AuctionNotFoundException, HttpUnauthorizedException, HttpForbidenException;
 //    Auction updateAuctionById(Integer id, Map<Object, Object> changes) throws InvalidCredentialsException, AuctionNotFoundException;
     Auction updateAuctionById(Integer id, AuctionDTO changes) throws InvalidCredentialsException, AuctionNotFoundException, HttpUnauthorizedException;
