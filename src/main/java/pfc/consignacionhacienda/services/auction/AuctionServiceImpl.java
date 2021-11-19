@@ -8,6 +8,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import pfc.consignacionhacienda.dao.AuctionDAO;
 import pfc.consignacionhacienda.dto.AuctionDTO;
+import pfc.consignacionhacienda.exceptions.HttpForbidenException;
 import pfc.consignacionhacienda.exceptions.HttpUnauthorizedException;
 import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
 import pfc.consignacionhacienda.exceptions.user.InvalidCredentialsException;
@@ -98,45 +99,14 @@ public class AuctionServiceImpl implements AuctionService{
     }
 
     @Override
-    public Auction deleteAuctionById(Integer id) throws AuctionNotFoundException, HttpUnauthorizedException {
+    public Auction deleteAuctionById(Integer id) throws AuctionNotFoundException, HttpUnauthorizedException, HttpForbidenException {
         Auction auction = getAuctionById(id);
+        if(auction.getFinished()){
+            throw new HttpForbidenException("No puede eliminarse un remate que ya se realizo.");
+        }
         auction.setDeleted(true);
         return this.saveAuction(auction);
     }
-
-   /* @Override
-    public Auction updateAuctionById(Integer id, Map<Object, Object> fields) throws AuctionNotFoundException, InvalidCredentialsException {
-        if(fields.containsKey("id")){
-            if(!fields.get("id").equals(id)){
-                throw new InvalidCredentialsException("No se puede modificar el id del remate");
-            }
-        }
-
-        Auction auction = getAuctionById(id);
-
-        List<User> aux = auction.getUsers().stream().filter((u -> u.getRol().equals("Administrador") || u.getRol().equals("Consignatario"))).collect(Collectors.toList());
-        if(aux.isEmpty()){
-            throw new InvalidCredentialsException("Debe existir al menos un usuario Consignatario o Administrador asociado al remate.");
-        }
-
-        fields.forEach((key, value) -> {
-            if(value != null) {
-                Field field = ReflectionUtils.findField(Auction.class, (String) key);
-                if(field != null) {
-                    field.setAccessible(true);
-                    logger.debug(field.getDeclaringClass().getName());
-                    if(field.getName().equals("date")){
-
-                        ReflectionUtils.setField(field, auction, Instant.parse(value.toString()));
-                    }
-                    else{
-                        ReflectionUtils.setField(field, auction, value);
-                    }
-                }
-            }
-        });
-        return saveAuction(auction);
-    }*/
 
     @Override
     public Auction updateAuctionById(Integer id, AuctionDTO fields) throws AuctionNotFoundException, InvalidCredentialsException, HttpUnauthorizedException {

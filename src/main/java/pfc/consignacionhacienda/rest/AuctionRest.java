@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pfc.consignacionhacienda.dto.AuctionDTO;
+import pfc.consignacionhacienda.exceptions.HttpForbidenException;
 import pfc.consignacionhacienda.exceptions.HttpUnauthorizedException;
 import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
 import pfc.consignacionhacienda.exceptions.user.InvalidCredentialsException;
@@ -27,7 +28,7 @@ public class AuctionRest {
     @PostMapping
     public ResponseEntity<Auction> saveAuction(@RequestBody Auction newAuction){
 
-        if(newAuction.getUsers().isEmpty() || newAuction.getUsers() == null){
+        if(newAuction.getUsers() == null || newAuction.getUsers().isEmpty()){
             logger.error("Al menos un usuario debe estar asociado al remate.");
             return ResponseEntity.badRequest().build();
         }
@@ -56,6 +57,9 @@ public class AuctionRest {
         }catch (AuctionNotFoundException e) {
             logger.error(e.getMessage());
             return ResponseEntity.notFound().build();
+        } catch (InvalidCredentialsException e){
+            logger.error(e.getMessage());
+            return ResponseEntity.badRequest().build();
         } catch (Exception e){
             logger.error(e.getMessage());
             return ResponseEntity.internalServerError().build();
@@ -71,7 +75,10 @@ public class AuctionRest {
         } catch (HttpUnauthorizedException e){
             logger.error(e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }catch (Exception e) {
+        } catch (HttpForbidenException e){
+            logger.error(e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        } catch (Exception e) {
             logger.error(e.getMessage());
             return ResponseEntity.internalServerError().build();
         }

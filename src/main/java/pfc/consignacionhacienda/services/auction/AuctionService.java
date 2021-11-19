@@ -2,6 +2,7 @@ package pfc.consignacionhacienda.services.auction;
 
 import org.springframework.data.domain.Page;
 import pfc.consignacionhacienda.dto.AuctionDTO;
+import pfc.consignacionhacienda.exceptions.HttpForbidenException;
 import pfc.consignacionhacienda.exceptions.HttpUnauthorizedException;
 import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
 import pfc.consignacionhacienda.exceptions.user.InvalidCredentialsException;
@@ -17,7 +18,7 @@ public interface AuctionService {
     Page<Auction> getAllNotDeletedAuctionsByPage(Integer page, Integer limit) throws InvalidCredentialsException;
     Auction getAuctionById(Integer id) throws AuctionNotFoundException;
     Auction getNotDeletedAuctionById(Integer id) throws AuctionNotFoundException;
-    Auction deleteAuctionById(Integer id) throws AuctionNotFoundException, HttpUnauthorizedException;
+    Auction deleteAuctionById(Integer id) throws AuctionNotFoundException, HttpUnauthorizedException, HttpForbidenException;
 //    Auction updateAuctionById(Integer id, Map<Object, Object> changes) throws InvalidCredentialsException, AuctionNotFoundException;
     Auction updateAuctionById(Integer id, AuctionDTO changes) throws InvalidCredentialsException, AuctionNotFoundException, HttpUnauthorizedException;
 }
