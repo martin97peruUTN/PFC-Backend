@@ -1,5 +1,8 @@
 package pfc.consignacionhacienda.integrationtests;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,6 +29,7 @@ import pfc.consignacionhacienda.model.User;
 import pfc.consignacionhacienda.services.locality.LocalityService;
 import pfc.consignacionhacienda.services.user.UserService;
 import pfc.consignacionhacienda.unittests.AuctionServiceImplTest;
+import pfc.consignacionhacienda.utils.PageDTO;
 
 import java.time.Instant;
 import java.time.Period;
@@ -240,5 +244,21 @@ public class AuctionRestTest {
         ResponseEntity<Auction> response = testRestTemplate.exchange(server, HttpMethod.DELETE, auctionDTOHttpEntity,
                 Auction.class);
         assertEquals(response.getStatusCode(), HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    void getFirst10Auctions(){
+        String server = "http://localhost:" + puerto + "/api/auction?page=0&limit=10";
+
+        ResponseEntity<String> response = testRestTemplate.getForEntity(server, String.class);
+        assertEquals(response.getStatusCode(), HttpStatus.OK);
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        try {
+            PageDTO pageDTO = objectMapper.readValue(response.getBody(), PageDTO.class);
+            assertEquals(pageDTO.getContent().size(),10);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
     }
 }

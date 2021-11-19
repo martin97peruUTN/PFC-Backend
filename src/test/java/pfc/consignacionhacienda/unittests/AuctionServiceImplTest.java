@@ -17,7 +17,6 @@ import pfc.consignacionhacienda.dto.AuctionDTO;
 import pfc.consignacionhacienda.exceptions.HttpForbidenException;
 import pfc.consignacionhacienda.exceptions.HttpUnauthorizedException;
 import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
-import pfc.consignacionhacienda.exceptions.locality.LocalityNotFoundException;
 import pfc.consignacionhacienda.exceptions.user.InvalidCredentialsException;
 import pfc.consignacionhacienda.model.Auction;
 import pfc.consignacionhacienda.model.Locality;
@@ -85,27 +84,13 @@ public class AuctionServiceImplTest {
 
         when(auctionDAO.save(any(Auction.class))).thenReturn(auction);
         Optional<Auction> auctionOpt = Optional.of(auction);
-        logger.debug(String.valueOf(auctionOpt.toString()));
+        logger.debug(auctionOpt.toString());
         when(auctionDAO.findById(any(Integer.class))).thenReturn(auctionOpt);
-//        when(auctionDAO.save(any(Auction.class))).thenReturn(auction);
-//        AuctionDTO auctionDTO = new AuctionDTO();
-//        try {
-//            auctionDTO.setLocality(localityService.getLocalityById(1));
-//            auctionService.updateAuctionById(1,auctionDTO);
-//        } catch (AuctionNotFoundException | HttpUnauthorizedException | LocalityNotFoundException e) {
-//            e.printStackTrace();
-//        }
-
     }
 
     //Crear remates
     @Test
     void createAuctionSuccesfully(){
-//        when(auctionDAO.save(any(Auction.class))).thenReturn(auction);
-//        Optional<Auction> auctionOpt = Optional.of(auction);
-//        logger.debug(String.valueOf(auctionOpt.toString()));
-//        when(auctionDAO.findById(any(Integer.class))).thenReturn(auctionOpt);
-
         Auction auction1 = new Auction();
         auction1.setUsers(auction.getUsers());
         auction1.setDate(auction.getDate());
@@ -125,40 +110,6 @@ public class AuctionServiceImplTest {
         }
     }
 
-    //Esto es integracion
-    @Test
-    void createAuctionWithoutLocality(){
-
-//        auction = new Auction();
-//        auction.setSenasaNumber("oneNumber");
-//        auction.setDate(Instant.now().plus(Period.ofDays(10)));
-//        auction.setLocality(null);
-//        when(auctionDAO.save(any(Auction.class))).thenReturn(auction);
-//        ArrayList<User> users = new ArrayList<>();
-//        users.add(userService.findUserById(1));
-//        auction.setUsers(users);
-//        //            Auction auctionSaved = auctionService.saveAuction(auction);
-//        assertThrows(Exception.class, ()->auctionService.saveAuction(auction));
-    }
-
-    @Test
-    void createAuctionWithoutUser(){
-
-        auction.setUsers(null);
-        when(auctionDAO.save(any(Auction.class))).thenReturn(auction);
-        try {
-            auction.setLocality(localityService.getLocalityById(1));
-        } catch (LocalityNotFoundException e) {
-            e.printStackTrace();
-        }
-
-        try {
-            Auction auctionSaved = auctionService.saveAuction(auction);
-            assertDoesNotThrow(()->auctionService.getAuctionById(auctionSaved.getId()));//porque esto se valida en el RestController
-        } catch (HttpUnauthorizedException e) {
-            e.printStackTrace();
-        }
-    }
     @Test
     void createAuctionWithInvalidDate(){
         auction.setDate(Instant.now().minus(Period.ofDays(10)));
@@ -174,10 +125,10 @@ public class AuctionServiceImplTest {
 //            Auction auction = auctionService.getAuctionById(1);
             assertEquals(auction.getId(),1);
             assertEquals(auction.getLocality().getId(),1);
+            logger.debug(auction.toString());
             locality.setId(2);
             locality.setName("Santa Fe");
             auctionDTO.setLocality(locality);
-            logger.debug(auction.toString());
             auction = auctionService.updateAuctionById(1,auctionDTO);
             logger.debug(auction.toString());
             assertEquals(auction.getId(),1);
@@ -190,13 +141,6 @@ public class AuctionServiceImplTest {
     @Test
     void updateAuctionWithInvalidDate(){
         AuctionDTO auctionDTO = new AuctionDTO();
-
-//        Auction auction = null;
-//        try {
-//            auction = auctionService.getAuctionById(1);
-//        } catch (AuctionNotFoundException e) {
-//            e.printStackTrace();
-//        }
         assertEquals(auction.getId(),1);
         assertEquals(auction.getLocality().getId(),1);
         auctionDTO.setDate(Instant.now().minus(Period.ofDays(10)));
@@ -219,12 +163,6 @@ public class AuctionServiceImplTest {
     void updateAuctionWithValidDate(){
         AuctionDTO auctionDTO = new AuctionDTO();
 
-//        Auction auction = null;
-//        try {
-//            auction = auctionService.getAuctionById(1);
-//        } catch (AuctionNotFoundException e) {
-//            e.printStackTrace();
-//        }
         assertEquals(auction.getId(),1);
         assertEquals(auction.getLocality().getId(),1);
         Instant before = auction.getDate();
@@ -254,6 +192,7 @@ public class AuctionServiceImplTest {
         assertEquals(auction.getDeleted(), false);
         try {
             auction = auctionService.deleteAuctionById(auction.getId());
+            logger.debug(auction.toString());
         } catch (AuctionNotFoundException | HttpForbidenException | HttpUnauthorizedException e) {
             e.printStackTrace();
         }
