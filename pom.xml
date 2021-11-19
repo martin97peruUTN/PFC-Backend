@@ -90,12 +90,6 @@
 			<artifactId>mapstruct</artifactId>
 			<version>1.4.2.Final</version>
 		</dependency>
-		<dependency>
-			<groupId>com.fasterxml.jackson.datatype</groupId>
-			<artifactId>jackson-datatype-jsr310</artifactId>
-			<scope>test</scope>
-			<version>2.13.0</version>
-		</dependency>
 	</dependencies>
 
 	<build>
