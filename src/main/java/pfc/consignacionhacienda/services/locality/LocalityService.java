@@ -4,6 +4,7 @@ import javassist.tools.web.BadHttpRequest;
 import org.springframework.data.domain.Page;
 import pfc.consignacionhacienda.exceptions.InternalServerException;
 import pfc.consignacionhacienda.exceptions.locality.LocalityNotFoundException;
+import pfc.consignacionhacienda.exceptions.user.InvalidCredentialsException;
 import pfc.consignacionhacienda.model.Locality;
 
 import java.util.List;
@@ -13,11 +14,11 @@ public interface LocalityService {
     
     List<Locality> getAllAvailablesLocalities();
 
-    Page<Locality> getAllLocalitiesByPages(Integer pageNumber, Integer limit);
+    Page<Locality> getAllLocalitiesByPages(Integer pageNumber, Integer limit) throws InvalidCredentialsException;
     List<Locality> getAllLocalities();
     Locality saveLocality(Locality locality) throws BadHttpRequest, pfc.consignacionhacienda.exceptions.BadHttpRequest;
     Locality updateLocalityById(Integer id, Locality locality) throws LocalityNotFoundException, pfc.consignacionhacienda.exceptions.BadHttpRequest;
     Locality deleteLocalityById(Integer id) throws InternalServerException, LocalityNotFoundException;
 
-    Page<Locality> getLocalitiesByName(Integer pageNumber, Integer limit, String localitySearchName);
+    Page<Locality> getLocalitiesByName(Integer pageNumber, Integer limit, String localitySearchName) throws InvalidCredentialsException;
 }
