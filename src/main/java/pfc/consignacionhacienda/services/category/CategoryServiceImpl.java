@@ -8,8 +8,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import pfc.consignacionhacienda.dao.CategoryDAO;
 import pfc.consignacionhacienda.exceptions.BadHttpRequest;
-import pfc.consignacionhacienda.exceptions.InternalServerException;
 import pfc.consignacionhacienda.exceptions.category.CategoryNotFoundException;
+import pfc.consignacionhacienda.exceptions.user.InvalidCredentialsException;
 import pfc.consignacionhacienda.model.Category;
 
 import java.util.List;
@@ -33,7 +33,10 @@ public class CategoryServiceImpl implements CategoryService{
     }
 
     @Override
-    public Page<Category> getAllCategoriesByPages(Integer pageNumber, Integer limit) {
+    public Page<Category> getAllCategoriesByPages(Integer pageNumber, Integer limit) throws InvalidCredentialsException{
+        if(pageNumber < 0 || limit < 0 ){
+            throw new InvalidCredentialsException("Parametros invalidos.");
+        }
         logger.debug(pageNumber + "   "+limit);
         return categoryDAO.findByDeletedNotNullAndDeletedFalse(PageRequest.of(pageNumber,limit));
     }

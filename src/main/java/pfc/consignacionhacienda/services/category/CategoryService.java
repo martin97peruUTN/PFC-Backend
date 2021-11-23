@@ -1,18 +1,17 @@
 package pfc.consignacionhacienda.services.category;
 
-import pfc.consignacionhacienda.exceptions.BadHttpRequest;
 import org.springframework.data.domain.Page;
+import pfc.consignacionhacienda.exceptions.BadHttpRequest;
 import pfc.consignacionhacienda.exceptions.InternalServerException;
 import pfc.consignacionhacienda.exceptions.category.CategoryNotFoundException;
-import pfc.consignacionhacienda.exceptions.locality.LocalityNotFoundException;
+import pfc.consignacionhacienda.exceptions.user.InvalidCredentialsException;
 import pfc.consignacionhacienda.model.Category;
-import pfc.consignacionhacienda.model.Locality;
 
 import java.util.List;
 
 public interface CategoryService {
     Category getCategoryById(Integer id) throws CategoryNotFoundException;
-    Page<Category> getAllCategoriesByPages(Integer pageNumber, Integer limit);
+    Page<Category> getAllCategoriesByPages(Integer pageNumber, Integer limit) throws InvalidCredentialsException;
     List<Category> getAllCategories();
 
     List<Category> getAllAvailablesCategories();

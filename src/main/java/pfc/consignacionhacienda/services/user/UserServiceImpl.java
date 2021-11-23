@@ -2,11 +2,9 @@ package pfc.consignacionhacienda.services.user;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import org.apache.el.util.ReflectionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -16,7 +14,6 @@ import pfc.consignacionhacienda.exceptions.user.DuplicateUsernameException;
 import pfc.consignacionhacienda.exceptions.user.InvalidCredentialsException;
 import pfc.consignacionhacienda.exceptions.user.UserNotFoundException;
 import pfc.consignacionhacienda.model.User;
-import pfc.consignacionhacienda.security.Principal;
 import pfc.consignacionhacienda.security.SecurityConstants;
 import pfc.consignacionhacienda.utils.ChangePassword;
 import pfc.consignacionhacienda.utils.JwtToken;
@@ -128,5 +125,15 @@ public class UserServiceImpl implements UserService {
             throw new DuplicateUsernameException("Ya existe un usuario con este username.");
         }
         return userDAO.save(user);
+    }
+
+    @Override
+    public User getCurrentUser() {
+        return (User)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    }
+
+    @Override
+    public Collection<? extends org.springframework.security.core.GrantedAuthority> getCurrentUserAuthorities() {
+        return SecurityContextHolder.getContext().getAuthentication().getAuthorities();
     }
 }

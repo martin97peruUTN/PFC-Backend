@@ -10,9 +10,9 @@ import java.util.List;
 
 @Repository
 public interface LocalityDAO extends JpaRepository<Locality, Integer> {
-    Page<Locality> findByDeletedNotNullAndDeletedFalse(Pageable of);
+    Page<Locality> findByDeletedNullOrDeletedFalse(Pageable of);
 
-    List<Locality> findByDeletedNotNullAndDeletedFalse();
+    List<Locality> findByDeletedNullOrDeletedFalse();
 
-    Page<Locality> findByDeletedNotNullAndDeletedFalseAndNameContaining(Pageable of, String name);
+    Page<Locality> findByDeletedNullOrDeletedFalseAndNameContaining(Pageable of, String name);
 }

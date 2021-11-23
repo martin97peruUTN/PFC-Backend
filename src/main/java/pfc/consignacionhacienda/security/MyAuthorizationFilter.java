@@ -84,8 +84,11 @@ public class MyAuthorizationFilter extends BasicAuthenticationFilter{
                     logger.debug(authorities.toString());
                     User usuario = new User();
                     //Armamos la informacion del usuario que luego se utilizara en SecurityConfig para asegurar las rutas, por ejemplo, por roles.
-                    if(parsedToken.getBody().getSubject() != null){
-                        usuario.setName(parsedToken.getBody().getSubject());
+                    if(parsedToken.getBody().get("name")!= null){
+                        usuario.setName(parsedToken.getBody().get("name").toString());
+                    }
+                    if(parsedToken.getBody().get("lastname")!= null){
+                        usuario.setLastname(parsedToken.getBody().get("lastname").toString());
                     }
                     if(parsedToken.getBody().get("username") != null){
                         usuario.setUsername(parsedToken.getBody().get("username").toString());

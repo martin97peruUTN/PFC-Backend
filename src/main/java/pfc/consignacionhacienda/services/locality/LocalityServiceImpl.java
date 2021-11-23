@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import pfc.consignacionhacienda.dao.LocalityDAO;
 import pfc.consignacionhacienda.exceptions.BadHttpRequest;
 import pfc.consignacionhacienda.exceptions.locality.LocalityNotFoundException;
+import pfc.consignacionhacienda.exceptions.user.InvalidCredentialsException;
 import pfc.consignacionhacienda.model.Locality;
 
 import java.util.List;
@@ -28,12 +29,15 @@ public class LocalityServiceImpl implements  LocalityService{
 
     @Override
     public List<Locality> getAllAvailablesLocalities() {
-        return localityDAO.findByDeletedNotNullAndDeletedFalse();
+        return localityDAO.findByDeletedNullOrDeletedFalse();
     }
 
     @Override
-    public Page<Locality> getAllLocalitiesByPages(Integer pageNumber, Integer limit) {
-        return localityDAO.findByDeletedNotNullAndDeletedFalse(PageRequest.of(pageNumber,limit));
+    public Page<Locality> getAllLocalitiesByPages(Integer pageNumber, Integer limit) throws InvalidCredentialsException {
+        if(pageNumber < 0 || limit < 0){
+            throw new InvalidCredentialsException("Parametros invalidos.");
+        }
+        return localityDAO.findByDeletedNullOrDeletedFalse(PageRequest.of(pageNumber,limit));
     }
 
     @Override
@@ -73,7 +77,10 @@ public class LocalityServiceImpl implements  LocalityService{
     }
 
     @Override
-    public Page<Locality> getLocalitiesByName(Integer pageNumber, Integer limit, String localitySearchName) {
-        return localityDAO.findByDeletedNotNullAndDeletedFalseAndNameContaining(PageRequest.of(pageNumber,limit), localitySearchName);
+    public Page<Locality> getLocalitiesByName(Integer pageNumber, Integer limit, String localitySearchName) throws InvalidCredentialsException{
+        if(pageNumber < 0 || limit < 0){
+            throw new InvalidCredentialsException("Parametros invalidos.");
+        }
+        return localityDAO.findByDeletedNullOrDeletedFalseAndNameContaining(PageRequest.of(pageNumber,limit), localitySearchName);
     }
 }
