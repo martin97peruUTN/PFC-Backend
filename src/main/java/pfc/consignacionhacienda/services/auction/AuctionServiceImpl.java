@@ -81,6 +81,36 @@ public class AuctionServiceImpl implements AuctionService{
     }
 
     @Override
+    public Page<Auction> getOwnNotDeletedAuctionsByPageAndId(Integer id, Integer page, Integer limit) throws InvalidCredentialsException, HttpUnauthorizedException {
+        if(page<0 || limit<0){
+            throw new InvalidCredentialsException("Parametros invalidos.");
+        }
+        if(id!=userService.getCurrentUser().getId()){
+            throw new HttpUnauthorizedException("El usuarion no coincide");
+        }
+        return auctionDAO.findOwnById(id, PageRequest.of(page, limit));
+    }
+
+    @Override
+    public Page<Auction> getOthersNotDeletedAuctionsByPageAndId(Integer id, Integer page, Integer limit) throws InvalidCredentialsException, HttpUnauthorizedException {
+        if(page<0 || limit<0){
+            throw new InvalidCredentialsException("Parametros invalidos.");
+        }
+        if(id!=userService.getCurrentUser().getId()){
+            throw new HttpUnauthorizedException("El usuarion no coincide");
+        }
+        return auctionDAO.findOthersById(id, PageRequest.of(page, limit));
+    }
+
+    @Override
+    public Page<Auction> getAllNotDeletedAndNotFinishedAuctionsByPage(Integer page, Integer limit) throws InvalidCredentialsException {
+        if(page<0 || limit<0){
+            throw new InvalidCredentialsException("Parametros invalidos.");
+        }
+        return auctionDAO.findByFinishedIsNullOrFinishedIsFalseAndDeletedNullOrDeletedFalse(PageRequest.of(page, limit));
+    }
+
+    @Override
     public Auction getAuctionById(Integer id) throws AuctionNotFoundException {
         Optional<Auction> auctionOpt = auctionDAO.findById(id);
         if(auctionOpt.isPresent()){

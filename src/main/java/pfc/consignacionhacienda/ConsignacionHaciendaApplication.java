@@ -22,7 +22,7 @@ public class ConsignacionHaciendaApplication {
 
 				registry.addMapping("/**")
 						.allowedMethods("*")
-						.allowedOrigins("https://localhost:3000");
+						.allowedOrigins("*");
 			}
 		};
 	}
