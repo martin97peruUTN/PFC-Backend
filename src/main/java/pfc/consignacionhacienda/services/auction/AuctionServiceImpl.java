@@ -50,7 +50,7 @@ public class AuctionServiceImpl implements AuctionService{
                 throw new HttpUnauthorizedException("Usted no tiene acceso a este remate.");
             }
         }
-        auction.setFinished(false);
+//        auction.setFinished(false);
         return auctionDAO.save(auction);
     }
 
@@ -122,7 +122,7 @@ public class AuctionServiceImpl implements AuctionService{
     @Override
     public Auction deleteAuctionById(Integer id) throws AuctionNotFoundException, HttpUnauthorizedException, HttpForbidenException {
         Auction auction = getAuctionById(id);
-        if(auction.getFinished()){
+        if(auction.getFinished() != null && auction.getFinished()){
             throw new HttpForbidenException("No puede eliminarse un remate que ya se realizo.");
         }
         auction.setDeleted(true);
