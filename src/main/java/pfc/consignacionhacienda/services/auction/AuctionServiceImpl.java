@@ -107,7 +107,7 @@ public class AuctionServiceImpl implements AuctionService{
         if(page<0 || limit<0){
             throw new InvalidCredentialsException("Parametros invalidos.");
         }
-        return auctionDAO.findByFinishedIsNullOrFinishedIsFalseAndDeletedNullOrDeletedFalseOrderByDateAsc(PageRequest.of(page, limit));
+        return auctionDAO.findAllAdmin(PageRequest.of(page, limit));
     }
 
     @Override

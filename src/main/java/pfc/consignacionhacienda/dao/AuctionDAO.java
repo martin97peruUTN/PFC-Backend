@@ -28,7 +28,11 @@ public interface AuctionDAO extends JpaRepository<Auction, Integer> {
             "ORDER BY a.date ASC"))
     Page<Auction> findOthersById(Integer userId, Pageable of);
 
-    Page<Auction> findByFinishedIsNullOrFinishedIsFalseAndDeletedNullOrDeletedFalseOrderByDateAsc(Pageable of);
+    @Query(value = ("SELECT a FROM Auction a WHERE " +
+            "(a.finished IS NULL OR a.finished IS FALSE) " +
+            "AND (a.deleted IS NULL OR a.deleted IS FALSE) " +
+            "ORDER BY a.date ASC"))
+    Page<Auction> findAllAdmin(Pageable of);
 
     Optional<Auction> findByIdAndDeletedNullOrDeletedFalse(Integer id);
 }
