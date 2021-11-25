@@ -40,7 +40,7 @@ public class AuctionServiceImpl implements AuctionService{
     @Override
     public Auction saveAuction(Auction auction) throws InvalidCredentialsException, HttpUnauthorizedException{
         logger.debug(Instant.now().plus(Period.ofDays(1)).toString());
-        if(Instant.now().plus(Period.ofDays(1)).isAfter(auction.getDate())){
+        if(Instant.now().isAfter(auction.getDate())){
             throw new InvalidCredentialsException("La fecha del remate es invalida");
         }
         logger.debug(userService.getCurrentUserAuthorities().toArray()[0].toString());
