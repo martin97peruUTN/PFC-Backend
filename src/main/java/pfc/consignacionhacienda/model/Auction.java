@@ -16,7 +16,7 @@ public class Auction {
     @Column (nullable = false)
     private Instant date;
 
-    @Column (nullable = false)
+    @Column
     private Boolean finished;
 
     @Column

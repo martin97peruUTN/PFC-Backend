@@ -40,7 +40,7 @@ public class AuctionServiceImpl implements AuctionService{
     @Override
     public Auction saveAuction(Auction auction) throws InvalidCredentialsException, HttpUnauthorizedException{
         logger.debug(Instant.now().plus(Period.ofDays(1)).toString());
-        if(Instant.now().plus(Period.ofDays(1)).isAfter(auction.getDate())){
+        if(Instant.now().isAfter(auction.getDate())){
             throw new InvalidCredentialsException("La fecha del remate es invalida");
         }
         logger.debug(userService.getCurrentUserAuthorities().toArray()[0].toString());
@@ -50,7 +50,7 @@ public class AuctionServiceImpl implements AuctionService{
                 throw new HttpUnauthorizedException("Usted no tiene acceso a este remate.");
             }
         }
-        auction.setFinished(false);
+//        auction.setFinished(false);
         return auctionDAO.save(auction);
     }
 
@@ -81,6 +81,36 @@ public class AuctionServiceImpl implements AuctionService{
     }
 
     @Override
+    public Page<Auction> getOwnNotDeletedAuctionsByPageAndId(Integer id, Integer page, Integer limit) throws InvalidCredentialsException, HttpUnauthorizedException {
+        if(page<0 || limit<0){
+            throw new InvalidCredentialsException("Parametros invalidos.");
+        }
+        if(id!=userService.getCurrentUser().getId()){
+            throw new HttpUnauthorizedException("El usuarion no coincide");
+        }
+        return auctionDAO.findOwnById(id, PageRequest.of(page, limit));
+    }
+
+    @Override
+    public Page<Auction> getOthersNotDeletedAuctionsByPageAndId(Integer id, Integer page, Integer limit) throws InvalidCredentialsException, HttpUnauthorizedException {
+        if(page<0 || limit<0){
+            throw new InvalidCredentialsException("Parametros invalidos.");
+        }
+        if(id!=userService.getCurrentUser().getId()){
+            throw new HttpUnauthorizedException("El usuarion no coincide");
+        }
+        return auctionDAO.findOthersById(id, PageRequest.of(page, limit));
+    }
+
+    @Override
+    public Page<Auction> getAllNotDeletedAndNotFinishedAuctionsByPage(Integer page, Integer limit) throws InvalidCredentialsException {
+        if(page<0 || limit<0){
+            throw new InvalidCredentialsException("Parametros invalidos.");
+        }
+        return auctionDAO.findAllAdmin(PageRequest.of(page, limit));
+    }
+
+    @Override
     public Auction getAuctionById(Integer id) throws AuctionNotFoundException {
         Optional<Auction> auctionOpt = auctionDAO.findById(id);
         if(auctionOpt.isPresent()){
@@ -92,7 +122,7 @@ public class AuctionServiceImpl implements AuctionService{
     @Override
     public Auction deleteAuctionById(Integer id) throws AuctionNotFoundException, HttpUnauthorizedException, HttpForbidenException {
         Auction auction = getAuctionById(id);
-        if(auction.getFinished()){
+        if(auction.getFinished() != null && auction.getFinished()){
             throw new HttpForbidenException("No puede eliminarse un remate que ya se realizo.");
         }
         auction.setDeleted(true);
