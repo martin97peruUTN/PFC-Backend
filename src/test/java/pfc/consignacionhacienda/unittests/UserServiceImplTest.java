@@ -1,20 +1,11 @@
 package pfc.consignacionhacienda.unittests;
 
-import org.aspectj.lang.annotation.Before;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.test.context.support.WithMockUser;
 import pfc.consignacionhacienda.exceptions.user.DuplicateUsernameException;
 import pfc.consignacionhacienda.exceptions.user.InvalidCredentialsException;
 import pfc.consignacionhacienda.exceptions.user.UserNotFoundException;
@@ -22,14 +13,10 @@ import pfc.consignacionhacienda.model.User;
 import pfc.consignacionhacienda.services.user.UserService;
 import pfc.consignacionhacienda.utils.ChangePassword;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.when;
 
 
 @SpringBootTest
@@ -97,7 +84,7 @@ public class UserServiceImplTest {
         Map<Object, Object> map = new LinkedHashMap<>();
         map.put("name", nameEdited);
         try {
-            userService.updateUserById(1, map);
+            userService.updateUserProfileById(1, map);
         } catch (DuplicateUsernameException e) {
             e.printStackTrace();
         }
@@ -112,7 +99,7 @@ public class UserServiceImplTest {
         String nameEdited = "userEdited";
         Map<Object, Object> map = new LinkedHashMap<>();
         map.put("name", nameEdited);
-        assertThrows(UserNotFoundException.class,()->{userService.updateUserById(2, map);});
+        assertThrows(UserNotFoundException.class,()->{userService.updateUserProfileById(2, map);});
     }
 
     @Test
@@ -123,7 +110,7 @@ public class UserServiceImplTest {
         Map<Object, Object> map = new LinkedHashMap<>();
         map.put("otroAtributo", otherAttribute);
         try {
-            userService.updateUserById(1, map);
+            userService.updateUserProfileById(1, map);
         } catch (DuplicateUsernameException e) {
             e.printStackTrace();
         }

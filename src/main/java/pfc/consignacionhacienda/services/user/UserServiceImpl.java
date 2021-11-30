@@ -5,11 +5,15 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ReflectionUtils;
 import pfc.consignacionhacienda.dao.UserDAO;
+import pfc.consignacionhacienda.dto.UserDTO;
+import pfc.consignacionhacienda.exceptions.HttpForbidenException;
 import pfc.consignacionhacienda.exceptions.user.DuplicateUsernameException;
 import pfc.consignacionhacienda.exceptions.user.InvalidCredentialsException;
 import pfc.consignacionhacienda.exceptions.user.UserNotFoundException;
@@ -17,6 +21,7 @@ import pfc.consignacionhacienda.model.User;
 import pfc.consignacionhacienda.security.SecurityConstants;
 import pfc.consignacionhacienda.utils.ChangePassword;
 import pfc.consignacionhacienda.utils.JwtToken;
+import pfc.consignacionhacienda.utils.UserMapper;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -32,8 +37,8 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-//    @Autowired
-//    private Authentication authentication;
+    @Autowired
+    private UserMapper userMapper;
 
     @Override
     public Optional<User> findByUsername(String username) {
@@ -50,7 +55,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public JwtToken updateUserById(Integer id, Map<Object, Object> fields) throws DuplicateUsernameException {
+    public JwtToken updateUserProfileById(Integer id, Map<Object, Object> fields) throws DuplicateUsernameException {
         Optional<User> userOpt = userDAO.findById(id);
 
         if(fields.containsKey("id")){
@@ -115,15 +120,22 @@ public class UserServiceImpl implements UserService {
 
     public User saveUser(User user) throws DuplicateUsernameException {
         Optional<User> u = findByUsername(user.getUsername());
+        //Si estoy modificando un usuario
         if(u.isPresent()){
             if(user.getId()!=null){
                 if(user.getId().equals(u.get().getId())){
+                    if(user.getPassword() != null && !passwordEncoder.matches(user.getPassword(), u.get().getPassword())){
+                        user.setPassword(passwordEncoder.encode(user.getPassword()));
+                    }
                     return userDAO.save(user);
                 }
                 throw new DuplicateUsernameException("Ya existe un usuario con este username.");
             }
             throw new DuplicateUsernameException("Ya existe un usuario con este username.");
         }
+
+        //Si estoy creando un usuario
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userDAO.save(user);
     }
 
@@ -135,5 +147,55 @@ public class UserServiceImpl implements UserService {
     @Override
     public Collection<? extends org.springframework.security.core.GrantedAuthority> getCurrentUserAuthorities() {
         return SecurityContextHolder.getContext().getAuthentication().getAuthorities();
+    }
+
+    @Override
+    public User deleteUserById(Integer id) throws DuplicateUsernameException, UserNotFoundException {
+        User u = findUserById(id);
+        if(u.isDeleted() != null && u.isDeleted()){
+            throw new UserNotFoundException("No existe usuario con id: " + id);
+        }
+        u.setDeleted(true);
+        return saveUser(u);
+    }
+
+    @Override
+    public User updateUserById(Integer id, UserDTO fields) throws DuplicateUsernameException, HttpForbidenException, InvalidCredentialsException {
+        if(fields.getId() != null){
+            if(!fields.getId().equals(id)){
+                throw new InvalidCredentialsException("No se puede modificar el id del usuario");
+            }
+        }
+        User user = findUserById(id);
+        if(fields.getRol() != null && !fields.getRol().equals(user.getRol())){
+            throw new HttpForbidenException("Los roles no pueden modificarse");
+        }
+        userMapper.updateUserFromDto(fields, user);
+        return saveUser(user);
+    }
+
+    @Override
+    public Page<User> findUsersNotDeleted(Integer page, Integer size) {
+        return userDAO.findByDeletedNotNullOrDeletedFalse(PageRequest.of(page, size));
+    }
+
+    @Override
+    public Page<User> findUsersNotDeletedByUsername(String username, Integer page, Integer size) {
+        return userDAO.findByUsernameAndNotDeleted(username, PageRequest.of(page, size));
+    }
+
+    @Override
+    public Page<User> findUsersNotDeletedByName(Integer page, Integer size, String name) {
+        return userDAO.getUsersNotDeletedByName(name, PageRequest.of(page, size));
+    }
+
+    @Override
+    public Page<User> findAllUsersByPage( Integer page, Integer size) {
+        return userDAO.findAll(PageRequest.of(page, size));
+    }
+
+    @Override
+    public List<User> findAllUsers() {
+        return userDAO.findAll();
     }
 }

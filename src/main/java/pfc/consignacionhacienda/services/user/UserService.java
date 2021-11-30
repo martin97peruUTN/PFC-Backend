@@ -1,13 +1,18 @@
 package pfc.consignacionhacienda.services.user;
 
+import org.springframework.data.domain.Page;
 import org.springframework.security.core.GrantedAuthority;
+import pfc.consignacionhacienda.dto.UserDTO;
+import pfc.consignacionhacienda.exceptions.HttpForbidenException;
 import pfc.consignacionhacienda.exceptions.user.DuplicateUsernameException;
+import pfc.consignacionhacienda.exceptions.user.InvalidCredentialsException;
 import pfc.consignacionhacienda.exceptions.user.UserNotFoundException;
 import pfc.consignacionhacienda.model.User;
 import pfc.consignacionhacienda.utils.ChangePassword;
 import pfc.consignacionhacienda.utils.JwtToken;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -16,7 +21,7 @@ public interface UserService {
 
     User findUserById(Integer id) throws UserNotFoundException;
 
-    JwtToken updateUserById(Integer id, Map<Object, Object> fields) throws DuplicateUsernameException;
+    JwtToken updateUserProfileById(Integer id, Map<Object, Object> fields) throws DuplicateUsernameException;
 
     void changePasswordById(Integer id, ChangePassword changePassword) throws DuplicateUsernameException;
 
@@ -25,4 +30,18 @@ public interface UserService {
     User getCurrentUser();
 
     Collection<? extends GrantedAuthority>  getCurrentUserAuthorities();
+
+    User deleteUserById(Integer id) throws DuplicateUsernameException, UserNotFoundException;
+
+    User updateUserById(Integer id, UserDTO fields) throws DuplicateUsernameException, HttpForbidenException, InvalidCredentialsException;
+
+    Page<User> findUsersNotDeleted(Integer page, Integer limit);
+
+    Page<User> findUsersNotDeletedByUsername(String username, Integer page, Integer size);
+
+    Page<User> findUsersNotDeletedByName(Integer page, Integer size, String name);
+
+    Page<User> findAllUsersByPage( Integer page, Integer size);
+
+    List<User> findAllUsers();
 }
