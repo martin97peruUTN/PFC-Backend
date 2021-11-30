@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pfc.consignacionhacienda.dto.UserDTO;
+import pfc.consignacionhacienda.exceptions.BadHttpRequest;
 import pfc.consignacionhacienda.exceptions.HttpForbidenException;
 import pfc.consignacionhacienda.exceptions.user.DuplicateUsernameException;
 import pfc.consignacionhacienda.exceptions.user.InvalidCredentialsException;
@@ -35,6 +36,9 @@ public class UserRest {
         } catch (DuplicateUsernameException e) {
             logger.error(e.getMessage());
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }catch (BadHttpRequest badHttpRequest) {
+            badHttpRequest.printStackTrace();
+            return ResponseEntity.badRequest().build();
         } catch (Exception e) {
             logger.error(e.getMessage());
             return ResponseEntity.internalServerError().build();
@@ -60,7 +64,10 @@ public class UserRest {
                 return ResponseEntity.ok(userService.updateUserProfileById(id, fields));
             } catch (UserNotFoundException e) {
                 return ResponseEntity.notFound().build();
-            } catch (InvalidCredentialsException e){
+            }catch (BadHttpRequest badHttpRequest) {
+                badHttpRequest.printStackTrace();
+                return ResponseEntity.badRequest().build();
+            }  catch (InvalidCredentialsException e){
                 return ResponseEntity.badRequest().build();
             }catch (DuplicateUsernameException e) {
                 logger.error(e.getMessage());
@@ -95,14 +102,13 @@ public class UserRest {
         }catch (InvalidCredentialsException e){
             logger.error(e.getMessage());
             return ResponseEntity.badRequest().build();
-        }catch (DuplicateUsernameException e) {
+        }catch (DuplicateUsernameException | HttpForbidenException e) {
             logger.error(e.getMessage());
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }catch (Exception e){
             logger.error(e.getMessage());
             return ResponseEntity.internalServerError().build();
         }
-
     }
 
     @PatchMapping("/admin-patch/{id}")
@@ -115,7 +121,10 @@ public class UserRest {
         } catch(DuplicateUsernameException | HttpForbidenException e) {
             logger.error(e.getMessage());
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        } catch (Exception e){
+        }catch (BadHttpRequest badHttpRequest) {
+            badHttpRequest.printStackTrace();
+            return ResponseEntity.badRequest().build();
+        }  catch (Exception e){
             logger.error(e.getMessage());
             return ResponseEntity.internalServerError().build();
         }
@@ -144,7 +153,10 @@ public class UserRest {
         }catch (UserNotFoundException e) {
             logger.error(e.getMessage());
             return ResponseEntity.notFound().build();
-        }catch (Exception e) {
+        }catch (BadHttpRequest badHttpRequest) {
+            badHttpRequest.printStackTrace();
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
             logger.error(e.getMessage());
             e.printStackTrace();
             return ResponseEntity.internalServerError().build();

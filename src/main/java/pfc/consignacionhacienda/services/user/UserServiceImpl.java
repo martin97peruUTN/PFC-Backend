@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.ReflectionUtils;
 import pfc.consignacionhacienda.dao.UserDAO;
 import pfc.consignacionhacienda.dto.UserDTO;
+import pfc.consignacionhacienda.exceptions.BadHttpRequest;
 import pfc.consignacionhacienda.exceptions.HttpForbidenException;
 import pfc.consignacionhacienda.exceptions.user.DuplicateUsernameException;
 import pfc.consignacionhacienda.exceptions.user.InvalidCredentialsException;
@@ -55,9 +56,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public JwtToken updateUserProfileById(Integer id, Map<Object, Object> fields) throws DuplicateUsernameException {
+    public JwtToken updateUserProfileById(Integer id, Map<Object, Object> fields) throws DuplicateUsernameException, BadHttpRequest {
         Optional<User> userOpt = userDAO.findById(id);
-
+        if(!getCurrentUser().getId().equals(id)){
+            throw new DuplicateUsernameException("No se puede modificar el perfil de otro usuario.");
+        }
         if(fields.containsKey("id")){
             if(!((Integer) fields.get("id")).equals(id)){
                 throw new InvalidCredentialsException("No se puede modificar el id del usuario");
@@ -98,9 +101,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void changePasswordById(Integer id, ChangePassword changePassword) throws DuplicateUsernameException {
+    public void changePasswordById(Integer id, ChangePassword changePassword) throws HttpForbidenException {
         Optional<User> userOpt = userDAO.findById(id);
-
+        if(!getCurrentUser().getId().equals(id)){
+            throw new HttpForbidenException("No se puede modificar la contraseña de otro usuario.");
+        }
         if(userOpt.isPresent()){
             User user = userOpt.get();
             String oldDBpassword = user.getPassword();
@@ -118,13 +123,16 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    public User saveUser(User user) throws DuplicateUsernameException {
+    public User saveUser(User user) throws DuplicateUsernameException, BadHttpRequest {
         Optional<User> u = findByUsername(user.getUsername());
         //Si estoy modificando un usuario
         if(u.isPresent()){
             if(user.getId()!=null){
                 if(user.getId().equals(u.get().getId())){
-                    if(user.getPassword() != null && !passwordEncoder.matches(user.getPassword(), u.get().getPassword())){
+                    if(user.getPassword() != null){
+                         if(passwordEncoder.matches(user.getPassword(), u.get().getPassword())){
+                            throw new BadHttpRequest("Las contraseñas deben ser distintas");
+                        }
                         user.setPassword(passwordEncoder.encode(user.getPassword()));
                     }
                     return userDAO.save(user);
@@ -150,7 +158,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User deleteUserById(Integer id) throws DuplicateUsernameException, UserNotFoundException {
+    public User deleteUserById(Integer id) throws DuplicateUsernameException, UserNotFoundException, BadHttpRequest {
         User u = findUserById(id);
         if(u.isDeleted() != null && u.isDeleted()){
             throw new UserNotFoundException("No existe usuario con id: " + id);
@@ -160,7 +168,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User updateUserById(Integer id, UserDTO fields) throws DuplicateUsernameException, HttpForbidenException, InvalidCredentialsException {
+    public User updateUserById(Integer id, UserDTO fields) throws DuplicateUsernameException, HttpForbidenException, InvalidCredentialsException, BadHttpRequest {
         if(fields.getId() != null){
             if(!fields.getId().equals(id)){
                 throw new InvalidCredentialsException("No se puede modificar el id del usuario");

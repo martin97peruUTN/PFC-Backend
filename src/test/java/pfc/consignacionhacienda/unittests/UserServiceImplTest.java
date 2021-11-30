@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import pfc.consignacionhacienda.exceptions.BadHttpRequest;
+import pfc.consignacionhacienda.exceptions.HttpForbidenException;
 import pfc.consignacionhacienda.exceptions.user.DuplicateUsernameException;
 import pfc.consignacionhacienda.exceptions.user.InvalidCredentialsException;
 import pfc.consignacionhacienda.exceptions.user.UserNotFoundException;
@@ -35,7 +37,11 @@ public class UserServiceImplTest {
         u.setName("testUser");
         u.setUsername("test");
         u.setRol("Administrador");
-        userService.saveUser(u);
+        try {
+            userService.saveUser(u);
+        } catch (BadHttpRequest e) {
+            e.printStackTrace();
+        }
     }
 
     //Tests de cambio de password
@@ -46,7 +52,7 @@ public class UserServiceImplTest {
         ChangePassword changePassword = new ChangePassword(oldPassword, newPassword);
         try {
             userService.changePasswordById(1, changePassword);
-        } catch (DuplicateUsernameException e) {
+        } catch (DuplicateUsernameException | HttpForbidenException e) {
             e.printStackTrace();
         }
         User u = userService.findUserById(1);
@@ -85,7 +91,7 @@ public class UserServiceImplTest {
         map.put("name", nameEdited);
         try {
             userService.updateUserProfileById(1, map);
-        } catch (DuplicateUsernameException e) {
+        } catch (DuplicateUsernameException | BadHttpRequest e) {
             e.printStackTrace();
         }
         User userEdited = userService.findUserById(1);
@@ -111,7 +117,7 @@ public class UserServiceImplTest {
         map.put("otroAtributo", otherAttribute);
         try {
             userService.updateUserProfileById(1, map);
-        } catch (DuplicateUsernameException e) {
+        } catch (DuplicateUsernameException | BadHttpRequest e) {
             e.printStackTrace();
         }
         User userEdited = userService.findUserById(1);

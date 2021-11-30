@@ -1,17 +1,12 @@
 package pfc.consignacionhacienda.integrationtests;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -24,11 +19,11 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.client.RestTemplate;
+import pfc.consignacionhacienda.exceptions.BadHttpRequest;
 import pfc.consignacionhacienda.exceptions.user.DuplicateUsernameException;
 import pfc.consignacionhacienda.model.User;
 import pfc.consignacionhacienda.services.user.UserService;
 import pfc.consignacionhacienda.utils.ChangePassword;
-import pfc.consignacionhacienda.utils.JwtToken;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -66,7 +61,7 @@ public class UserRestTest {
         u.setRol("Administrador");
         try {
             userService.saveUser(u);
-        } catch (DuplicateUsernameException e) {
+        } catch (DuplicateUsernameException | BadHttpRequest e) {
             e.printStackTrace();
         }
         List<GrantedAuthority> authorities = new ArrayList<>();
