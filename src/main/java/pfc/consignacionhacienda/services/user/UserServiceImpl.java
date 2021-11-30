@@ -112,7 +112,7 @@ public class UserServiceImpl implements UserService {
                 throw new InvalidCredentialsException("Las contraseñas deben ser distintas");
             }
             user.setPassword(newPasswordEncoded);
-            saveUser(user);
+            userDAO.save(user);
         }else{
             throw new UserNotFoundException("Usuario con id: " + id + " no encontrado.");
         }
