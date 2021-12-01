@@ -38,7 +38,15 @@ public class CategoryServiceImpl implements CategoryService{
             throw new InvalidCredentialsException("Parametros invalidos.");
         }
         logger.debug(pageNumber + "   "+limit);
-        return categoryDAO.findByDeletedNotNullAndDeletedFalse(PageRequest.of(pageNumber,limit));
+        return categoryDAO.findByDeletedNotNullAndDeletedFalseOrderByName(PageRequest.of(pageNumber,limit));
+    }
+
+    @Override
+    public Page<Category> getCategoriesByName(Integer pageNumber, Integer limit, String name){
+        if(pageNumber < 0 || limit < 0){
+            throw new InvalidCredentialsException("Parametros invalidos.");
+        }
+        return categoryDAO.findByName(PageRequest.of(pageNumber,limit), name);
     }
 
     @Override
@@ -48,7 +56,7 @@ public class CategoryServiceImpl implements CategoryService{
 
     @Override
     public List<Category> getAllAvailablesCategories() {
-        return categoryDAO.findByDeletedNotNullAndDeletedFalse();
+        return categoryDAO.findByDeletedNotNullAndDeletedFalseOrderByName();
     }
 
     @Override

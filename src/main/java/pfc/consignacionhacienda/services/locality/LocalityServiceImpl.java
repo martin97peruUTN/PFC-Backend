@@ -29,7 +29,7 @@ public class LocalityServiceImpl implements  LocalityService{
 
     @Override
     public List<Locality> getAllAvailablesLocalities() {
-        return localityDAO.findByDeletedNullOrDeletedFalse();
+        return localityDAO.findByDeletedNullOrDeletedFalseOrderByName();
     }
 
     @Override
@@ -37,7 +37,7 @@ public class LocalityServiceImpl implements  LocalityService{
         if(pageNumber < 0 || limit < 0){
             throw new InvalidCredentialsException("Parametros invalidos.");
         }
-        return localityDAO.findByDeletedNullOrDeletedFalse(PageRequest.of(pageNumber,limit));
+        return localityDAO.findByDeletedNullOrDeletedFalseOrderByName(PageRequest.of(pageNumber,limit));
     }
 
     @Override
@@ -81,6 +81,6 @@ public class LocalityServiceImpl implements  LocalityService{
         if(pageNumber < 0 || limit < 0){
             throw new InvalidCredentialsException("Parametros invalidos.");
         }
-        return localityDAO.findByDeletedNullOrDeletedFalseAndNameContaining(PageRequest.of(pageNumber,limit), localitySearchName);
+        return localityDAO.findByName(PageRequest.of(pageNumber,limit), localitySearchName);
     }
 }

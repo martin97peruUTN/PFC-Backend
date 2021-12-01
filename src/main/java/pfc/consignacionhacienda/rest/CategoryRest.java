@@ -37,9 +37,14 @@ public class CategoryRest {
     @GetMapping()
     public ResponseEntity<Page<Category>> getAllCategories(
             @RequestParam(required = false, defaultValue = "0") Integer page,
-            @RequestParam(required = false, defaultValue = "10") Integer limit){
+            @RequestParam(required = false, defaultValue = "10") Integer limit,
+            @RequestParam(required = false, name = "name", defaultValue = "") String categorySearchName){
         try {
-            return ResponseEntity.ok(categoryService.getAllCategoriesByPages(page,limit));
+            if(categorySearchName.isBlank()){
+                return ResponseEntity.ok(categoryService.getAllCategoriesByPages(page,limit));
+            }else{
+                return ResponseEntity.ok(categoryService.getCategoriesByName(page, limit, categorySearchName));
+            }
         }catch (InvalidCredentialsException e){
             logger.error(e.getMessage());
             return ResponseEntity.badRequest().build();
