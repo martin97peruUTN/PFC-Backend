@@ -18,6 +18,6 @@ public interface UserDAO extends JpaRepository<User, Integer> {
     @Query("Select u from User u where u.username like %:username% and (u.deleted is null or u.deleted = false)")
     Page<User> findByUsernameAndNotDeleted(String username, Pageable of);
 
-    @Query("Select u from User u where (u.name like %:name% or u.lastname like %:name%) and (u.deleted is null or u.deleted = false)")
+    @Query("Select u from User u where (u.name like %:name% or u.lastname like %:name%) and (u.deleted is null or u.deleted = false) order by u.lastname")
     Page<User> getUsersNotDeletedByName(String name, Pageable of);
 }
