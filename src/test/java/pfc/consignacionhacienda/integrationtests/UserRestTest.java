@@ -4,8 +4,9 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.http.HttpEntity;
@@ -42,7 +43,7 @@ public class UserRestTest {
     @LocalServerPort
     String puerto;
 
-    @Autowired
+    @SpyBean
     private UserService userService;
 
     @Mock
@@ -65,17 +66,20 @@ public class UserRestTest {
             e.printStackTrace();
         }
         List<GrantedAuthority> authorities = new ArrayList<>();
-        authorities.add(new SimpleGrantedAuthority("Rol"));
+        authorities.add(new SimpleGrantedAuthority("Administrador"));
 //        when(authenticationMock.getAuthorities()).thenReturn((List)authorities);
         SecurityContextHolder.setContext(securityContext);
         when(securityContext.getAuthentication()).thenReturn(authenticationMock);
         when(authenticationMock.getAuthorities()).thenReturn((List)authorities);
+        User us = new User();
+        us.setId(1);
+        Mockito.doReturn(us).when(userService).getCurrentUser();
     }
 
     //Tests de modificacion de password usuario.
     @Test
     void testChangePasswordSuccesfully(){
-        String server = "http://localhost:" + puerto + "/api/user/1/modificarpass";
+        String server = "http://localhost:" + puerto + "/api/user/profile/1/modificarpass";
         String oldPassword = "1234";
         String newPassword = "nueva";
         testRestTemplatePatch.setRequestFactory(new HttpComponentsClientHttpRequestFactory(HttpClientBuilder.create().build()));
@@ -89,7 +93,7 @@ public class UserRestTest {
 
     @Test
     void testChangePasswordSameNewPasswordAndOldPassword(){
-        String server = "http://localhost:" + puerto + "/api/user/1/modificarpass";
+        String server = "http://localhost:" + puerto + "/api/user/profile/1/modificarpass";
         String oldPassword = "1234";
         String newPassword = "1234";
         testRestTemplatePatch.setRequestFactory(new HttpComponentsClientHttpRequestFactory(HttpClientBuilder.create().build()));
@@ -103,7 +107,7 @@ public class UserRestTest {
 
     @Test
     void testChangePasswordWithOnlyBlankSpaces(){
-        String server = "http://localhost:" + puerto + "/api/user/1/modificarpass";
+        String server = "http://localhost:" + puerto + "/api/user/profile/1/modificarpass";
         String oldPassword = " ";
         String newPassword = "1234";
         testRestTemplatePatch.setRequestFactory(new HttpComponentsClientHttpRequestFactory(HttpClientBuilder.create().build()));
@@ -115,9 +119,10 @@ public class UserRestTest {
         assertEquals(response.getStatusCode(), HttpStatus.BAD_REQUEST);
     }
 
+    //TODO por ahora no tener en cuenta. Utilizar para testear una modificacion a un usuario que no sea desde su perfil.
     @Test
-    void testChangePasswordInexistentUser(){
-        String server = "http://localhost:" + puerto + "/api/user/100/modificarpass";
+     void testChangePasswordInexistentUser(){
+        String server = "http://localhost:" + puerto + "/api/user/admin-patch/100";
         String oldPassword = "1234";
         String newPassword = "123456";
         testRestTemplatePatch.setRequestFactory(new HttpComponentsClientHttpRequestFactory(HttpClientBuilder.create().build()));
@@ -132,7 +137,7 @@ public class UserRestTest {
     //Tests de modificacion de otros atributos del usuario.
     @Test
     void testChangeUserDataSuccesfully(){
-        String server = "http://localhost:" + puerto + "/api/user/1";
+        String server = "http://localhost:" + puerto + "/api/user/profile/1";
         String nameEdited = "userEdited";
         Map<Object, Object> map = new LinkedHashMap<>();
         map.put("name", nameEdited);
@@ -147,7 +152,7 @@ public class UserRestTest {
 
     @Test
     void testChangeUserInexistent(){
-        String server = "http://localhost:" + puerto + "/api/user/2";
+        String server = "http://localhost:" + puerto + "/api/user/admin-patch/2";
         String nameEdited = "userEdited";
         Map<Object, Object> map = new LinkedHashMap<>();
         map.put("name", nameEdited);
@@ -157,12 +162,11 @@ public class UserRestTest {
         ResponseEntity<String> response = testRestTemplate.exchange(server, HttpMethod.PATCH, requestChangeUserData,
                 String.class);
         assertEquals(response.getStatusCode(), HttpStatus.NOT_FOUND);
-
     }
 
     @Test
     void testChangeUserRolAndUserID(){
-        String server = "http://localhost:" + puerto + "/api/user/1";
+        String server = "http://localhost:" + puerto + "/api/user/admin-patch/1";
         String rolEdited = "OtroRol";
         Map<Object, Object> map = new LinkedHashMap<>();
         map.put("rol", rolEdited);
@@ -184,7 +188,7 @@ public class UserRestTest {
 
     @Test
     void testChangeUserInexistentAttributes(){
-        String server = "http://localhost:" + puerto + "/api/user/1";
+        String server = "http://localhost:" + puerto + "/api/user/profile/1";
         User userDB = userService.findUserById(1);
         String nameEdited = "userEdited";
         Map<Object, Object> map = new LinkedHashMap<>();

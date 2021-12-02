@@ -3,9 +3,12 @@ package pfc.consignacionhacienda.unittests;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import pfc.consignacionhacienda.dto.UserDTO;
 import pfc.consignacionhacienda.exceptions.BadHttpRequest;
 import pfc.consignacionhacienda.exceptions.HttpForbidenException;
 import pfc.consignacionhacienda.exceptions.user.DuplicateUsernameException;
@@ -18,14 +21,14 @@ import pfc.consignacionhacienda.utils.ChangePassword;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 
 @SpringBootTest
 public class UserServiceImplTest {
-    @Autowired
+    @SpyBean
     private UserService userService;
-
     @Autowired
     private PasswordEncoder passwordEncoder;
 
@@ -42,6 +45,7 @@ public class UserServiceImplTest {
         } catch (BadHttpRequest e) {
             e.printStackTrace();
         }
+        Mockito.doReturn(u).when(userService).getCurrentUser();
     }
 
     //Tests de cambio de password
@@ -103,9 +107,11 @@ public class UserServiceImplTest {
         User userToEdit = userService.findUserById(1);
         assertEquals(userToEdit.getName(), "testUser");
         String nameEdited = "userEdited";
-        Map<Object, Object> map = new LinkedHashMap<>();
-        map.put("name", nameEdited);
-        assertThrows(UserNotFoundException.class,()->{userService.updateUserProfileById(2, map);});
+//        Map<Object, Object> map = new LinkedHashMap<>();
+//        map.put("name", nameEdited);
+        UserDTO userDTO = new UserDTO();
+        userDTO.setName(nameEdited);
+        assertThrows(UserNotFoundException.class,()->{userService.updateUserById(2, userDTO);});
     }
 
     @Test

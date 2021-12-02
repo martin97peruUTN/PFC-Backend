@@ -115,16 +115,16 @@ public class UserRest {
     public ResponseEntity<User> updateUserFromListById(@PathVariable Integer id, @RequestBody UserDTO userDTO){
         try {
             return ResponseEntity.ok(this.userService.updateUserById(id, userDTO));
-        }catch (InvalidCredentialsException e){
+        }catch (UserNotFoundException e){
+            logger.error(e.getMessage());
+            return ResponseEntity.notFound().build();
+        }catch (InvalidCredentialsException | BadHttpRequest e){
             logger.error(e.getMessage());
             return ResponseEntity.badRequest().build();
-        } catch(DuplicateUsernameException | HttpForbidenException e) {
+        } catch(DuplicateUsernameException e) {
             logger.error(e.getMessage());
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }catch (BadHttpRequest badHttpRequest) {
-            badHttpRequest.printStackTrace();
-            return ResponseEntity.badRequest().build();
-        }  catch (Exception e){
+        } catch (Exception e){
             logger.error(e.getMessage());
             return ResponseEntity.internalServerError().build();
         }

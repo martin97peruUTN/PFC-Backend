@@ -14,7 +14,6 @@ import org.springframework.util.ReflectionUtils;
 import pfc.consignacionhacienda.dao.UserDAO;
 import pfc.consignacionhacienda.dto.UserDTO;
 import pfc.consignacionhacienda.exceptions.BadHttpRequest;
-import pfc.consignacionhacienda.exceptions.HttpForbidenException;
 import pfc.consignacionhacienda.exceptions.user.DuplicateUsernameException;
 import pfc.consignacionhacienda.exceptions.user.InvalidCredentialsException;
 import pfc.consignacionhacienda.exceptions.user.UserNotFoundException;
@@ -50,19 +49,19 @@ public class UserServiceImpl implements UserService {
     public User findUserById(Integer id) throws UserNotFoundException {
         Optional<User> user = userDAO.findById(id);
         if(user.isPresent()){
-            return  user.get();
+            return user.get();
         }
         throw new UserNotFoundException("El usuario con id: " + id + " no existe");
     }
 
     @Override
     public JwtToken updateUserProfileById(Integer id, Map<Object, Object> fields) throws DuplicateUsernameException, BadHttpRequest {
-        Optional<User> userOpt = userDAO.findById(id);
         if(!getCurrentUser().getId().equals(id)){
-            throw new DuplicateUsernameException("No se puede modificar el perfil de otro usuario.");
+            throw new InvalidCredentialsException("No se puede modificar el perfil de otro usuario.");
         }
+        Optional<User> userOpt = userDAO.findById(id);
         if(fields.containsKey("id")){
-            if(!((Integer) fields.get("id")).equals(id)){
+            if(!fields.get("id").equals(id)){
                 throw new InvalidCredentialsException("No se puede modificar el id del usuario");
             }
         }
@@ -101,11 +100,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void changePasswordById(Integer id, ChangePassword changePassword) throws HttpForbidenException {
-        Optional<User> userOpt = userDAO.findById(id);
+    public void changePasswordById(Integer id, ChangePassword changePassword) throws DuplicateUsernameException {
         if(!getCurrentUser().getId().equals(id)){
-            throw new HttpForbidenException("No se puede modificar la contraseña de otro usuario.");
+            throw new InvalidCredentialsException("No se puede modificar el perfil de otro usuario.");
         }
+        Optional<User> userOpt = userDAO.findById(id);
         if(userOpt.isPresent()){
             User user = userOpt.get();
             String oldDBpassword = user.getPassword();
@@ -117,32 +116,24 @@ public class UserServiceImpl implements UserService {
                 throw new InvalidCredentialsException("Las contraseñas deben ser distintas");
             }
             user.setPassword(newPasswordEncoded);
-            userDAO.save(user);
+            saveUser(user);
         }else{
             throw new UserNotFoundException("Usuario con id: " + id + " no encontrado.");
         }
     }
 
-    public User saveUser(User user) throws DuplicateUsernameException, BadHttpRequest {
+    public User saveUser(User user) throws DuplicateUsernameException {
         Optional<User> u = findByUsername(user.getUsername());
-        //Si estoy modificando un usuario
-        if(u.isPresent()){
+        if(u.isPresent()){ //Si estamos modificando un usuario existente
             if(user.getId()!=null){
                 if(user.getId().equals(u.get().getId())){
-                    if(user.getPassword() != null){
-                         if(passwordEncoder.matches(user.getPassword(), u.get().getPassword())){
-                            throw new BadHttpRequest("Las contraseñas deben ser distintas");
-                        }
-                        user.setPassword(passwordEncoder.encode(user.getPassword()));
-                    }
-                    return userDAO.save(user);
+                   return userDAO.save(user);
                 }
                 throw new DuplicateUsernameException("Ya existe un usuario con este username.");
             }
             throw new DuplicateUsernameException("Ya existe un usuario con este username.");
         }
-
-        //Si estoy creando un usuario
+        //Si estamos creando un nuevo usuario
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userDAO.save(user);
     }
@@ -158,7 +149,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User deleteUserById(Integer id) throws DuplicateUsernameException, UserNotFoundException, BadHttpRequest {
+    public User deleteUserById(Integer id) throws DuplicateUsernameException, UserNotFoundException {
         User u = findUserById(id);
         if(u.isDeleted() != null && u.isDeleted()){
             throw new UserNotFoundException("No existe usuario con id: " + id);
@@ -168,15 +159,23 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User updateUserById(Integer id, UserDTO fields) throws DuplicateUsernameException, HttpForbidenException, InvalidCredentialsException, BadHttpRequest {
+    public User updateUserById(Integer id, UserDTO fields) throws DuplicateUsernameException, InvalidCredentialsException, BadHttpRequest {
         if(fields.getId() != null){
             if(!fields.getId().equals(id)){
                 throw new InvalidCredentialsException("No se puede modificar el id del usuario");
             }
         }
         User user = findUserById(id);
-        if(fields.getRol() != null && !fields.getRol().equals(user.getRol())){
-            throw new HttpForbidenException("Los roles no pueden modificarse");
+        if(fields.getRol() != null && !fields.getRol().equals(user.getRol())) {
+            throw new BadHttpRequest("Los roles no pueden modificarse");
+        }
+        if(fields.getPassword() != null){
+            String newPassword = fields.getPassword();
+            if(passwordEncoder.matches(newPassword, user.getPassword())){
+                throw new InvalidCredentialsException("Las contraseñas son iguales");
+            }
+            user.setPassword(passwordEncoder.encode(newPassword));
+            fields.setPassword(null);
         }
         userMapper.updateUserFromDto(fields, user);
         return saveUser(user);
