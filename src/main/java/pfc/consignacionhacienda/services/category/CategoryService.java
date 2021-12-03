@@ -15,6 +15,7 @@ public interface CategoryService {
     List<Category> getAllCategories();
 
     List<Category> getAllAvailablesCategories();
+    Page<Category> getCategoriesByName(Integer pageNumber, Integer limit, String name);
 
     Category saveCategory(Category category) throws BadHttpRequest;
     Category updateCategoryById(Integer id, Category category) throws CategoryNotFoundException, BadHttpRequest;

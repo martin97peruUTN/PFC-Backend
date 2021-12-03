@@ -1,16 +1,16 @@
 package pfc.consignacionhacienda.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.coyote.Response;
-import org.apache.http.protocol.HTTP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.HttpClientErrorException;
+import pfc.consignacionhacienda.dto.UserDTO;
+import pfc.consignacionhacienda.exceptions.BadHttpRequest;
+import pfc.consignacionhacienda.exceptions.HttpForbidenException;
 import pfc.consignacionhacienda.exceptions.user.DuplicateUsernameException;
 import pfc.consignacionhacienda.exceptions.user.InvalidCredentialsException;
 import pfc.consignacionhacienda.exceptions.user.UserNotFoundException;
@@ -29,6 +29,22 @@ public class UserRest {
     @Autowired
     private UserService userService;
 
+    @PostMapping()
+    public ResponseEntity<User> createUSer(@RequestBody User u){
+        try {
+            return ResponseEntity.ok(userService.saveUser(u));
+        } catch (DuplicateUsernameException e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }catch (BadHttpRequest badHttpRequest) {
+            badHttpRequest.printStackTrace();
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
+        }
+    }
     @GetMapping("/{id}")
     public ResponseEntity<User> getUserById(@PathVariable Integer id){
         try{
@@ -41,15 +57,18 @@ public class UserRest {
         }
     }
     
-    @PatchMapping("/{id}")
+    @PatchMapping("/profile/{id}")
     public ResponseEntity<JwtToken> updateUserById(@PathVariable Integer id, @RequestBody Map<Object, Object> fields) {
         logger.debug(fields.keySet().toString());
         if (!fields.containsKey("rol")) {
             try {
-                return ResponseEntity.ok(userService.updateUserById(id, fields));
+                return ResponseEntity.ok(userService.updateUserProfileById(id, fields));
             } catch (UserNotFoundException e) {
                 return ResponseEntity.notFound().build();
-            } catch (InvalidCredentialsException e){
+            }catch (BadHttpRequest badHttpRequest) {
+                badHttpRequest.printStackTrace();
+                return ResponseEntity.badRequest().build();
+            }  catch (InvalidCredentialsException e){
                 return ResponseEntity.badRequest().build();
             }catch (DuplicateUsernameException e) {
                 logger.error(e.getMessage());
@@ -66,7 +85,7 @@ public class UserRest {
         }
     }
 
-    @PatchMapping("/{id}/modificarpass")
+    @PatchMapping("/profile/{id}/modificarpass")
     public ResponseEntity<?> changePassword(@PathVariable Integer id, @RequestBody ChangePassword changePassword){
         if(changePassword == null || changePassword.getNewPassword() == null || changePassword.getNewPassword().isBlank() || changePassword.getOldPassword() == null ||changePassword.getOldPassword().isBlank() || changePassword.getNewPassword().equals(changePassword.getOldPassword())){
             return ResponseEntity.badRequest().build();
@@ -84,13 +103,64 @@ public class UserRest {
         }catch (InvalidCredentialsException e){
             logger.error(e.getMessage());
             return ResponseEntity.badRequest().build();
-        }catch (DuplicateUsernameException e) {
+        }catch (DuplicateUsernameException | HttpForbidenException e) {
             logger.error(e.getMessage());
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }catch (Exception e){
             logger.error(e.getMessage());
             return ResponseEntity.internalServerError().build();
         }
+    }
 
+    @PatchMapping("/admin-patch/{id}")
+    public ResponseEntity<User> updateUserFromListById(@PathVariable Integer id, @RequestBody UserDTO userDTO){
+        try {
+            return ResponseEntity.ok(this.userService.updateUserById(id, userDTO));
+        }catch (UserNotFoundException e){
+            logger.error(e.getMessage());
+            return ResponseEntity.notFound().build();
+        }catch (InvalidCredentialsException | BadHttpRequest e){
+            logger.error(e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch(DuplicateUsernameException | HttpForbidenException e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        } catch (Exception e){
+            logger.error(e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/user-list")
+    public ResponseEntity<Page<User>> getNotDeletedUsers(
+            @RequestParam(required = false, defaultValue = "0") Integer page,
+            @RequestParam(required = false, defaultValue = "10") Integer limit,
+            @RequestParam(required = false, defaultValue = "") String name){
+        try {
+            return ResponseEntity.ok(userService.findUsersNotDeletedByName(page, limit, name));
+        }catch (Exception e){
+            logger.error(e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<User> deleteUserById(@PathVariable Integer id){
+        try {
+            return ResponseEntity.ok(userService.deleteUserById(id));
+        } catch (DuplicateUsernameException e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }catch (UserNotFoundException e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.notFound().build();
+        }catch (BadHttpRequest badHttpRequest) {
+            badHttpRequest.printStackTrace();
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
+        }
     }
 }

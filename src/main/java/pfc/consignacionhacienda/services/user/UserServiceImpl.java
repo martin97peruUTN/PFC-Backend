@@ -5,11 +5,16 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ReflectionUtils;
 import pfc.consignacionhacienda.dao.UserDAO;
+import pfc.consignacionhacienda.dto.UserDTO;
+import pfc.consignacionhacienda.exceptions.BadHttpRequest;
+import pfc.consignacionhacienda.exceptions.HttpForbidenException;
 import pfc.consignacionhacienda.exceptions.user.DuplicateUsernameException;
 import pfc.consignacionhacienda.exceptions.user.InvalidCredentialsException;
 import pfc.consignacionhacienda.exceptions.user.UserNotFoundException;
@@ -17,6 +22,7 @@ import pfc.consignacionhacienda.model.User;
 import pfc.consignacionhacienda.security.SecurityConstants;
 import pfc.consignacionhacienda.utils.ChangePassword;
 import pfc.consignacionhacienda.utils.JwtToken;
+import pfc.consignacionhacienda.utils.UserMapper;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -32,8 +38,8 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-//    @Autowired
-//    private Authentication authentication;
+    @Autowired
+    private UserMapper userMapper;
 
     @Override
     public Optional<User> findByUsername(String username) {
@@ -44,17 +50,20 @@ public class UserServiceImpl implements UserService {
     public User findUserById(Integer id) throws UserNotFoundException {
         Optional<User> user = userDAO.findById(id);
         if(user.isPresent()){
-            return  user.get();
+            logger.debug(user.get().getPassword());
+            return user.get();
         }
         throw new UserNotFoundException("El usuario con id: " + id + " no existe");
     }
 
     @Override
-    public JwtToken updateUserById(Integer id, Map<Object, Object> fields) throws DuplicateUsernameException {
+    public JwtToken updateUserProfileById(Integer id, Map<Object, Object> fields) throws DuplicateUsernameException, BadHttpRequest {
+        if(!getCurrentUser().getId().equals(id)){
+            throw new InvalidCredentialsException("No se puede modificar el perfil de otro usuario.");
+        }
         Optional<User> userOpt = userDAO.findById(id);
-
         if(fields.containsKey("id")){
-            if(!((Integer) fields.get("id")).equals(id)){
+            if(!fields.get("id").equals(id)){
                 throw new InvalidCredentialsException("No se puede modificar el id del usuario");
             }
         }
@@ -94,8 +103,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void changePasswordById(Integer id, ChangePassword changePassword) throws DuplicateUsernameException {
+        if(!getCurrentUser().getId().equals(id)){
+            throw new InvalidCredentialsException("No se puede modificar el perfil de otro usuario.");
+        }
         Optional<User> userOpt = userDAO.findById(id);
-
         if(userOpt.isPresent()){
             User user = userOpt.get();
             String oldDBpassword = user.getPassword();
@@ -115,15 +126,17 @@ public class UserServiceImpl implements UserService {
 
     public User saveUser(User user) throws DuplicateUsernameException {
         Optional<User> u = findByUsername(user.getUsername());
-        if(u.isPresent()){
+        if(u.isPresent()){ //Si estamos modificando un usuario existente
             if(user.getId()!=null){
                 if(user.getId().equals(u.get().getId())){
-                    return userDAO.save(user);
+                   return userDAO.save(user);
                 }
                 throw new DuplicateUsernameException("Ya existe un usuario con este username.");
             }
             throw new DuplicateUsernameException("Ya existe un usuario con este username.");
         }
+        //Si estamos creando un nuevo usuario
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userDAO.save(user);
     }
 
@@ -135,5 +148,63 @@ public class UserServiceImpl implements UserService {
     @Override
     public Collection<? extends org.springframework.security.core.GrantedAuthority> getCurrentUserAuthorities() {
         return SecurityContextHolder.getContext().getAuthentication().getAuthorities();
+    }
+
+    @Override
+    public User deleteUserById(Integer id) throws DuplicateUsernameException, UserNotFoundException {
+        User u = findUserById(id);
+        if(u.isDeleted() != null && u.isDeleted()){
+            throw new UserNotFoundException("No existe usuario con id: " + id);
+        }
+        u.setDeleted(true);
+        return saveUser(u);
+    }
+
+    @Override
+    public User updateUserById(Integer id, UserDTO fields) throws DuplicateUsernameException, InvalidCredentialsException, HttpForbidenException {
+        if(fields.getId() != null){
+            if(!fields.getId().equals(id)){
+                throw new InvalidCredentialsException("No se puede modificar el id del usuario");
+            }
+        }
+        User user = findUserById(id);
+        if(fields.getRol() != null && !fields.getRol().equals(user.getRol())) {
+            throw new HttpForbidenException("Los roles no pueden modificarse");
+        }
+        if(fields.getPassword() != null){
+            String newPassword = fields.getPassword();
+            if(passwordEncoder.matches(newPassword, user.getPassword())){
+                throw new InvalidCredentialsException("Las contraseñas son iguales");
+            }
+            user.setPassword(passwordEncoder.encode(newPassword));
+            fields.setPassword(null);
+        }
+        userMapper.updateUserFromDto(fields, user);
+        return saveUser(user);
+    }
+
+    @Override
+    public Page<User> findUsersNotDeleted(Integer page, Integer size) {
+        return userDAO.findByDeletedNotNullOrDeletedFalse(PageRequest.of(page, size));
+    }
+
+    @Override
+    public Page<User> findUsersNotDeletedByUsername(String username, Integer page, Integer size) {
+        return userDAO.findByUsernameAndNotDeleted(username, PageRequest.of(page, size));
+    }
+
+    @Override
+    public Page<User> findUsersNotDeletedByName(Integer page, Integer size, String name) {
+        return userDAO.getUsersNotDeletedByName(name, PageRequest.of(page, size));
+    }
+
+    @Override
+    public Page<User> findAllUsersByPage( Integer page, Integer size) {
+        return userDAO.findAll(PageRequest.of(page, size));
+    }
+
+    @Override
+    public List<User> findAllUsers() {
+        return userDAO.findAll();
     }
 }

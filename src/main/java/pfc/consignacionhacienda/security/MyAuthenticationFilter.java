@@ -1,35 +1,25 @@
 package pfc.consignacionhacienda.security;
 
-import com.fasterxml.jackson.core.JsonGenerationException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.net.httpserver.Headers;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.config.core.GrantedAuthorityDefaults;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.servlet.function.ServerRequest;
 import pfc.consignacionhacienda.exceptions.user.InvalidCredentialsException;
-import pfc.consignacionhacienda.exceptions.user.UserNotFoundException;
 import pfc.consignacionhacienda.model.User;
 
-import javax.servlet.*;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.Date;
+import java.util.LinkedHashMap;
 
 public class MyAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     private static final Logger logger = LoggerFactory.getLogger(MyAuthenticationFilter.class);
@@ -97,6 +87,7 @@ public class MyAuthenticationFilter extends UsernamePasswordAuthenticationFilter
             }
 
         } catch (Exception exception) {
+            exception.printStackTrace();
             response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
         }
         return null;

@@ -32,6 +32,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .antMatchers( "/api/auction-user/own/**").authenticated()
             .antMatchers( "/api/auction-user/others/**").authenticated()
             .antMatchers( "/api/auction/**").hasAnyAuthority("Administrador","Consignatario")
+            .antMatchers("/api/user/profile/**").hasAnyAuthority("Administrador","Consignatario","Asistente")
+            .antMatchers("/api/user/user-list/**").hasAnyAuthority("Consignatario", "Administrador")
+            .antMatchers("/api/user/**").hasAnyAuthority("Administrador")
             .antMatchers(HttpMethod.POST,"/api/login").permitAll()
             .anyRequest().authenticated()
             .and()
@@ -40,10 +43,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 //            .csrf().csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse());
                 .csrf().disable();
     }
-
     @Bean
     public PasswordEncoder encoder() {
         return new BCryptPasswordEncoder();
     }
-
 }
