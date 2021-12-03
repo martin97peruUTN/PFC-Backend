@@ -41,6 +41,7 @@ public class UserRest {
             return ResponseEntity.badRequest().build();
         } catch (Exception e) {
             logger.error(e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.internalServerError().build();
         }
     }
@@ -121,7 +122,7 @@ public class UserRest {
         }catch (InvalidCredentialsException | BadHttpRequest e){
             logger.error(e.getMessage());
             return ResponseEntity.badRequest().build();
-        } catch(DuplicateUsernameException e) {
+        } catch(DuplicateUsernameException | HttpForbidenException e) {
             logger.error(e.getMessage());
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         } catch (Exception e){

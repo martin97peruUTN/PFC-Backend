@@ -34,7 +34,7 @@ public interface UserService {
 
     User deleteUserById(Integer id) throws DuplicateUsernameException, UserNotFoundException, BadHttpRequest;
 
-    User updateUserById(Integer id, UserDTO fields) throws DuplicateUsernameException, InvalidCredentialsException, BadHttpRequest;
+    User updateUserById(Integer id, UserDTO fields) throws DuplicateUsernameException, InvalidCredentialsException, BadHttpRequest, HttpForbidenException;
 
     Page<User> findUsersNotDeleted(Integer page, Integer limit);
 

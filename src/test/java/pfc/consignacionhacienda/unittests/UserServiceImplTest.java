@@ -220,9 +220,7 @@ public class UserServiceImplTest {
         User uModified=null;
         try {
             uModified = userService.updateUserById(1, changes);
-        } catch (DuplicateUsernameException e) {
-            e.printStackTrace();
-        } catch (BadHttpRequest e) {
+        } catch (DuplicateUsernameException | BadHttpRequest | HttpForbidenException  e) {
             e.printStackTrace();
         }
         assertEquals(changes.getName(), uModified.getName());
@@ -246,7 +244,7 @@ public class UserServiceImplTest {
         UserDTO changes = new UserDTO();
         changes.setRol("Asistente");
         Mockito.doReturn(Optional.empty()).when(userDAOMock).findByUsername(any(String.class));
-        assertThrows(BadHttpRequest.class, ()->userService.updateUserById(1,changes));
+        assertThrows(HttpForbidenException.class, ()->userService.updateUserById(1,changes));
     }
 
     //updateUser

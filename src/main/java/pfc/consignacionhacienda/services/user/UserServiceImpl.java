@@ -14,6 +14,7 @@ import org.springframework.util.ReflectionUtils;
 import pfc.consignacionhacienda.dao.UserDAO;
 import pfc.consignacionhacienda.dto.UserDTO;
 import pfc.consignacionhacienda.exceptions.BadHttpRequest;
+import pfc.consignacionhacienda.exceptions.HttpForbidenException;
 import pfc.consignacionhacienda.exceptions.user.DuplicateUsernameException;
 import pfc.consignacionhacienda.exceptions.user.InvalidCredentialsException;
 import pfc.consignacionhacienda.exceptions.user.UserNotFoundException;
@@ -127,16 +128,9 @@ public class UserServiceImpl implements UserService {
         Optional<User> u = findByUsername(user.getUsername());
         if(u.isPresent()){ //Si estamos modificando un usuario existente
             if(user.getId()!=null){
-                logger.debug("entra1");
                 if(user.getId().equals(u.get().getId())){
-
-                    logger.debug("entra2");
                    return userDAO.save(user);
                 }
-
-                logger.debug("entra3");
-                logger.debug(String.valueOf(user.getId()));
-                logger.debug(String.valueOf(u.get().getId()));
                 throw new DuplicateUsernameException("Ya existe un usuario con este username.");
             }
             throw new DuplicateUsernameException("Ya existe un usuario con este username.");
@@ -167,7 +161,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User updateUserById(Integer id, UserDTO fields) throws DuplicateUsernameException, InvalidCredentialsException, BadHttpRequest {
+    public User updateUserById(Integer id, UserDTO fields) throws DuplicateUsernameException, InvalidCredentialsException, HttpForbidenException {
         if(fields.getId() != null){
             if(!fields.getId().equals(id)){
                 throw new InvalidCredentialsException("No se puede modificar el id del usuario");
@@ -175,7 +169,7 @@ public class UserServiceImpl implements UserService {
         }
         User user = findUserById(id);
         if(fields.getRol() != null && !fields.getRol().equals(user.getRol())) {
-            throw new BadHttpRequest("Los roles no pueden modificarse");
+            throw new HttpForbidenException("Los roles no pueden modificarse");
         }
         if(fields.getPassword() != null){
             String newPassword = fields.getPassword();

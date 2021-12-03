@@ -43,10 +43,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 //            .csrf().csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse());
                 .csrf().disable();
     }
-
     @Bean
     public PasswordEncoder encoder() {
         return new BCryptPasswordEncoder();
     }
-
 }
