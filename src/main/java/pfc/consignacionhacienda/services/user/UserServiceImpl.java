@@ -49,6 +49,7 @@ public class UserServiceImpl implements UserService {
     public User findUserById(Integer id) throws UserNotFoundException {
         Optional<User> user = userDAO.findById(id);
         if(user.isPresent()){
+            logger.debug(user.get().getPassword());
             return user.get();
         }
         throw new UserNotFoundException("El usuario con id: " + id + " no existe");
@@ -126,9 +127,16 @@ public class UserServiceImpl implements UserService {
         Optional<User> u = findByUsername(user.getUsername());
         if(u.isPresent()){ //Si estamos modificando un usuario existente
             if(user.getId()!=null){
+                logger.debug("entra1");
                 if(user.getId().equals(u.get().getId())){
+
+                    logger.debug("entra2");
                    return userDAO.save(user);
                 }
+
+                logger.debug("entra3");
+                logger.debug(String.valueOf(user.getId()));
+                logger.debug(String.valueOf(u.get().getId()));
                 throw new DuplicateUsernameException("Ya existe un usuario con este username.");
             }
             throw new DuplicateUsernameException("Ya existe un usuario con este username.");
