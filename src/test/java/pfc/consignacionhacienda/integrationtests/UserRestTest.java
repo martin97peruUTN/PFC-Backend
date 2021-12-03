@@ -9,10 +9,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -34,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -121,7 +119,6 @@ public class UserRestTest {
         assertEquals(response.getStatusCode(), HttpStatus.BAD_REQUEST);
     }
 
-    //TODO por ahora no tener en cuenta. Utilizar para testear una modificacion a un usuario que no sea desde su perfil.
     @Test
      void testChangePasswordInexistentUser(){
         String server = "http://localhost:" + puerto + "/api/user/admin-patch/100";
@@ -149,7 +146,6 @@ public class UserRestTest {
         ResponseEntity<String> response = testRestTemplate.exchange(server, HttpMethod.PATCH, requestChangePassword,
                 String.class);
         assertEquals(response.getStatusCode(), HttpStatus.OK);
-
     }
 
     @Test
@@ -238,20 +234,28 @@ public class UserRestTest {
     //Crear usuarios
     @Test
     void createUserSuccesfully(){
-        String password = "1234";
 //        Mockito.doReturn(password).when(passwordEncoder).encode(any(String.class));
         String server = "http://localhost:" + puerto + "/api/user";
-        User newUser = new User();
-        newUser.setName("Nuevo");
-        newUser.setLastname("User");
-        newUser.setUsername("newUSer");
-        newUser.setRol("Administrador");
-        newUser.setPassword("password");
-        HttpEntity<User> userHttpEntity = new HttpEntity<>(newUser);
+        String userJSON = "{\n" +
+                "\n" +
+                "    \"name\": \"Tomas\",\n" +
+                "\n" +
+                "    \"lastname\": \"Ravelli\",\n" +
+                "\n" +
+                "    \"rol\": \"Asistente\",\n" +
+                "\n" +
+                "    \"username\": \"user"+ Math.random() + "\",\n" +
+                "\n" +
+                "    \"password\": \"1234\"\n" +
+                "\n" +
+                "}";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<String> userHttpEntity = new HttpEntity<>(userJSON, headers);
         ResponseEntity<User> response = testRestTemplate.exchange(server, HttpMethod.POST, userHttpEntity,
                 User.class);
-//        assertEquals(response.getStatusCode(), HttpStatus.OK); no anda porque jackson ignora el atributo password
-//        assertNotNull(response.getBody().getId());
+        assertEquals(response.getStatusCode(), HttpStatus.OK);// no anda porque jackson ignora el atributo password
+        assertNotNull(response.getBody().getId());
     }
 
     @Test
