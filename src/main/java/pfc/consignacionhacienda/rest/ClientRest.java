@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pfc.consignacionhacienda.dto.ClientDTO;
+import pfc.consignacionhacienda.exceptions.BadHttpRequest;
 import pfc.consignacionhacienda.exceptions.client.ClientNotFoundException;
 import pfc.consignacionhacienda.model.Client;
 import pfc.consignacionhacienda.services.client.ClientService;
@@ -58,7 +59,7 @@ public class ClientRest {
     }
 
     @DeleteMapping("/{id}")
-    ResponseEntity<Client> updateClientById(@PathVariable Integer id){
+    ResponseEntity<Client> deleteClientById(@PathVariable Integer id){
         try {
             return ResponseEntity.ok(clientService.deleteClientById(id));
         }catch (ClientNotFoundException e){
@@ -77,6 +78,9 @@ public class ClientRest {
         } catch (ClientNotFoundException e){
             logger.error(e.getMessage());
             return ResponseEntity.notFound().build();
+        } catch (BadHttpRequest badHttpRequest) {
+            logger.error(badHttpRequest.getMessage());
+            return ResponseEntity.badRequest().build();
         } catch (Exception e){
             logger.error(e.getMessage());
             return ResponseEntity.internalServerError().build();

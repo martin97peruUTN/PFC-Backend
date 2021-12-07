@@ -11,7 +11,7 @@ public class Provenance {
     private String reference;
     private String renspaNumber;
     private Boolean deleted;
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false,cascade = CascadeType.DETACH)
     private Locality locality;
 
     public Integer getId() {

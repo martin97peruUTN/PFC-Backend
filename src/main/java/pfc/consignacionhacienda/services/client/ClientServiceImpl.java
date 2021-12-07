@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import pfc.consignacionhacienda.dao.ClientDAO;
 import pfc.consignacionhacienda.dao.ProvenanceDAO;
 import pfc.consignacionhacienda.dto.ClientDTO;
+import pfc.consignacionhacienda.exceptions.BadHttpRequest;
 import pfc.consignacionhacienda.exceptions.client.ClientNotFoundException;
 import pfc.consignacionhacienda.model.Client;
 import pfc.consignacionhacienda.model.Provenance;
@@ -49,18 +50,21 @@ public class ClientServiceImpl implements ClientService{
     }
 
     @Override
-    public Client updateClientById(ClientDTO clientDTO, Integer id) throws ClientNotFoundException {
-        if(clientDTO.getDeletedProvenances() != null) {
-            for (Provenance p : clientDTO.getDeletedProvenances()) {
-                p.setDeleted(true);
-                provenanceDAO.save(p);
+    public Client updateClientById(ClientDTO clientDTO, Integer id) throws ClientNotFoundException, BadHttpRequest {
+        if(clientDTO.getProvenances() != null && !clientDTO.getProvenances().isEmpty()) {
+            if (clientDTO.getDeletedProvenances() != null) {
+                for (Provenance p : clientDTO.getDeletedProvenances()) {
+                    p.setDeleted(true);
+                    provenanceDAO.save(p);
+                }
+                clientDTO.setDeletedProvenances(null);
             }
-            clientDTO.setDeletedProvenances(null);
-        }
 
-        Client c = getClientById(id);
-        clientMapper.updateClientFromDto(clientDTO, c);
-        return saveClient(c);
+            Client c = getClientById(id);
+            clientMapper.updateClientFromDto(clientDTO, c);
+            return saveClient(c);
+        }
+        throw new BadHttpRequest("El cliente debe tener al menos una procedencia.");
     }
 
     @Override
