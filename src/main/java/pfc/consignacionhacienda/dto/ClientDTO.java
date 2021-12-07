@@ -9,7 +9,7 @@ public class ClientDTO {
     private String cuit;
     private Boolean deleted;
     private List<Provenance> provenances;
-    private List<Provenance> provenancesDeleted;
+    private List<Provenance> deletedProvenances;
 
     public Integer getId() {
         return id;
@@ -51,12 +51,12 @@ public class ClientDTO {
         this.provenances = provenances;
     }
 
-    public List<Provenance> getProvenancesDeleted() {
-        return provenancesDeleted;
+    public List<Provenance> getDeletedProvenances() {
+        return deletedProvenances;
     }
 
-    public void setProvenancesDeleted(List<Provenance> provenancesDeleted) {
-        this.provenancesDeleted = provenancesDeleted;
+    public void setDeletedProvenances(List<Provenance> deletedProvenances) {
+        this.deletedProvenances = deletedProvenances;
     }
 
     @Override
@@ -67,7 +67,7 @@ public class ClientDTO {
                 ", cuit='" + cuit + '\'' +
                 ", deleted=" + deleted +
                 ", provenances=" + provenances +
-                ", provenancesDeleted=" + provenancesDeleted +
+                ", provenancesDeleted=" + deletedProvenances +
                 '}';
     }
 }

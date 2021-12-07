@@ -58,7 +58,7 @@ public class ClientRest {
     }
 
     @DeleteMapping("/{id}")
-    ResponseEntity<Client> deleteClientById(@PathVariable Integer id){
+    ResponseEntity<Client> updateClientById(@PathVariable Integer id){
         try {
             return ResponseEntity.ok(clientService.deleteClientById(id));
         }catch (ClientNotFoundException e){
@@ -71,7 +71,7 @@ public class ClientRest {
     }
 
     @PatchMapping("/{id}")
-    ResponseEntity<Client> deleteClientById(@RequestBody ClientDTO clientDTO, @PathVariable Integer id){
+    ResponseEntity<Client> updateClientById(@RequestBody ClientDTO clientDTO, @PathVariable Integer id){
         try {
             return ResponseEntity.ok(clientService.updateClientById(clientDTO, id));
         } catch (ClientNotFoundException e){

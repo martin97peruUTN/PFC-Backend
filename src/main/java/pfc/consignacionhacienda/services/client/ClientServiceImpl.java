@@ -50,14 +50,15 @@ public class ClientServiceImpl implements ClientService{
 
     @Override
     public Client updateClientById(ClientDTO clientDTO, Integer id) throws ClientNotFoundException {
-        if(clientDTO.getProvenances() != null) {
-            for (Provenance p : clientDTO.getProvenancesDeleted()) {
+        if(clientDTO.getDeletedProvenances() != null) {
+            for (Provenance p : clientDTO.getDeletedProvenances()) {
                 provenanceDAO.deleteById(p.getId());
             }
-            clientDTO.setProvenancesDeleted(null);
+            clientDTO.setDeletedProvenances(null);
         }
+        
         Client c = getClientById(id);
-        clientMapper.updateClientFromDto(clientDTO, getClientById(id));
+        clientMapper.updateClientFromDto(clientDTO, c);
         return saveClient(c);
     }
 
