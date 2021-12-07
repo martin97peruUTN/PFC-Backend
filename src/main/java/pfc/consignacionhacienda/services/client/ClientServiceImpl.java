@@ -52,11 +52,12 @@ public class ClientServiceImpl implements ClientService{
     public Client updateClientById(ClientDTO clientDTO, Integer id) throws ClientNotFoundException {
         if(clientDTO.getDeletedProvenances() != null) {
             for (Provenance p : clientDTO.getDeletedProvenances()) {
-                provenanceDAO.deleteById(p.getId());
+                p.setDeleted(true);
+                provenanceDAO.save(p);
             }
             clientDTO.setDeletedProvenances(null);
         }
-        
+
         Client c = getClientById(id);
         clientMapper.updateClientFromDto(clientDTO, c);
         return saveClient(c);

@@ -10,6 +10,7 @@ public class Provenance {
     @Column(nullable = false)
     private String reference;
     private String renspaNumber;
+    private Boolean deleted;
     @ManyToOne(optional = false)
     private Locality locality;
 
@@ -44,6 +45,13 @@ public class Provenance {
     public void setLocality(Locality locality) {
         this.locality = locality;
     }
+    public Boolean getDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(Boolean deleted) {
+        this.deleted = deleted;
+    }
 
     @Override
     public String toString() {
@@ -51,6 +59,7 @@ public class Provenance {
                 "id=" + id +
                 ", reference='" + reference + '\'' +
                 ", renspaNumber='" + renspaNumber + '\'' +
+                ", deleted=" + deleted +
                 ", locality=" + locality +
                 '}';
     }
