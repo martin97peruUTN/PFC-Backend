@@ -1,8 +1,10 @@
 package pfc.consignacionhacienda.services.client;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
 import pfc.consignacionhacienda.dao.ClientDAO;
 import pfc.consignacionhacienda.dao.ProvenanceDAO;
 import pfc.consignacionhacienda.dto.ClientDTO;
@@ -11,9 +13,9 @@ import pfc.consignacionhacienda.model.Client;
 import pfc.consignacionhacienda.model.Provenance;
 import pfc.consignacionhacienda.utils.ClientMapper;
 
-import java.util.List;
 import java.util.Optional;
 
+@Service
 public class ClientServiceImpl implements ClientService{
     @Autowired
     private ClientDAO clientDAO;
@@ -32,7 +34,7 @@ public class ClientServiceImpl implements ClientService{
     }
 
     @Override
-    public List<Client> getClientsByPage(Integer size, Integer page, String name) {
+    public Page<Client> getClientsByPage(Integer page, Integer size, String name) {
         return clientDAO.findByNotDeletedAndName(name, PageRequest.of(page, size, Sort.by(Sort.Order.asc("name"))));
     }
 

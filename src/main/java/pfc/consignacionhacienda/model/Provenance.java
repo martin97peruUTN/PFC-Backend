@@ -10,7 +10,7 @@ public class Provenance {
     @Column(nullable = false)
     private String reference;
     private String renspaNumber;
-    @Column(nullable = false)
+    @ManyToOne(optional = false)
     private Locality locality;
 
     public Integer getId() {

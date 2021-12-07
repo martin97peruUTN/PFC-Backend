@@ -3,14 +3,13 @@ package pfc.consignacionhacienda.rest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pfc.consignacionhacienda.dto.ClientDTO;
 import pfc.consignacionhacienda.exceptions.client.ClientNotFoundException;
 import pfc.consignacionhacienda.model.Client;
 import pfc.consignacionhacienda.services.client.ClientService;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/client")
@@ -45,7 +44,7 @@ public class ClientRest {
     }
 
     @GetMapping()
-    ResponseEntity<List<Client>> getClientById(
+    ResponseEntity<Page<Client>> getClientById(
             @RequestParam(required = false, defaultValue = "0") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer limit,
             @RequestParam(required = false, name = "name", defaultValue = "") String clientName
