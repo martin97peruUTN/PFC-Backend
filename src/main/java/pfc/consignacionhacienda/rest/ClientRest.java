@@ -25,7 +25,10 @@ public class ClientRest {
     ResponseEntity<Client> saveClient(@RequestBody Client newClient){
         try {
             return ResponseEntity.ok(clientService.saveClient(newClient));
-        }catch (Exception e){
+        } catch (BadHttpRequest e){
+            logger.error(e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e){
             logger.error(e.getMessage());
             return ResponseEntity.internalServerError().build();
         }

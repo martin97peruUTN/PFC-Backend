@@ -9,7 +9,7 @@ public class ClientDTO {
     private String cuit;
     private Boolean deleted;
     private List<Provenance> provenances;
-    private List<Provenance> deletedProvenances;
+    private List<ProvenanceDTO> deletedProvenances;
 
     public Integer getId() {
         return id;
@@ -51,11 +51,11 @@ public class ClientDTO {
         this.provenances = provenances;
     }
 
-    public List<Provenance> getDeletedProvenances() {
+    public List<ProvenanceDTO> getDeletedProvenances() {
         return deletedProvenances;
     }
 
-    public void setDeletedProvenances(List<Provenance> deletedProvenances) {
+    public void setDeletedProvenances(List<ProvenanceDTO> deletedProvenances) {
         this.deletedProvenances = deletedProvenances;
     }
 

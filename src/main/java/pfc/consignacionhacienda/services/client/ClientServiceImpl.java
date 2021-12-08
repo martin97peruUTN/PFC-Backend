@@ -8,11 +8,13 @@ import org.springframework.stereotype.Service;
 import pfc.consignacionhacienda.dao.ClientDAO;
 import pfc.consignacionhacienda.dao.ProvenanceDAO;
 import pfc.consignacionhacienda.dto.ClientDTO;
+import pfc.consignacionhacienda.dto.ProvenanceDTO;
 import pfc.consignacionhacienda.exceptions.BadHttpRequest;
 import pfc.consignacionhacienda.exceptions.client.ClientNotFoundException;
 import pfc.consignacionhacienda.model.Client;
 import pfc.consignacionhacienda.model.Provenance;
 import pfc.consignacionhacienda.utils.ClientMapper;
+import pfc.consignacionhacienda.utils.ProvenanceMapper;
 
 import java.util.Optional;
 
@@ -24,6 +26,8 @@ public class ClientServiceImpl implements ClientService{
     private ProvenanceDAO provenanceDAO;
     @Autowired
     private ClientMapper clientMapper;
+    @Autowired
+    private ProvenanceMapper provenanceMapper;
 
     @Override
     public Client getClientById(Integer id) throws ClientNotFoundException {
@@ -51,24 +55,26 @@ public class ClientServiceImpl implements ClientService{
 
     @Override
     public Client updateClientById(ClientDTO clientDTO, Integer id) throws ClientNotFoundException, BadHttpRequest {
-        if(clientDTO.getProvenances() != null && !clientDTO.getProvenances().isEmpty()) {
-            if (clientDTO.getDeletedProvenances() != null) {
-                for (Provenance p : clientDTO.getDeletedProvenances()) {
-                    p.setDeleted(true);
-                    provenanceDAO.save(p);
-                }
-                clientDTO.setDeletedProvenances(null);
+        if (clientDTO.getDeletedProvenances() != null) {
+            for (ProvenanceDTO p : clientDTO.getDeletedProvenances()) {
+                Provenance provenance = provenanceDAO.findById(p.getId()).get();
+                ProvenanceDTO aux = new ProvenanceDTO();
+                aux.setDeleted(true);
+                provenanceMapper.updateProvenanceFromDto(aux, provenance);
+                provenanceDAO.save(provenance);
             }
-
-            Client c = getClientById(id);
-            clientMapper.updateClientFromDto(clientDTO, c);
-            return saveClient(c);
+            clientDTO.setDeletedProvenances(null);
         }
-        throw new BadHttpRequest("El cliente debe tener al menos una procedencia.");
+        Client c = getClientById(id);
+        clientMapper.updateClientFromDto(clientDTO, c);
+        return saveClient(c);
     }
 
     @Override
-    public Client saveClient(Client client) {
-        return clientDAO.save(client);
+    public Client saveClient(Client client) throws BadHttpRequest {
+        if(client.getProvenances() != null && !client.getProvenances().isEmpty()) {
+            return clientDAO.save(client);
+        }
+        throw new BadHttpRequest("El cliente debe tener al menos una procedencia.");
     }
 }

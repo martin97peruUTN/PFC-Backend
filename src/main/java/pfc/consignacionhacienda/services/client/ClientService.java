@@ -11,5 +11,5 @@ public interface ClientService {
     Page<Client> getClientsByPage(Integer page, Integer size, String name);
     Client deleteClientById(Integer id) throws ClientNotFoundException;
     Client updateClientById(ClientDTO clientDTO, Integer id) throws ClientNotFoundException, BadHttpRequest;
-    Client saveClient(Client client);
+    Client saveClient(Client client) throws BadHttpRequest;
 }

@@ -1,5 +1,7 @@
 package pfc.consignacionhacienda.model;
 
+import org.hibernate.annotations.Where;
+
 import javax.persistence.*;
 import java.util.List;
 @Entity
@@ -12,6 +14,8 @@ public class Client {
     private String cuit;
     private Boolean deleted;
     @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "client_id", referencedColumnName ="id")
+    @Where(clause = "deleted is null or deleted = false")
     private List<Provenance> provenances;
 
     public Integer getId() {
