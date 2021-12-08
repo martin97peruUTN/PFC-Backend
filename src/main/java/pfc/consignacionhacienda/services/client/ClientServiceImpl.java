@@ -1,5 +1,7 @@
 package pfc.consignacionhacienda.services.client;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -20,6 +22,7 @@ import java.util.Optional;
 
 @Service
 public class ClientServiceImpl implements ClientService{
+    private static final Logger logger = LoggerFactory.getLogger(ClientServiceImpl.class);
     @Autowired
     private ClientDAO clientDAO;
     @Autowired
@@ -56,11 +59,13 @@ public class ClientServiceImpl implements ClientService{
     @Override
     public Client updateClientById(ClientDTO clientDTO, Integer id) throws ClientNotFoundException, BadHttpRequest {
         if (clientDTO.getDeletedProvenances() != null) {
+            logger.debug(clientDTO.getDeletedProvenances().toString());
             for (ProvenanceDTO p : clientDTO.getDeletedProvenances()) {
                 Provenance provenance = provenanceDAO.findById(p.getId()).get();
                 ProvenanceDTO aux = new ProvenanceDTO();
                 aux.setDeleted(true);
                 provenanceMapper.updateProvenanceFromDto(aux, provenance);
+                logger.debug(provenance.toString());
                 provenanceDAO.save(provenance);
             }
             clientDTO.setDeletedProvenances(null);
