@@ -18,6 +18,7 @@ import pfc.consignacionhacienda.model.Provenance;
 import pfc.consignacionhacienda.utils.ClientMapper;
 import pfc.consignacionhacienda.utils.ProvenanceMapper;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -58,6 +59,7 @@ public class ClientServiceImpl implements ClientService{
 
     @Override
     public Client updateClientById(ClientDTO clientDTO, Integer id) throws ClientNotFoundException, BadHttpRequest {
+        List<ProvenanceDTO> auxiliar = clientDTO.getDeletedProvenances();
         if (clientDTO.getDeletedProvenances() != null) {
             logger.debug(clientDTO.getDeletedProvenances().toString());
             for (ProvenanceDTO p : clientDTO.getDeletedProvenances()) {
@@ -72,7 +74,22 @@ public class ClientServiceImpl implements ClientService{
         }
         Client c = getClientById(id);
         clientMapper.updateClientFromDto(clientDTO, c);
-        return saveClient(c);
+        try {
+            return saveClient(c);
+        } catch (BadHttpRequest e){
+            //Esto lo hago porque si al momento de guardar el cliente modificado lanza un error porque no quedar procedencias, debo mantener el estado inicial con las procedencias originales sin ser eliminadas.
+            if(auxiliar != null) {
+                for (ProvenanceDTO p : auxiliar) {
+                    Provenance provenance = provenanceDAO.findById(p.getId()).get();
+                    ProvenanceDTO aux = new ProvenanceDTO();
+                    aux.setDeleted(false);
+                    provenanceMapper.updateProvenanceFromDto(aux, provenance);
+                    logger.debug(provenance.toString());
+                    provenanceDAO.save(provenance);
+                }
+            }
+            throw e;
+        }
     }
 
     @Override
