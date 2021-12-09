@@ -5,10 +5,10 @@ import pfc.consignacionhacienda.model.Auction;
 
 import java.util.List;
 @JsonIncludeProperties(value = {"content"})
-public class PageDTO {
+public class AuctionPageDTO {
     private List<Auction> content;
 
-    public PageDTO(){
+    public AuctionPageDTO(){
 
     }
 

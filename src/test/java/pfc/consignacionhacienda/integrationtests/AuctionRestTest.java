@@ -29,7 +29,7 @@ import pfc.consignacionhacienda.model.User;
 import pfc.consignacionhacienda.services.locality.LocalityService;
 import pfc.consignacionhacienda.services.user.UserService;
 import pfc.consignacionhacienda.unittests.AuctionServiceImplTest;
-import pfc.consignacionhacienda.utils.PageDTO;
+import pfc.consignacionhacienda.utils.AuctionPageDTO;
 
 import java.time.Instant;
 import java.time.Period;
@@ -255,8 +255,8 @@ public class AuctionRestTest {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         try {
-            PageDTO pageDTO = objectMapper.readValue(response.getBody(), PageDTO.class);
-            assertEquals(pageDTO.getContent().size(),10);
+            AuctionPageDTO auctionPageDTO = objectMapper.readValue(response.getBody(), AuctionPageDTO.class);
+            assertEquals(auctionPageDTO.getContent().size(),10);
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
