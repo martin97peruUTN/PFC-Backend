@@ -35,4 +35,5 @@ public interface AuctionDAO extends JpaRepository<Auction, Integer> {
     Page<Auction> findAllAdmin(Pageable of);
 
     Optional<Auction> findByIdAndDeletedNullOrDeletedFalse(Integer id);
+
 }

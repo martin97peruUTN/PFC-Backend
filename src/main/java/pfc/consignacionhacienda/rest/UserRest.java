@@ -20,6 +20,7 @@ import pfc.consignacionhacienda.utils.ChangePassword;
 import pfc.consignacionhacienda.utils.JwtToken;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -138,6 +139,18 @@ public class UserRest {
             @RequestParam(required = false, defaultValue = "") String name){
         try {
             return ResponseEntity.ok(userService.findUsersNotDeletedByName(page, limit, name));
+        }catch (Exception e){
+            logger.error(e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/user-list/{id}")
+    public ResponseEntity<List<User>> getUsersByNameExceptIdAndNotAdmin(
+            @PathVariable Integer id,
+            @RequestParam(required = false, defaultValue = "") String name){
+        try {
+            return ResponseEntity.ok(userService.findUsersByNameExceptIdAndNotAdmin(name,id));
         }catch (Exception e){
             logger.error(e.getMessage());
             return ResponseEntity.internalServerError().build();

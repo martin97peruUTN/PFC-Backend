@@ -45,4 +45,6 @@ public interface UserService {
     Page<User> findAllUsersByPage( Integer page, Integer size);
 
     List<User> findAllUsers();
+
+    List<User> findUsersByNameExceptIdAndNotAdmin(String name, Integer userId);
 }

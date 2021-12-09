@@ -6,7 +6,9 @@ import pfc.consignacionhacienda.exceptions.HttpForbidenException;
 import pfc.consignacionhacienda.exceptions.HttpUnauthorizedException;
 import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
 import pfc.consignacionhacienda.exceptions.user.InvalidCredentialsException;
+import pfc.consignacionhacienda.exceptions.user.UserNotFoundException;
 import pfc.consignacionhacienda.model.Auction;
+import pfc.consignacionhacienda.model.User;
 
 import java.util.List;
 
@@ -23,4 +25,7 @@ public interface AuctionService {
     Auction deleteAuctionById(Integer id) throws AuctionNotFoundException, HttpUnauthorizedException, HttpForbidenException;
 //    Auction updateAuctionById(Integer id, Map<Object, Object> changes) throws InvalidCredentialsException, AuctionNotFoundException;
     Auction updateAuctionById(Integer id, AuctionDTO changes) throws InvalidCredentialsException, AuctionNotFoundException, HttpUnauthorizedException;
+    List<User> getUsersByAuctionId(Integer auctionID) throws AuctionNotFoundException;
+    Auction removeUserFromAuction(Integer auctionId, Integer UserId) throws AuctionNotFoundException, UserNotFoundException;
+    Auction addUserToAuction(Integer auctionId, Integer userId) throws AuctionNotFoundException, UserNotFoundException;
 }
