@@ -26,6 +26,6 @@ public interface AuctionService {
 //    Auction updateAuctionById(Integer id, Map<Object, Object> changes) throws InvalidCredentialsException, AuctionNotFoundException;
     Auction updateAuctionById(Integer id, AuctionDTO changes) throws InvalidCredentialsException, AuctionNotFoundException, HttpUnauthorizedException;
     List<User> getUsersByAuctionId(Integer auctionID) throws AuctionNotFoundException;
-    Auction removeUserFromAuction(Integer auctionId, Integer UserId) throws AuctionNotFoundException, UserNotFoundException, HttpForbidenException;
-    Auction addUserToAuction(Integer auctionId, Integer userId) throws AuctionNotFoundException, UserNotFoundException;
+    Auction removeUserFromAuction(Integer auctionId, Integer UserId) throws AuctionNotFoundException, UserNotFoundException, HttpForbidenException, HttpUnauthorizedException;
+    Auction addUserToAuction(Integer auctionId, Integer userId) throws AuctionNotFoundException, UserNotFoundException, HttpUnauthorizedException;
 }

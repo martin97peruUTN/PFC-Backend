@@ -96,6 +96,9 @@ public class AuctionUserRest {
         } catch (AuctionNotFoundException | UserNotFoundException e) {
             logger.error(e.getMessage());
             return ResponseEntity.notFound().build();
+        } catch (HttpUnauthorizedException e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         } catch (Exception e){
             logger.error(e.getMessage());
             return ResponseEntity.internalServerError().build();
@@ -112,6 +115,9 @@ public class AuctionUserRest {
         }catch (HttpForbidenException e) {
             logger.error(e.getMessage());
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        } catch (HttpUnauthorizedException e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         } catch (Exception e){
             logger.error(e.getMessage());
             return ResponseEntity.internalServerError().build();
