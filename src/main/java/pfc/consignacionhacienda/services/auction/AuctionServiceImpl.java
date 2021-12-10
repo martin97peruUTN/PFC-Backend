@@ -172,12 +172,15 @@ public class AuctionServiceImpl implements AuctionService{
     }
 
     @Override
-    public Auction removeUserFromAuction(Integer auctionId, Integer userId) throws AuctionNotFoundException, UserNotFoundException {
+    public Auction removeUserFromAuction(Integer auctionId, Integer userId) throws AuctionNotFoundException, UserNotFoundException, HttpForbidenException {
         Optional<Auction> auctionOpt = auctionDAO.findById(auctionId);
         if(auctionOpt.isPresent()){
             Auction auction = auctionOpt.get();
             Optional<User> userOpt = auction.getUsers().stream().filter(u -> u.getId().equals(userId)).findFirst();
             if(userOpt.isPresent()){
+                if(auction.getUsers().size() == 1) {
+                    throw new HttpForbidenException("El remate no puede quedar sin usuarios participantes");
+                }
                 auction.getUsers().remove(userOpt.get());
                 return auctionDAO.save(auction);
             }

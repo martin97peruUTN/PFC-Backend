@@ -22,6 +22,6 @@ public interface UserDAO extends JpaRepository<User, Integer> {
     @Query("Select u from User u where (u.name like %:name% or u.lastname like %:name%) and (u.deleted is null or u.deleted = false) order by u.lastname")
     Page<User> getUsersNotDeletedByName(String name, Pageable of);
 
-    @Query("Select u from User u where (u.name like %:name% or u.lastname like %:name%) and (u.deleted is null or u.deleted = false) and u.id != userId and u.rol != 'Administrador' order by u.lastname")
+    @Query("Select u from User u where (u.name like %:name% or u.lastname like %:name%) and (u.deleted is null or u.deleted = false) and u.id != :userId and u.rol != 'Administrador' order by u.lastname")
     List<User> findByNameAndRolAndNotId(String name, Integer userId);
 }

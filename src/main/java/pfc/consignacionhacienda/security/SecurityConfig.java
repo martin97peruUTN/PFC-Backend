@@ -30,6 +30,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .antMatchers( "/api/locality/**").hasAnyAuthority("Administrador","Consignatario")
             .antMatchers( "/api/category/**").hasAnyAuthority("Administrador","Consignatario")
             .antMatchers( "/api/auction-user").hasAnyAuthority("Administrador")
+            .antMatchers( "/api/auction-user/assignment/**").hasAnyAuthority("Administrador", "Consignatario")
+            .antMatchers( "/api/auction-user/users/**").hasAnyAuthority("Administrador", "Consignatario")
             .antMatchers( "/api/auction-user/own/**").authenticated()
             .antMatchers( "/api/auction-user/others/**").authenticated()
             .antMatchers( "/api/auction/**").hasAnyAuthority("Administrador","Consignatario")
