@@ -207,4 +207,9 @@ public class UserServiceImpl implements UserService {
     public List<User> findAllUsers() {
         return userDAO.findAll();
     }
+
+    @Override
+    public List<User> findUsersByNameExceptIdAndNotAdmin(String name, Integer userId) {
+        return userDAO.findByNameAndRolAndNotId(name, userId);
+    }
 }

@@ -65,7 +65,7 @@ public class AuctionRestTest {
     @BeforeEach
     void initTests(){
         roles = new ArrayList<>();
-        roles.add(new SimpleGrantedAuthority("Administrador"));
+        roles.add(new SimpleGrantedAuthority("Consignatario"));
         when(list2.toArray()).thenReturn(roles.toArray());
         Mockito.doReturn(list2).when(userService).getCurrentUserAuthorities();
 

@@ -14,6 +14,7 @@ import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
 import pfc.consignacionhacienda.exceptions.user.InvalidCredentialsException;
 import pfc.consignacionhacienda.model.Auction;
 import pfc.consignacionhacienda.services.auction.AuctionService;
+import pfc.consignacionhacienda.services.user.UserService;
 
 
 @RestController
@@ -25,10 +26,13 @@ public class AuctionRest {
     @Autowired
     private AuctionService auctionService;
 
+    @Autowired
+    private UserService userService;
+
     @PostMapping
     public ResponseEntity<Auction> saveAuction(@RequestBody Auction newAuction){
 
-        if(newAuction.getUsers() == null || newAuction.getUsers().isEmpty()){
+        if(!userService.getCurrentUserAuthorities().toArray()[0].toString().equals("Administrador") && (newAuction.getUsers() == null || newAuction.getUsers().isEmpty())){
             logger.error("Al menos un usuario debe estar asociado al remate.");
             return ResponseEntity.badRequest().build();
         }
