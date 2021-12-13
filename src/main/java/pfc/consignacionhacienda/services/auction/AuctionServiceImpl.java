@@ -12,6 +12,7 @@ import pfc.consignacionhacienda.exceptions.HttpForbidenException;
 import pfc.consignacionhacienda.exceptions.HttpUnauthorizedException;
 import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
 import pfc.consignacionhacienda.exceptions.user.InvalidCredentialsException;
+import pfc.consignacionhacienda.exceptions.user.UserNotFoundException;
 import pfc.consignacionhacienda.model.Auction;
 import pfc.consignacionhacienda.model.User;
 import pfc.consignacionhacienda.services.user.UserService;
@@ -159,5 +160,57 @@ public class AuctionServiceImpl implements AuctionService{
         Auction auction = getAuctionById(id);
         auctionMapper.updateAuctionFromDto(fields, auction);
         return saveAuction(auction);
+    }
+
+    @Override
+    public List<User> getUsersByAuctionId(Integer auctionID) throws AuctionNotFoundException {
+        Optional<Auction> auction = auctionDAO.findById(auctionID);
+        if(auction.isPresent()){
+            return auction.get().getUsers();
+        }
+        throw new AuctionNotFoundException("El remate con id: " + auctionID + " no existe");
+    }
+
+    @Override
+    public Auction removeUserFromAuction(Integer auctionId, Integer userId) throws AuctionNotFoundException, UserNotFoundException, HttpForbidenException, HttpUnauthorizedException {
+        Optional<Auction> auctionOpt = auctionDAO.findById(auctionId);
+        if(auctionOpt.isPresent()){
+            Auction auction = auctionOpt.get();
+            List<User> autionUserList = auction.getUsers();
+            Optional<User> userOptional = autionUserList.stream().filter(u -> u.getId().equals(userService.getCurrentUser().getId())).findFirst();
+            if(!userOptional.isPresent() && !userService.getCurrentUserAuthorities().toArray()[0].equals("Administrador")){
+                throw new HttpUnauthorizedException("Usted no es participante del remate que quiere modificar");
+            }
+            Optional<User> userOpt = auction.getUsers().stream().filter(u -> u.getId().equals(userId)).findFirst();
+            if(userOpt.isPresent()){
+                if(!userOpt.get().getId().equals(userService.getCurrentUser().getId())){
+                    auction.getUsers().remove(userOpt.get());
+                    return auctionDAO.save(auction);
+                }
+                throw new HttpForbidenException("No puede eliminarse a si mismo");
+            }
+            throw new UserNotFoundException("El usuario con id: " + userId + " no participa en este remate.");
+        }
+        throw new AuctionNotFoundException("El remate con id: " + auctionId + " no existe.");
+    }
+
+    @Override
+    public Auction addUserToAuction(Integer auctionId, Integer userId) throws AuctionNotFoundException, UserNotFoundException, HttpUnauthorizedException {
+        User user = userService.findUserById(userId);
+        Optional<Auction> auctionOpt = auctionDAO.findById(auctionId);
+        if(auctionOpt.isPresent()){
+            Auction auction = auctionOpt.get();
+            List<User> autionUserList = auction.getUsers();
+            Optional<User> userOptional = autionUserList.stream().filter(u -> u.getId().equals(userService.getCurrentUser().getId())).findFirst();
+            if(userOptional.isPresent() || userService.getCurrentUserAuthorities().toArray()[0].equals("Administrador")){
+                if(!auction.getUsers().contains(user)){
+                    auction.getUsers().add(user);
+                    return auctionDAO.save(auction);
+                }
+                return auction;
+            }
+            throw new HttpUnauthorizedException("Usted no es participante del remate que quiere modificar");
+        }
+        throw new AuctionNotFoundException("El remate con id: " + auctionId + " no existe");
     }
 }

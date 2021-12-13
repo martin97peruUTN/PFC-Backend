@@ -23,15 +23,21 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http.cors().and()
             .authorizeRequests()
             .antMatchers(HttpMethod.GET,"/api/test").hasAuthority("Rol")
-            .antMatchers(HttpMethod.GET, "/api/locality/**").authenticated()
-            .antMatchers(HttpMethod.GET, "/api/category/**").authenticated()
-            .antMatchers(HttpMethod.GET, "/api/auction/**").authenticated()
+            .antMatchers(HttpMethod.GET, "/api/locality/**").hasAnyAuthority("Administrador","Consignatario","Asistente")
+            .antMatchers(HttpMethod.GET, "/api/category/**").hasAnyAuthority("Administrador","Consignatario","Asistente")
+            .antMatchers(HttpMethod.GET, "/api/auction/**").hasAnyAuthority("Administrador","Consignatario","Asistente")
+            .antMatchers(HttpMethod.GET, "/api/client/**").hasAnyAuthority("Administrador","Consignatario","Asistente")
             .antMatchers( "/api/locality/**").hasAnyAuthority("Administrador","Consignatario")
             .antMatchers( "/api/category/**").hasAnyAuthority("Administrador","Consignatario")
             .antMatchers( "/api/auction-user").hasAnyAuthority("Administrador")
+            .antMatchers( "/api/auction-user/assignment/**").hasAnyAuthority("Administrador", "Consignatario")
+            .antMatchers( "/api/auction-user/users/**").hasAnyAuthority("Administrador", "Consignatario")
             .antMatchers( "/api/auction-user/own/**").authenticated()
             .antMatchers( "/api/auction-user/others/**").authenticated()
             .antMatchers( "/api/auction/**").hasAnyAuthority("Administrador","Consignatario")
+            .antMatchers("/api/user/profile/**").hasAnyAuthority("Administrador","Consignatario","Asistente")
+            .antMatchers("/api/user/user-list/**").hasAnyAuthority("Consignatario", "Administrador")
+            .antMatchers("/api/user/**").hasAnyAuthority("Administrador")
             .antMatchers(HttpMethod.POST,"/api/login").permitAll()
             .anyRequest().authenticated()
             .and()
@@ -40,10 +46,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 //            .csrf().csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse());
                 .csrf().disable();
     }
-
     @Bean
     public PasswordEncoder encoder() {
         return new BCryptPasswordEncoder();
     }
-
 }

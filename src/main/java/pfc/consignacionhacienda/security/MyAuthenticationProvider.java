@@ -42,6 +42,10 @@ public class MyAuthenticationProvider implements AuthenticationProvider {
             throw new InvalidCredentialsException("Las credenciales son inválidas");
         }
         User user = userOpt.get();
+        if(user.isDeleted()!=null && user.isDeleted()){
+            logger.error("Este usuario fue eliminado");
+            throw new InvalidCredentialsException("Las credenciales son inválidas");
+        }
         logger.debug(passwordEncoder.encode(password));
         if(!passwordEncoder.matches(password, user.getPassword())){
             throw new InvalidCredentialsException("Las credenciales son inválidas");

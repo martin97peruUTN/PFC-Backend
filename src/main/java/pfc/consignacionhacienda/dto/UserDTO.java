@@ -1,34 +1,13 @@
-package pfc.consignacionhacienda.model;
+package pfc.consignacionhacienda.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import javax.persistence.*;
-
-@Entity
-public class User {
-    @Id
-    @GeneratedValue(strategy =  GenerationType.IDENTITY)
+public class UserDTO {
     private Integer id;
-
-    @Column(nullable = false)
     private String name;
-
-    @Column(nullable = false)
     private String lastname;
-
-    @Column(unique = true, nullable = false)
     private String username;
-
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    @Column(nullable = false)
     private String password;
-
-    @Column(nullable = false)
     private String rol;
-
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    @Column()
-    private Boolean deleted;
+    private boolean deleted;
 
     public Integer getId() {
         return id;
@@ -78,7 +57,7 @@ public class User {
         this.rol = rol;
     }
 
-    public Boolean isDeleted() {
+    public boolean isDeleted() {
         return deleted;
     }
 
@@ -88,7 +67,7 @@ public class User {
 
     @Override
     public String toString() {
-        return "User{" +
+        return "UserDTO{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", lastname='" + lastname + '\'' +
@@ -99,3 +78,4 @@ public class User {
                 '}';
     }
 }
+
