@@ -2,6 +2,7 @@ package pfc.consignacionhacienda.services.batch;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -9,7 +10,6 @@ import pfc.consignacionhacienda.dao.BatchDAO;
 import pfc.consignacionhacienda.dto.AnimalsOnGroundDTO;
 import pfc.consignacionhacienda.model.AnimalsOnGround;
 import pfc.consignacionhacienda.model.Batch;
-import pfc.consignacionhacienda.model.Client;
 import pfc.consignacionhacienda.services.animalsOnGround.AnimalsOnGroundService;
 import pfc.consignacionhacienda.services.client.ClientService;
 import pfc.consignacionhacienda.services.soldBatch.SoldBatchService;
@@ -33,11 +33,20 @@ public class BatchServiceImpl implements BatchService{
     AnimalsOnGroundService animalsOnGroundService;
 
     @Override
-    public List<AnimalsOnGroundDTO> getAnimalListDTO(Integer auctionId, Boolean sold, Boolean notSold, Integer page, Integer limit) {
+    public Page getAnimalListDTO(Integer auctionId, Boolean sold, Boolean notSold, Integer page, Integer limit) {
 
-        List<AnimalsOnGroundDTO> animalList = new ArrayList<>();
+        ArrayList<AnimalsOnGroundDTO> animalList = new ArrayList<>();
+        Page<AnimalsOnGround> animalsOnGroundPage;
         Pageable p = PageRequest.of(page, limit);
-        Page<AnimalsOnGround> animalsOnGroundPage = animalsOnGroundService.getAnimalsOnGroundByAuction(auctionId, p);
+        if(sold){
+            animalsOnGroundPage = animalsOnGroundService.getAnimalsOnGroundByAuctionSold(auctionId, p);
+        }else{
+            if(notSold){
+                animalsOnGroundPage = animalsOnGroundService.getAnimalsOnGroundByAuctionNotSold(auctionId, p);
+            }else{
+                animalsOnGroundPage = animalsOnGroundService.getAnimalsOnGroundByAuctionForSell(auctionId, p);
+            }
+        }
         for(AnimalsOnGround animalsOnGround: animalsOnGroundPage){
             AnimalsOnGroundDTO newAnimalDTO = new AnimalsOnGroundDTO();
             Batch batch = getBatchByAnimalsOnGroundId(animalsOnGround.getId());
@@ -49,12 +58,7 @@ public class BatchServiceImpl implements BatchService{
             newAnimalDTO.setSoldAmount(soldBatchService.getTotalSold(newAnimalDTO.getId()));
             animalList.add(newAnimalDTO);
         }
-        return animalList;
-    }
-
-    @Override
-    public List<Batch> getBatchesByAuctionId(Integer auctionId) {
-        return batchDAO.findByAuctionId(auctionId);
+        return new PageImpl<>(animalList, p, animalsOnGroundPage.getTotalElements());
     }
 
     @Override

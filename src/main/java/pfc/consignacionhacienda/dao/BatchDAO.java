@@ -9,6 +9,7 @@ import java.util.List;
 
 @Repository
 public interface BatchDAO extends JpaRepository<Batch, Integer> {
+
     List<Batch> findByAuctionId(Integer id);
 
     Batch findByAnimalsOnGroundId(Integer id);

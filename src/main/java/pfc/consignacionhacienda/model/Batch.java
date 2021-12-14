@@ -20,6 +20,7 @@ public class Batch {
 
     @ManyToOne
     @JoinColumn(name = "auction_id")
+    @Where(clause = "deleted is null or deleted = false")
     private Auction auction;
 
     @ManyToOne

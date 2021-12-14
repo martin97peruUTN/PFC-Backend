@@ -19,4 +19,19 @@ public class AnimalsOnGroundServiceImpl implements AnimalsOnGroundService{
     public Page<AnimalsOnGround> getAnimalsOnGroundByAuction(Integer auctionId, Pageable of) {
         return animalsOnGroundDAO.getAnimalsOnGroundByAuction(auctionId, of);
     }
+
+    @Override
+    public Page<AnimalsOnGround> getAnimalsOnGroundByAuctionSold(Integer auctionId, Pageable of) {
+        return animalsOnGroundDAO.getAnimalsOnGroundByAuctionSold(auctionId, of);
+    }
+
+    @Override
+    public Page<AnimalsOnGround> getAnimalsOnGroundByAuctionNotSold(Integer auctionId, Pageable of) {
+        return animalsOnGroundDAO.getAnimalsOnGroundByAuctionNotSold(auctionId, of);
+    }
+
+    @Override
+    public Page<AnimalsOnGround> getAnimalsOnGroundByAuctionForSell(Integer auctionId, Pageable of) {
+        return animalsOnGroundDAO.getAnimalsOnGroundByAuctionForSell(auctionId, of);
+    }
 }
