@@ -28,7 +28,8 @@ public class BatchRest {
                                                                         @RequestParam(name = "sold", required = false) Boolean sold,
                                                                         @RequestParam(name = "notSold", required = false) Boolean notSold,
                                                                         @RequestParam(name = "page", defaultValue = "0") Integer page,
-                                                                        @RequestParam(name = "limit", defaultValue = "16") Integer limit){
+                                                                        @RequestParam(name = "limit", defaultValue = "20") Integer limit){
+
         return null;
     }
 

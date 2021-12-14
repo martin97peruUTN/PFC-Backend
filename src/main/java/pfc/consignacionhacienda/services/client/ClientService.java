@@ -5,6 +5,7 @@ import pfc.consignacionhacienda.dto.ClientDTO;
 import pfc.consignacionhacienda.exceptions.BadHttpRequest;
 import pfc.consignacionhacienda.exceptions.client.ClientNotFoundException;
 import pfc.consignacionhacienda.model.Client;
+import pfc.consignacionhacienda.model.Provenance;
 
 public interface ClientService {
     Client getClientById(Integer id) throws ClientNotFoundException;
@@ -12,4 +13,6 @@ public interface ClientService {
     Client deleteClientById(Integer id) throws ClientNotFoundException;
     Client updateClientById(ClientDTO clientDTO, Integer id) throws ClientNotFoundException, BadHttpRequest;
     Client saveClient(Client client) throws BadHttpRequest;
+
+    Client findByProvenanceId(Integer id);
 }

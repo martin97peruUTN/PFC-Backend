@@ -17,7 +17,7 @@ public class AnimalsOnGround {
     @Column(nullable = false)
     private Boolean notSold;
 
-    private Integer order;
+    private Integer startingOrder;
 
     private Boolean deleted;
 
@@ -57,12 +57,12 @@ public class AnimalsOnGround {
         this.notSold = notSold;
     }
 
-    public Integer getOrder() {
-        return order;
+    public Integer getStartingOrder() {
+        return startingOrder;
     }
 
-    public void setOrder(Integer order) {
-        this.order = order;
+    public void setStartingOrder(Integer order) {
+        this.startingOrder = order;
     }
 
     public Category getCategory() {
@@ -88,7 +88,7 @@ public class AnimalsOnGround {
                 ", amount=" + amount +
                 ", sold=" + sold +
                 ", notSold=" + notSold +
-                ", order=" + order +
+                ", order=" + startingOrder +
                 ", deleted=" + deleted +
                 ", category=" + category +
                 '}';

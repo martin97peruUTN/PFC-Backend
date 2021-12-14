@@ -99,4 +99,9 @@ public class ClientServiceImpl implements ClientService{
         }
         throw new BadHttpRequest("El cliente debe tener al menos una procedencia.");
     }
+
+    @Override
+    public Client findByProvenanceId(Integer id) {
+        return clientDAO.findByProvenanceContaining(id);
+    }
 }
