@@ -7,11 +7,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pfc.consignacionhacienda.dto.AnimalsOnGroundDTO;
+import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
 import pfc.consignacionhacienda.model.AnimalsOnGround;
 import pfc.consignacionhacienda.model.Batch;
 import pfc.consignacionhacienda.services.batch.BatchService;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/auction-batch")
@@ -37,8 +36,16 @@ public class BatchRest {
                                                                            @RequestParam(name = "notSold", defaultValue = "false") Boolean notSold,
                                                                            @RequestParam(name = "page", defaultValue = "0") Integer page,
                                                                            @RequestParam(name = "limit", defaultValue = "20") Integer limit){
-        logger.info(batchService.getAnimalListDTO(auctionId, sold, notSold, page, limit).toString());
-        return ResponseEntity.ok(batchService.getAnimalListDTO(auctionId, sold, notSold, page, limit));
+//        logger.info(batchService.getAnimalListDTO(auctionId, sold, notSold, page, limit).toString());
+        try {
+            return ResponseEntity.ok(batchService.getAnimalListDTO(auctionId, sold, notSold, page, limit));
+        } catch (AuctionNotFoundException e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.notFound().build();
+        } catch (Exception e){
+            logger.error(e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @PatchMapping("/{batchId}")

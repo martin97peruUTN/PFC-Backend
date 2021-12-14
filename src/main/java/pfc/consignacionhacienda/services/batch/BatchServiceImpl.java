@@ -8,33 +8,41 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import pfc.consignacionhacienda.dao.BatchDAO;
 import pfc.consignacionhacienda.dto.AnimalsOnGroundDTO;
+import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
 import pfc.consignacionhacienda.model.AnimalsOnGround;
+import pfc.consignacionhacienda.model.Auction;
 import pfc.consignacionhacienda.model.Batch;
 import pfc.consignacionhacienda.services.animalsOnGround.AnimalsOnGroundService;
+import pfc.consignacionhacienda.services.auction.AuctionService;
 import pfc.consignacionhacienda.services.client.ClientService;
 import pfc.consignacionhacienda.services.soldBatch.SoldBatchService;
 
 import java.util.ArrayList;
-import java.util.List;
 
 @Service
 public class BatchServiceImpl implements BatchService{
 
     @Autowired
-    BatchDAO batchDAO;
+    private BatchDAO batchDAO;
 
     @Autowired
-    ClientService clientService;
+    private ClientService clientService;
 
     @Autowired
-    SoldBatchService soldBatchService;
+    private SoldBatchService soldBatchService;
 
     @Autowired
-    AnimalsOnGroundService animalsOnGroundService;
+    private AnimalsOnGroundService animalsOnGroundService;
+
+    @Autowired
+    private AuctionService auctionService;
 
     @Override
-    public Page getAnimalListDTO(Integer auctionId, Boolean sold, Boolean notSold, Integer page, Integer limit) {
-
+    public Page getAnimalListDTO(Integer auctionId, Boolean sold, Boolean notSold, Integer page, Integer limit) throws AuctionNotFoundException {
+        Auction a = auctionService.getAuctionById(auctionId);
+        if(a.getDeleted() != null && a.getDeleted()){
+            throw new AuctionNotFoundException("El remate con id: " + auctionId + " no existe");
+        }
         ArrayList<AnimalsOnGroundDTO> animalList = new ArrayList<>();
         Page<AnimalsOnGround> animalsOnGroundPage;
         Pageable p = PageRequest.of(page, limit);
