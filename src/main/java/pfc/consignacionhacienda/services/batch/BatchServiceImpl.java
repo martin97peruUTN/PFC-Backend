@@ -1,5 +1,7 @@
 package pfc.consignacionhacienda.services.batch;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -10,6 +12,7 @@ import pfc.consignacionhacienda.dao.BatchDAO;
 import pfc.consignacionhacienda.dto.AnimalsOnGroundDTO;
 import pfc.consignacionhacienda.exceptions.HttpForbidenException;
 import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
+import pfc.consignacionhacienda.exceptions.batch.BatchNotFoundException;
 import pfc.consignacionhacienda.model.AnimalsOnGround;
 import pfc.consignacionhacienda.model.Auction;
 import pfc.consignacionhacienda.model.Batch;
@@ -19,10 +22,12 @@ import pfc.consignacionhacienda.services.client.ClientService;
 import pfc.consignacionhacienda.services.soldBatch.SoldBatchService;
 
 import java.util.ArrayList;
+import java.util.Optional;
 
 @Service
 public class BatchServiceImpl implements BatchService{
 
+    private static final Logger logger = LoggerFactory.getLogger(BatchServiceImpl.class);
     @Autowired
     private BatchDAO batchDAO;
 
@@ -77,14 +82,52 @@ public class BatchServiceImpl implements BatchService{
 
     @Override
     public Batch saveBatch(Batch newBatch, Integer auctionId) throws AuctionNotFoundException, IllegalArgumentException, HttpForbidenException {
-        Auction auction = auctionService.getAuctionById(auctionId);
-        if(auction.getDeleted()){
-            throw new AuctionNotFoundException("El remate con id: " + auctionId + " no existe.");
-        }
-        if(auction.getFinished()){
-            throw new HttpForbidenException("El remate ya ha finalizado, por lo tanto, no puede agregarse este lote al mismo.");
+        Auction auction = getAuctionNotDeletedById(auctionId);
+        if(newBatch.getAnimalsOnGround() == null || newBatch.getAnimalsOnGround().isEmpty()){
+            throw new IllegalArgumentException("El lote debe tener al menos un conjunto de animales en pista.");
         }
         newBatch.setAuction(auction);
         return batchDAO.save(newBatch);
+    }
+
+    @Override
+    public Batch findById(Integer batchId) throws BatchNotFoundException{
+        Optional<Batch> batchOptional = batchDAO.findById(batchId);
+        if(batchOptional.isPresent()){
+            return batchOptional.get();
+        }
+        throw new BatchNotFoundException("El lote con id: " + batchId + " no existe.");
+    }
+    @Override
+    public AnimalsOnGround addAnimalsOnGround(Integer batchId, AnimalsOnGround animalsOnGround) throws BatchNotFoundException, IllegalArgumentException, AuctionNotFoundException, HttpForbidenException {
+        Batch batch = findById(batchId);
+        if(batch.getDeleted() != null && batch.getDeleted()){
+            throw new BatchNotFoundException("El lote con id: " + batchId + " no existe.");
+        }
+        if(batch.getAuction().getDeleted() != null && batch.getAuction().getDeleted()){
+            throw new AuctionNotFoundException("El remate fue eliminado.");
+        }
+        if(batch.getAuction().getFinished() != null && batch.getAuction().getDeleted()){
+            throw new HttpForbidenException("No se pueden editar lotes de un remate finalizado.");
+        }
+        if(animalsOnGround.getAmount() < 0){
+            throw new IllegalArgumentException("La cantidad de animales a agregar debe ser mayor a 0");
+        }
+        batch.getAnimalsOnGround().add(animalsOnGround);
+        logger.debug(batch.getAnimalsOnGround().toString());
+        logger.debug(animalsOnGround.toString());
+        batchDAO.save(batch);
+        return animalsOnGround;
+    }
+
+    private Auction getAuctionNotDeletedById(Integer auctionId) throws AuctionNotFoundException, HttpForbidenException {
+        Auction auction = auctionService.getAuctionById(auctionId);
+        if (auction.getDeleted()) {
+            throw new AuctionNotFoundException("El remate con id: " + auctionId + " no existe.");
+        }
+        if (auction.getFinished()) {
+            throw new HttpForbidenException("El remate ya ha finalizado, por lo tanto, no puede agregarse este lote al mismo.");
+        }
+        return auction;
     }
 }

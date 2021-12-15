@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import pfc.consignacionhacienda.dto.AnimalsOnGroundDTO;
 import pfc.consignacionhacienda.exceptions.HttpForbidenException;
 import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
+import pfc.consignacionhacienda.exceptions.batch.BatchNotFoundException;
 import pfc.consignacionhacienda.model.AnimalsOnGround;
 import pfc.consignacionhacienda.model.Batch;
 import pfc.consignacionhacienda.services.batch.BatchService;
@@ -43,7 +44,12 @@ public class BatchRest {
 
     @GetMapping("/{batchId}")
     ResponseEntity<Batch> getBatchById(@PathVariable Integer batchId){
-        return null;
+        try {
+            return ResponseEntity.ok(batchService.findById(batchId));
+        } catch (BatchNotFoundException e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @GetMapping("/animals-on-ground/by-auction/{auctionId}")
@@ -70,8 +76,22 @@ public class BatchRest {
     }
 
     @PostMapping("/{batchId}/animals-on-ground")
-    ResponseEntity<AnimalsOnGround> saveAnimalsOnGround(@PathVariable Integer batchId){
-        return null;
+    ResponseEntity<AnimalsOnGround> saveAnimalsOnGround(@PathVariable Integer batchId, @RequestBody AnimalsOnGround animalsOnGround){
+        try {
+            return ResponseEntity.ok(batchService.addAnimalsOnGround(batchId, animalsOnGround));
+        } catch (BatchNotFoundException | AuctionNotFoundException e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.notFound().build();
+        }catch ( IllegalArgumentException e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (HttpForbidenException e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @PatchMapping("/animals-on-ground/{animalsId}")
