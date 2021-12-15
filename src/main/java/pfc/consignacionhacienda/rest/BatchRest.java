@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pfc.consignacionhacienda.dto.AnimalsOnGroundDTO;
 import pfc.consignacionhacienda.exceptions.HttpForbidenException;
+import pfc.consignacionhacienda.exceptions.animalsOnGround.AnimalsOnGroundNotFound;
 import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
 import pfc.consignacionhacienda.exceptions.batch.BatchNotFoundException;
 import pfc.consignacionhacienda.model.AnimalsOnGround;
@@ -101,7 +102,18 @@ public class BatchRest {
 
     @DeleteMapping("/animals-on-ground/{animalsId}")
     ResponseEntity<AnimalsOnGround> deleteAnimalsOnGroundById(@PathVariable Integer animalsId){
-        return null;
+        try {
+            return ResponseEntity.ok(batchService.deleteAnimalsOnGroundById(animalsId));
+        } catch (AnimalsOnGroundNotFound | AuctionNotFoundException | BatchNotFoundException e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.notFound().build();
+        }  catch (HttpForbidenException e){
+            logger.error(e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        } catch (Exception e){
+            logger.error(e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @DeleteMapping("/{batchId}")

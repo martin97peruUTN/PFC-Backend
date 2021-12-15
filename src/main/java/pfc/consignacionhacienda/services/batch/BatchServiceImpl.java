@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import pfc.consignacionhacienda.dao.BatchDAO;
 import pfc.consignacionhacienda.dto.AnimalsOnGroundDTO;
 import pfc.consignacionhacienda.exceptions.HttpForbidenException;
+import pfc.consignacionhacienda.exceptions.animalsOnGround.AnimalsOnGroundNotFound;
 import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
 import pfc.consignacionhacienda.exceptions.batch.BatchNotFoundException;
 import pfc.consignacionhacienda.model.AnimalsOnGround;
@@ -98,6 +99,22 @@ public class BatchServiceImpl implements BatchService{
         }
         throw new BatchNotFoundException("El lote con id: " + batchId + " no existe.");
     }
+
+    @Override
+    public AnimalsOnGround deleteAnimalsOnGroundById(Integer animalsId) throws AnimalsOnGroundNotFound, HttpForbidenException, AuctionNotFoundException, BatchNotFoundException {
+        Batch batchOwn = getBatchByAnimalsOnGroundId(animalsId);
+        if(batchOwn.getDeleted() != null && batchOwn.getDeleted()){
+            throw new BatchNotFoundException("El lote al que pertenece estos animales no existe");
+        }
+        if(batchOwn.getAuction().getDeleted() != null && batchOwn.getAuction().getDeleted()){
+            throw new AuctionNotFoundException("El remate al que pertenece estos animales no existe");
+        }
+        if(batchOwn.getAuction().getFinished() != null && batchOwn.getAuction().getFinished()){
+            throw new HttpForbidenException("No puede modificarse un remate que ya se ha realizado");
+        }
+        return animalsOnGroundService.deleteById(animalsId);
+    }
+
     @Override
     public AnimalsOnGround addAnimalsOnGround(Integer batchId, AnimalsOnGround animalsOnGround) throws BatchNotFoundException, IllegalArgumentException, AuctionNotFoundException, HttpForbidenException {
         Batch batch = findById(batchId);

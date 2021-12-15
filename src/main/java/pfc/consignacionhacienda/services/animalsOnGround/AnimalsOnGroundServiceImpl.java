@@ -5,9 +5,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import pfc.consignacionhacienda.dao.AnimalsOnGroundDAO;
+import pfc.consignacionhacienda.exceptions.animalsOnGround.AnimalsOnGroundNotFound;
 import pfc.consignacionhacienda.model.AnimalsOnGround;
-import pfc.consignacionhacienda.model.Batch;
-import pfc.consignacionhacienda.services.batch.BatchService;
+
+import java.util.Optional;
 
 @Service
 public class AnimalsOnGroundServiceImpl implements AnimalsOnGroundService{
@@ -33,5 +34,23 @@ public class AnimalsOnGroundServiceImpl implements AnimalsOnGroundService{
     @Override
     public Page<AnimalsOnGround> getAnimalsOnGroundByAuctionForSell(Integer auctionId, Pageable of) {
         return animalsOnGroundDAO.getAnimalsOnGroundByAuctionForSell(auctionId, of);
+    }
+
+    @Override
+    public AnimalsOnGround deleteById(Integer id) throws AnimalsOnGroundNotFound {
+        AnimalsOnGround animalsOnGround = findById(id);
+        if(animalsOnGround.getDeleted() != null && animalsOnGround.getDeleted()){
+            throw new AnimalsOnGroundNotFound("El conjunto de animales en pista con id: " + id + " no existe");
+        }
+        animalsOnGround.setDeleted(true);
+        return animalsOnGroundDAO.save(animalsOnGround);
+    }
+
+    private AnimalsOnGround findById(Integer id) throws AnimalsOnGroundNotFound {
+        Optional<AnimalsOnGround> animalsOnGround = animalsOnGroundDAO.findById(id);
+        if(animalsOnGround.isPresent()){
+            return animalsOnGround.get();
+        }
+        throw new AnimalsOnGroundNotFound("El conjunto de animales en pista con id: " + id + " no existe");
     }
 }
