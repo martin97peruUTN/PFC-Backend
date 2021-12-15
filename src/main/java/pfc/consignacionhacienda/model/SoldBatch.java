@@ -21,6 +21,8 @@ public class SoldBatch {
 
     private Double weight;
 
+    private Boolean deleted;
+
     @ManyToOne
     @JoinColumn(name = "animals_id")
     private AnimalsOnGround animalsOnGround;
@@ -93,6 +95,14 @@ public class SoldBatch {
         this.client = client;
     }
 
+    public Boolean getDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(Boolean deleted) {
+        this.deleted = deleted;
+    }
+
     @Override
     public String toString() {
         return "SoldBatch{" +
@@ -102,7 +112,8 @@ public class SoldBatch {
                 ", price=" + price +
                 ", mustWeigh=" + mustWeigh +
                 ", weight=" + weight +
-                ", animalsOnGrountd=" + animalsOnGround +
+                ", deleted=" + deleted +
+                ", animalsOnGround=" + animalsOnGround +
                 ", client=" + client +
                 '}';
     }

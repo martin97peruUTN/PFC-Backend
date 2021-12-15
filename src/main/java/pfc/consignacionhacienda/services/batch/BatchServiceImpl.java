@@ -19,10 +19,7 @@ import pfc.consignacionhacienda.exceptions.animalsOnGround.AnimalsOnGroundNotFou
 import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
 import pfc.consignacionhacienda.exceptions.batch.BatchNotFoundException;
 import pfc.consignacionhacienda.exceptions.client.ClientNotFoundException;
-import pfc.consignacionhacienda.model.AnimalsOnGround;
-import pfc.consignacionhacienda.model.Auction;
-import pfc.consignacionhacienda.model.Batch;
-import pfc.consignacionhacienda.model.Client;
+import pfc.consignacionhacienda.model.*;
 import pfc.consignacionhacienda.services.animalsOnGround.AnimalsOnGroundService;
 import pfc.consignacionhacienda.services.auction.AuctionService;
 import pfc.consignacionhacienda.services.client.ClientService;
@@ -31,6 +28,7 @@ import pfc.consignacionhacienda.utils.AnimalsOnGoundMapper;
 import pfc.consignacionhacienda.utils.BatchMapper;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -208,5 +206,35 @@ public class BatchServiceImpl implements BatchService{
             throw new HttpForbidenException("El remate ya ha finalizado, por lo tanto, no puede agregarse este lote al mismo.");
         }
         return auction;
+    }
+
+    @Override
+    public Batch deleteBatchById(Integer batchId) throws HttpForbidenException, AuctionNotFoundException, BatchNotFoundException {
+        Batch batch = this.findById(batchId);
+        if(batch.getDeleted() != null && batch.getDeleted()){
+            throw new BatchNotFoundException("El lote con id: "+ batchId + " no existe");
+        }
+        Auction auction = batch.getAuction();
+        if(auction.getDeleted() != null && auction.getDeleted()){
+            throw new AuctionNotFoundException("El lote pertenece a un remate inexistente.");
+        }
+        if(auction.getFinished() != null && auction.getFinished()){
+            throw new HttpForbidenException("No se puede modificar lotes de un remate que ya se ha realizado");
+        }
+        boolean canBeDeleted = true;
+        List<AnimalsOnGround> animalsOnGroundList = batch.getAnimalsOnGround();
+        if(animalsOnGroundList != null && !animalsOnGroundList.isEmpty()) {
+            for (AnimalsOnGround animalsOnGround : animalsOnGroundList) {
+                List<SoldBatch> soldBatches = soldBatchService.findSoldBatchesNotDeletedByAnimalsOnGroundId(animalsOnGround.getId());
+                if(soldBatches != null && soldBatches.size() > 0){
+                    canBeDeleted = false;
+                }
+            }
+        }
+        if(!canBeDeleted){
+            throw new HttpForbidenException("No puede eliminarse un lote de animales que ya tiene animales vendidos.");
+        }
+        batch.setDeleted(true);
+        return batchDAO.save(batch);
     }
 }

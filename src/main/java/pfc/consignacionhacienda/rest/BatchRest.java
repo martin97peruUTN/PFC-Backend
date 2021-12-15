@@ -149,8 +149,19 @@ public class BatchRest {
     }
 
     @DeleteMapping("/{batchId}")
-    ResponseEntity<AnimalsOnGround> deleteBatchById(@PathVariable Integer batchId){
-        return null;
+    ResponseEntity<Batch> deleteBatchById(@PathVariable Integer batchId){
+        try {
+            return ResponseEntity.ok(batchService.deleteBatchById(batchId));
+        } catch (HttpForbidenException e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        } catch (AuctionNotFoundException | BatchNotFoundException e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @GetMapping("/by-animals-on-ground/{animalsOnGroundId}")

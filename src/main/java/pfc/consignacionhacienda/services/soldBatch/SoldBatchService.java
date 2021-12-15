@@ -1,7 +1,11 @@
 package pfc.consignacionhacienda.services.soldBatch;
 
-import org.springframework.stereotype.Service;
+import pfc.consignacionhacienda.model.SoldBatch;
+
+import java.util.List;
 
 public interface SoldBatchService {
     Integer getTotalSold(Integer id);
+
+    List<SoldBatch> findSoldBatchesNotDeletedByAnimalsOnGroundId(Integer id);
 }

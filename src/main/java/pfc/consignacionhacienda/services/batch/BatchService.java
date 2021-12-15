@@ -23,4 +23,5 @@ public interface BatchService {
     AnimalsOnGround deleteAnimalsOnGroundById(Integer animalsId) throws AnimalsOnGroundNotFound, HttpForbidenException, AuctionNotFoundException, BatchNotFoundException;
     Batch updateBatchById(Integer batchId, BatchDTO batchDTO) throws BatchNotFoundException, BadHttpRequest, AuctionNotFoundException, HttpForbidenException;
     AnimalsOnGround updateAnimalsOnGroundById(Integer animalsId, AnimalsOnGroundDTO animalsOnGroundDTO) throws BadHttpRequest, AnimalsOnGroundNotFound, HttpForbidenException, AuctionNotFoundException;
+    Batch deleteBatchById(Integer batchId) throws HttpForbidenException, AuctionNotFoundException, BatchNotFoundException;
 }
