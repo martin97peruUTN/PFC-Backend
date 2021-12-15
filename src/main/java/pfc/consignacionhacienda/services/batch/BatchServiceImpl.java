@@ -124,7 +124,7 @@ public class BatchServiceImpl implements BatchService{
         if(batch.getAuction().getDeleted() != null && batch.getAuction().getDeleted()){
             throw new AuctionNotFoundException("El remate fue eliminado.");
         }
-        if(batch.getAuction().getFinished() != null && batch.getAuction().getDeleted()){
+        if(batch.getAuction().getFinished() != null && batch.getAuction().getFinished()){
             throw new HttpForbidenException("No se pueden editar lotes de un remate finalizado.");
         }
         if(animalsOnGround.getAmount() < 0){
