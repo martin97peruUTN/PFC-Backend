@@ -10,16 +10,21 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import pfc.consignacionhacienda.dao.BatchDAO;
 import pfc.consignacionhacienda.dto.AnimalsOnGroundDTO;
+import pfc.consignacionhacienda.dto.BatchWithClientDTO;
+import pfc.consignacionhacienda.dto.ClientForBatchDTO;
 import pfc.consignacionhacienda.exceptions.HttpForbidenException;
 import pfc.consignacionhacienda.exceptions.animalsOnGround.AnimalsOnGroundNotFound;
 import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
 import pfc.consignacionhacienda.exceptions.batch.BatchNotFoundException;
+import pfc.consignacionhacienda.exceptions.client.ClientNotFoundException;
 import pfc.consignacionhacienda.model.AnimalsOnGround;
 import pfc.consignacionhacienda.model.Auction;
 import pfc.consignacionhacienda.model.Batch;
+import pfc.consignacionhacienda.model.Client;
 import pfc.consignacionhacienda.services.animalsOnGround.AnimalsOnGroundService;
 import pfc.consignacionhacienda.services.auction.AuctionService;
 import pfc.consignacionhacienda.services.client.ClientService;
+import pfc.consignacionhacienda.services.provenance.ProvenanceService;
 import pfc.consignacionhacienda.services.soldBatch.SoldBatchService;
 
 import java.util.ArrayList;
@@ -34,6 +39,9 @@ public class BatchServiceImpl implements BatchService{
 
     @Autowired
     private ClientService clientService;
+
+    @Autowired
+    private ProvenanceService provenanceService;
 
     @Autowired
     private SoldBatchService soldBatchService;
@@ -98,6 +106,29 @@ public class BatchServiceImpl implements BatchService{
             return batchOptional.get();
         }
         throw new BatchNotFoundException("El lote con id: " + batchId + " no existe.");
+    }
+
+    @Override
+    public BatchWithClientDTO getBatchByAnimalsOnGroundIdWithClient(Integer animalsOnGroundId) throws BatchNotFoundException, ClientNotFoundException {
+        Batch batch = getBatchByAnimalsOnGroundId(animalsOnGroundId);
+        if(batch.getDeleted() != null && batch.getDeleted()){
+            throw new BatchNotFoundException("El conjunto de animales en pista con id: "+animalsOnGroundId+"pertenece a un lote de animales inexistente");
+        }
+        Client c = provenanceService.findClientByProvenanceId(batch.getProvenance().getId());
+        BatchWithClientDTO batchWithClientDTO = new BatchWithClientDTO();
+        batchWithClientDTO.setAnimalsOnGround(batch.getAnimalsOnGround());
+        batchWithClientDTO.setProvenance(batch.getProvenance());
+        batchWithClientDTO.setCorralNumber(batch.getCorralNumber());
+        batchWithClientDTO.setDteNumber(batch.getDteNumber());
+        batchWithClientDTO.setId(batch.getId());
+
+        ClientForBatchDTO client = new ClientForBatchDTO();
+        client.setCuit(c.getCuit());
+        client.setId(c.getId());
+        client.setName(c.getName());
+        batchWithClientDTO.setClient(client);
+
+        return batchWithClientDTO;
     }
 
     @Override

@@ -8,10 +8,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pfc.consignacionhacienda.dto.AnimalsOnGroundDTO;
+import pfc.consignacionhacienda.dto.BatchWithClientDTO;
 import pfc.consignacionhacienda.exceptions.HttpForbidenException;
 import pfc.consignacionhacienda.exceptions.animalsOnGround.AnimalsOnGroundNotFound;
 import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
 import pfc.consignacionhacienda.exceptions.batch.BatchNotFoundException;
+import pfc.consignacionhacienda.exceptions.client.ClientNotFoundException;
 import pfc.consignacionhacienda.model.AnimalsOnGround;
 import pfc.consignacionhacienda.model.Batch;
 import pfc.consignacionhacienda.services.batch.BatchService;
@@ -119,5 +121,18 @@ public class BatchRest {
     @DeleteMapping("/{batchId}")
     ResponseEntity<AnimalsOnGround> deleteBatchById(@PathVariable Integer batchId){
         return null;
+    }
+
+    @GetMapping("/by-animals-on-ground/{animalsOnGroundId}")
+    ResponseEntity<BatchWithClientDTO> getBatchByAnimalsOnGroundId(@PathVariable Integer animalsOnGroundId){
+        try {
+            return ResponseEntity.ok(batchService.getBatchByAnimalsOnGroundIdWithClient(animalsOnGroundId));
+        } catch (BatchNotFoundException | ClientNotFoundException e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
     }
 }
