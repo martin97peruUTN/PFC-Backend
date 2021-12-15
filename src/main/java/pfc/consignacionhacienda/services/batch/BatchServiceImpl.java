@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import pfc.consignacionhacienda.dao.BatchDAO;
 import pfc.consignacionhacienda.dto.AnimalsOnGroundDTO;
+import pfc.consignacionhacienda.exceptions.HttpForbidenException;
 import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
 import pfc.consignacionhacienda.model.AnimalsOnGround;
 import pfc.consignacionhacienda.model.Auction;
@@ -38,7 +39,7 @@ public class BatchServiceImpl implements BatchService{
     private AuctionService auctionService;
 
     @Override
-    public Page getAnimalListDTO(Integer auctionId, Boolean sold, Boolean notSold, Integer page, Integer limit) throws AuctionNotFoundException {
+    public Page<AnimalsOnGroundDTO> getAnimalListDTO(Integer auctionId, Boolean sold, Boolean notSold, Integer page, Integer limit) throws AuctionNotFoundException {
         Auction a = auctionService.getAuctionById(auctionId);
         if(a.getDeleted() != null && a.getDeleted()){
             throw new AuctionNotFoundException("El remate con id: " + auctionId + " no existe");
@@ -72,5 +73,18 @@ public class BatchServiceImpl implements BatchService{
     @Override
     public Batch getBatchByAnimalsOnGroundId(Integer animalsOnGroundId) {
         return batchDAO.findByAnimalsOnGroundId(animalsOnGroundId);
+    }
+
+    @Override
+    public Batch saveBatch(Batch newBatch, Integer auctionId) throws AuctionNotFoundException, IllegalArgumentException, HttpForbidenException {
+        Auction auction = auctionService.getAuctionById(auctionId);
+        if(auction.getDeleted()){
+            throw new AuctionNotFoundException("El remate con id: " + auctionId + " no existe.");
+        }
+        if(auction.getFinished()){
+            throw new HttpForbidenException("El remate ya ha finalizado, por lo tanto, no puede agregarse este lote al mismo.");
+        }
+        newBatch.setAuction(auction);
+        return batchDAO.save(newBatch);
     }
 }

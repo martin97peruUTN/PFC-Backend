@@ -4,9 +4,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pfc.consignacionhacienda.dto.AnimalsOnGroundDTO;
+import pfc.consignacionhacienda.exceptions.HttpForbidenException;
 import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
 import pfc.consignacionhacienda.model.AnimalsOnGround;
 import pfc.consignacionhacienda.model.Batch;
@@ -21,8 +23,22 @@ public class BatchRest {
     BatchService batchService;
 
     @PostMapping("/{auctionId}")
-    ResponseEntity<Batch> saveBatch(@PathVariable Integer auctionId){
-        return null;
+    ResponseEntity<Batch> saveBatch(@PathVariable Integer auctionId, @RequestBody Batch newBatch){
+        try {
+            return ResponseEntity.ok(batchService.saveBatch(newBatch, auctionId ));
+        } catch (AuctionNotFoundException e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.notFound().build();
+        } catch (IllegalArgumentException e){
+            logger.error(e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (HttpForbidenException e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }catch (Exception e){
+            logger.error(e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @GetMapping("/{batchId}")
