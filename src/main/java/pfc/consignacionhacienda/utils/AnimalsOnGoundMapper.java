@@ -4,11 +4,11 @@ import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
-import pfc.consignacionhacienda.dto.BatchDTO;
-import pfc.consignacionhacienda.model.Batch;
+import pfc.consignacionhacienda.dto.AnimalsOnGroundDTO;
+import pfc.consignacionhacienda.model.AnimalsOnGround;
 
 @Mapper(componentModel = "spring")
-public interface BatchMapper {
+public interface AnimalsOnGoundMapper {
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    void updateBatchFromDto(BatchDTO dto, @MappingTarget Batch entity);
+    void updateAnimalsOnGroundFromDto(AnimalsOnGroundDTO dto, @MappingTarget AnimalsOnGround entity);
 }

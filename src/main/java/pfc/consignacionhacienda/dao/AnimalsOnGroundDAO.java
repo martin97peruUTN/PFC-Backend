@@ -21,4 +21,7 @@ public interface AnimalsOnGroundDAO extends JpaRepository<AnimalsOnGround, Integ
 
     @Query("SELECT ag FROM Batch b JOIN b.animalsOnGround ag JOIN b.auction au WHERE au.id=:auctionId AND ag.sold IS FALSE AND ag.notSold IS FALSE AND (ag.deleted IS NULL OR ag.deleted IS FALSE) AND (b.deleted IS NULL OR b.deleted IS FALSE) AND (au.deleted IS NULL OR au.deleted IS FALSE)")
     Page<AnimalsOnGround> getAnimalsOnGroundByAuctionForSell(Integer auctionId, Pageable of);
+
+    @Query("SELECT ag FROM AnimalsOnGround ag  WHERE ag.id=:animalsId AND (ag.deleted IS NULL OR ag.deleted IS FALSE)")
+    AnimalsOnGround findByIdAndNotDeleted(Integer animalsId);
 }

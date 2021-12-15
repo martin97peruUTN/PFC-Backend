@@ -5,8 +5,16 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import pfc.consignacionhacienda.dao.AnimalsOnGroundDAO;
+import pfc.consignacionhacienda.dto.AnimalsOnGroundDTO;
+import pfc.consignacionhacienda.exceptions.BadHttpRequest;
+import pfc.consignacionhacienda.exceptions.HttpForbidenException;
 import pfc.consignacionhacienda.exceptions.animalsOnGround.AnimalsOnGroundNotFound;
+import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
 import pfc.consignacionhacienda.model.AnimalsOnGround;
+import pfc.consignacionhacienda.model.Auction;
+import pfc.consignacionhacienda.services.batch.BatchService;
+import pfc.consignacionhacienda.services.soldBatch.SoldBatchService;
+import pfc.consignacionhacienda.utils.AnimalsOnGoundMapper;
 
 import java.util.Optional;
 
@@ -15,6 +23,15 @@ public class AnimalsOnGroundServiceImpl implements AnimalsOnGroundService{
 
     @Autowired
     AnimalsOnGroundDAO animalsOnGroundDAO;
+
+    @Autowired
+    BatchService batchService;
+
+    @Autowired
+    SoldBatchService soldBatchService;
+
+    @Autowired
+    AnimalsOnGoundMapper animalsOnGoundMapper;
 
     @Override
     public Page<AnimalsOnGround> getAnimalsOnGroundByAuction(Integer auctionId, Pageable of) {
@@ -43,6 +60,40 @@ public class AnimalsOnGroundServiceImpl implements AnimalsOnGroundService{
             throw new AnimalsOnGroundNotFound("El conjunto de animales en pista con id: " + id + " no existe");
         }
         animalsOnGround.setDeleted(true);
+        return animalsOnGroundDAO.save(animalsOnGround);
+    }
+
+    @Override
+    public AnimalsOnGround getAnimalsOnGroundNotDeletedById(Integer animalsId) {
+        return animalsOnGroundDAO.findByIdAndNotDeleted(animalsId);
+    }
+
+    @Override
+    public AnimalsOnGround updateAnimalsOnGround(Integer animalsId, AnimalsOnGroundDTO animalsOnGroundDTO) throws BadHttpRequest, AnimalsOnGroundNotFound, AuctionNotFoundException, HttpForbidenException {
+        if(animalsOnGroundDTO.getId() != null && !animalsOnGroundDTO.getId().equals(animalsId)){
+            throw new BadHttpRequest("El id del path no coincide con el id del body del request");
+        }
+
+        if(animalsOnGroundDTO.getAmount() != null && animalsOnGroundDTO.getAmount() <= 0){
+            throw new IllegalArgumentException("La cantidad de animales debe ser mayor a cero");
+        }
+        AnimalsOnGround animalsOnGround = getAnimalsOnGroundNotDeletedById(animalsId);
+        if(animalsOnGround == null){
+            throw new AnimalsOnGroundNotFound("El conjunto de animales en pista con id: " + animalsId + " no existe");
+        }
+        Auction auction = batchService.getBatchByAnimalsOnGroundId(animalsId).getAuction();
+        if(auction.getDeleted()!=null && auction.getDeleted()){
+            throw new AuctionNotFoundException("El conjunto de Animales En Pista pertenece a un remate inexistente.");
+        }
+        if(auction.getFinished()!=null && auction.getFinished()){
+            throw new HttpForbidenException("No se pueden editar Animales En Pista de un remate que ya se ha realizado");
+        }
+
+        Integer totalVendidos = soldBatchService.getTotalSold(animalsId);
+        if(animalsOnGroundDTO.getAmount() != null && totalVendidos > animalsOnGroundDTO.getAmount()){
+            throw new HttpForbidenException("La cantidad 'amount' de Animales En Pista no puede ser menor a la cantidad que ya se ha vendido.");
+        }
+        animalsOnGoundMapper.updateAnimalsOnGroundFromDto(animalsOnGroundDTO, animalsOnGround);
         return animalsOnGroundDAO.save(animalsOnGround);
     }
 

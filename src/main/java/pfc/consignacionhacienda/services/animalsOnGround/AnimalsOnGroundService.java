@@ -2,7 +2,11 @@ package pfc.consignacionhacienda.services.animalsOnGround;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import pfc.consignacionhacienda.dto.AnimalsOnGroundDTO;
+import pfc.consignacionhacienda.exceptions.BadHttpRequest;
+import pfc.consignacionhacienda.exceptions.HttpForbidenException;
 import pfc.consignacionhacienda.exceptions.animalsOnGround.AnimalsOnGroundNotFound;
+import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
 import pfc.consignacionhacienda.model.AnimalsOnGround;
 
 public interface AnimalsOnGroundService {
@@ -12,4 +16,8 @@ public interface AnimalsOnGroundService {
     Page<AnimalsOnGround> getAnimalsOnGroundByAuctionForSell(Integer auctionId, Pageable of);
 
     AnimalsOnGround deleteById(Integer id) throws AnimalsOnGroundNotFound;
+
+    AnimalsOnGround getAnimalsOnGroundNotDeletedById(Integer animalsId);
+
+    AnimalsOnGround updateAnimalsOnGround(Integer animalsId, AnimalsOnGroundDTO animalsOnGroundDTO) throws BadHttpRequest, AnimalsOnGroundNotFound, AuctionNotFoundException, HttpForbidenException;
 }

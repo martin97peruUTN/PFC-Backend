@@ -114,8 +114,22 @@ public class BatchRest {
     }
 
     @PatchMapping("/animals-on-ground/{animalsId}")
-    ResponseEntity<AnimalsOnGround> updateAnimalsOnGroundById(@PathVariable Integer animalsId){
-        return null;
+    ResponseEntity<AnimalsOnGround> updateAnimalsOnGroundById(@PathVariable Integer animalsId, @RequestBody AnimalsOnGroundDTO animalsOnGroundDTO){
+        try {
+            return ResponseEntity.ok(batchService.updateAnimalsOnGroundById(animalsId, animalsOnGroundDTO));
+        } catch (BadHttpRequest e) {
+           logger.error(e.getMessage());
+           return ResponseEntity.badRequest().build();
+        } catch (AnimalsOnGroundNotFound | AuctionNotFoundException e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.notFound().build();
+        } catch (HttpForbidenException e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        } catch ( Exception e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @DeleteMapping("/animals-on-ground/{animalsId}")

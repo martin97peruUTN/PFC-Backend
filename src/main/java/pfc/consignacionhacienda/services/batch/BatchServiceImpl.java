@@ -27,6 +27,7 @@ import pfc.consignacionhacienda.services.animalsOnGround.AnimalsOnGroundService;
 import pfc.consignacionhacienda.services.auction.AuctionService;
 import pfc.consignacionhacienda.services.client.ClientService;
 import pfc.consignacionhacienda.services.soldBatch.SoldBatchService;
+import pfc.consignacionhacienda.utils.AnimalsOnGoundMapper;
 import pfc.consignacionhacienda.utils.BatchMapper;
 
 import java.util.ArrayList;
@@ -42,6 +43,9 @@ public class BatchServiceImpl implements BatchService{
 
     @Autowired
     private BatchMapper batchMapper;
+
+    @Autowired
+    private AnimalsOnGoundMapper animalsOnGoundMapper;
 
     @Autowired
     private ClientService clientService;
@@ -151,6 +155,9 @@ public class BatchServiceImpl implements BatchService{
 
     @Override
     public Batch updateBatchById(Integer batchId, BatchDTO batchDTO) throws IllegalArgumentException, BatchNotFoundException, BadHttpRequest, AuctionNotFoundException, HttpForbidenException {
+        if(batchDTO.getId() != null && !batchDTO.getId().equals(batchId)){
+            throw new BadHttpRequest("El id del path no coincide con el id del body del request");
+        }
         Batch batch = findById(batchId);
         if(batch.getAuction().getDeleted() != null && batch.getAuction().getDeleted()){
             throw new AuctionNotFoundException("El lote pertenece a un remate que no existe");
@@ -158,14 +165,16 @@ public class BatchServiceImpl implements BatchService{
         if(batch.getAuction().getFinished() != null && batch.getAuction().getFinished()){
             throw new HttpForbidenException("No se puede editar un lote de un remate que ya se ha realizado.");
         }
-        if(batchDTO.getId() != null && !batchDTO.getId().equals(batchId)){
-            throw new BadHttpRequest("El id del path no coincide con el id del body del request");
-        }
         if(batch.getDeleted() != null && batch.getDeleted()){
             throw new BatchNotFoundException("El lote con id: " + batchId + " no existe.");
         }
-        batchMapper.updateUserFromDto(batchDTO, batch);
+        batchMapper.updateBatchFromDto(batchDTO, batch);
         return batchDAO.save(batch);
+    }
+
+    @Override
+    public AnimalsOnGround updateAnimalsOnGroundById(Integer animalsId, AnimalsOnGroundDTO animalsOnGroundDTO) throws BadHttpRequest, AnimalsOnGroundNotFound, HttpForbidenException, AuctionNotFoundException {
+        return animalsOnGroundService.updateAnimalsOnGround(animalsId,animalsOnGroundDTO );
     }
 
     @Override

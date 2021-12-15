@@ -23,7 +23,7 @@ public class SoldBatch {
 
     @ManyToOne
     @JoinColumn(name = "animals_id")
-    private AnimalsOnGround animalsOnGrountd;
+    private AnimalsOnGround animalsOnGround;
 
     @ManyToOne
     @JoinColumn(name = "client_id")
@@ -77,12 +77,12 @@ public class SoldBatch {
         this.weight = weight;
     }
 
-    public AnimalsOnGround getAnimalsOnGrountd() {
-        return animalsOnGrountd;
+    public AnimalsOnGround getAnimalsOnGround() {
+        return animalsOnGround;
     }
 
-    public void setAnimalsOnGrountd(AnimalsOnGround animalsOnGrountd) {
-        this.animalsOnGrountd = animalsOnGrountd;
+    public void setAnimalsOnGround(AnimalsOnGround animalsOnGround) {
+        this.animalsOnGround = animalsOnGround;
     }
 
     public Client getClient() {
@@ -102,7 +102,7 @@ public class SoldBatch {
                 ", price=" + price +
                 ", mustWeigh=" + mustWeigh +
                 ", weight=" + weight +
-                ", animalsOnGrountd=" + animalsOnGrountd +
+                ", animalsOnGrountd=" + animalsOnGround +
                 ", client=" + client +
                 '}';
     }

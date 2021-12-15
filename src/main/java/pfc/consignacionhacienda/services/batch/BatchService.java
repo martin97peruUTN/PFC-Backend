@@ -22,4 +22,5 @@ public interface BatchService {
     BatchWithClientDTO getBatchByAnimalsOnGroundIdWithClient(Integer animalsOnGroundId) throws BatchNotFoundException, ClientNotFoundException;
     AnimalsOnGround deleteAnimalsOnGroundById(Integer animalsId) throws AnimalsOnGroundNotFound, HttpForbidenException, AuctionNotFoundException, BatchNotFoundException;
     Batch updateBatchById(Integer batchId, BatchDTO batchDTO) throws BatchNotFoundException, BadHttpRequest, AuctionNotFoundException, HttpForbidenException;
+    AnimalsOnGround updateAnimalsOnGroundById(Integer animalsId, AnimalsOnGroundDTO animalsOnGroundDTO) throws BadHttpRequest, AnimalsOnGroundNotFound, HttpForbidenException, AuctionNotFoundException;
 }

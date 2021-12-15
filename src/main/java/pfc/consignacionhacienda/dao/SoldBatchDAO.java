@@ -8,6 +8,6 @@ import pfc.consignacionhacienda.model.SoldBatch;
 @Repository
 public interface SoldBatchDAO extends JpaRepository<SoldBatch, Integer> {
 
-    @Query("SELECT SUM(b.amount) FROM SoldBatch b JOIN b.animalsOnGrountd a WHERE a.id=:id")
+    @Query("SELECT SUM(b.amount) FROM SoldBatch b JOIN b.animalsOnGround a WHERE a.id=:id")
     Integer getTotalSold(Integer id);
 }
