@@ -8,7 +8,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pfc.consignacionhacienda.dto.AnimalsOnGroundDTO;
+import pfc.consignacionhacienda.dto.BatchDTO;
 import pfc.consignacionhacienda.dto.BatchWithClientDTO;
+import pfc.consignacionhacienda.exceptions.BadHttpRequest;
 import pfc.consignacionhacienda.exceptions.HttpForbidenException;
 import pfc.consignacionhacienda.exceptions.animalsOnGround.AnimalsOnGroundNotFound;
 import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
@@ -74,8 +76,22 @@ public class BatchRest {
     }
 
     @PatchMapping("/{batchId}")
-    ResponseEntity<Batch> updateBatchById(@PathVariable Integer batchId){
-        return null;
+    ResponseEntity<Batch> updateBatchById(@PathVariable Integer batchId, @RequestBody BatchDTO batchDTO){
+        try {
+            return ResponseEntity.ok(batchService.updateBatchById(batchId, batchDTO));
+        } catch (BatchNotFoundException | AuctionNotFoundException e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.notFound().build();
+        } catch (BadHttpRequest | IllegalArgumentException e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }  catch (HttpForbidenException e){
+            logger.error(e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }catch (Exception e){
+            logger.error(e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @PostMapping("/{batchId}/animals-on-ground")

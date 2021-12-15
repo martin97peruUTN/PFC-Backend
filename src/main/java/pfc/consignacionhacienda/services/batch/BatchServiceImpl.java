@@ -10,8 +10,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import pfc.consignacionhacienda.dao.BatchDAO;
 import pfc.consignacionhacienda.dto.AnimalsOnGroundDTO;
+import pfc.consignacionhacienda.dto.BatchDTO;
 import pfc.consignacionhacienda.dto.BatchWithClientDTO;
 import pfc.consignacionhacienda.dto.ClientForBatchDTO;
+import pfc.consignacionhacienda.exceptions.BadHttpRequest;
 import pfc.consignacionhacienda.exceptions.HttpForbidenException;
 import pfc.consignacionhacienda.exceptions.animalsOnGround.AnimalsOnGroundNotFound;
 import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
@@ -24,8 +26,8 @@ import pfc.consignacionhacienda.model.Client;
 import pfc.consignacionhacienda.services.animalsOnGround.AnimalsOnGroundService;
 import pfc.consignacionhacienda.services.auction.AuctionService;
 import pfc.consignacionhacienda.services.client.ClientService;
-import pfc.consignacionhacienda.services.provenance.ProvenanceService;
 import pfc.consignacionhacienda.services.soldBatch.SoldBatchService;
+import pfc.consignacionhacienda.utils.BatchMapper;
 
 import java.util.ArrayList;
 import java.util.Optional;
@@ -34,14 +36,15 @@ import java.util.Optional;
 public class BatchServiceImpl implements BatchService{
 
     private static final Logger logger = LoggerFactory.getLogger(BatchServiceImpl.class);
+
     @Autowired
     private BatchDAO batchDAO;
 
     @Autowired
-    private ClientService clientService;
+    private BatchMapper batchMapper;
 
     @Autowired
-    private ProvenanceService provenanceService;
+    private ClientService clientService;
 
     @Autowired
     private SoldBatchService soldBatchService;
@@ -114,7 +117,7 @@ public class BatchServiceImpl implements BatchService{
         if(batch.getDeleted() != null && batch.getDeleted()){
             throw new BatchNotFoundException("El conjunto de animales en pista con id: "+animalsOnGroundId+"pertenece a un lote de animales inexistente");
         }
-        Client c = provenanceService.findClientByProvenanceId(batch.getProvenance().getId());
+        Client c = clientService.findByProvenanceId(batch.getProvenance().getId());
         BatchWithClientDTO batchWithClientDTO = new BatchWithClientDTO();
         batchWithClientDTO.setAnimalsOnGround(batch.getAnimalsOnGround());
         batchWithClientDTO.setProvenance(batch.getProvenance());
@@ -144,6 +147,25 @@ public class BatchServiceImpl implements BatchService{
             throw new HttpForbidenException("No puede modificarse un remate que ya se ha realizado");
         }
         return animalsOnGroundService.deleteById(animalsId);
+    }
+
+    @Override
+    public Batch updateBatchById(Integer batchId, BatchDTO batchDTO) throws IllegalArgumentException, BatchNotFoundException, BadHttpRequest, AuctionNotFoundException, HttpForbidenException {
+        Batch batch = findById(batchId);
+        if(batch.getAuction().getDeleted() != null && batch.getAuction().getDeleted()){
+            throw new AuctionNotFoundException("El lote pertenece a un remate que no existe");
+        }
+        if(batch.getAuction().getFinished() != null && batch.getAuction().getFinished()){
+            throw new HttpForbidenException("No se puede editar un lote de un remate que ya se ha realizado.");
+        }
+        if(batchDTO.getId() != null && !batchDTO.getId().equals(batchId)){
+            throw new BadHttpRequest("El id del path no coincide con el id del body del request");
+        }
+        if(batch.getDeleted() != null && batch.getDeleted()){
+            throw new BatchNotFoundException("El lote con id: " + batchId + " no existe.");
+        }
+        batchMapper.updateUserFromDto(batchDTO, batch);
+        return batchDAO.save(batch);
     }
 
     @Override

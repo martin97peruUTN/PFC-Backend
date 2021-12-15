@@ -2,7 +2,9 @@ package pfc.consignacionhacienda.services.batch;
 
 import org.springframework.data.domain.Page;
 import pfc.consignacionhacienda.dto.AnimalsOnGroundDTO;
+import pfc.consignacionhacienda.dto.BatchDTO;
 import pfc.consignacionhacienda.dto.BatchWithClientDTO;
+import pfc.consignacionhacienda.exceptions.BadHttpRequest;
 import pfc.consignacionhacienda.exceptions.HttpForbidenException;
 import pfc.consignacionhacienda.exceptions.animalsOnGround.AnimalsOnGroundNotFound;
 import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
@@ -19,4 +21,5 @@ public interface BatchService {
     Batch findById(Integer batchId) throws BatchNotFoundException;
     BatchWithClientDTO getBatchByAnimalsOnGroundIdWithClient(Integer animalsOnGroundId) throws BatchNotFoundException, ClientNotFoundException;
     AnimalsOnGround deleteAnimalsOnGroundById(Integer animalsId) throws AnimalsOnGroundNotFound, HttpForbidenException, AuctionNotFoundException, BatchNotFoundException;
+    Batch updateBatchById(Integer batchId, BatchDTO batchDTO) throws BatchNotFoundException, BadHttpRequest, AuctionNotFoundException, HttpForbidenException;
 }
