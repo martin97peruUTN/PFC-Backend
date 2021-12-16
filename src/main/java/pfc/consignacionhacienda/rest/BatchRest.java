@@ -20,6 +20,8 @@ import pfc.consignacionhacienda.model.AnimalsOnGround;
 import pfc.consignacionhacienda.model.Batch;
 import pfc.consignacionhacienda.services.batch.BatchService;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/auction-batch")
 public class BatchRest {
@@ -95,7 +97,7 @@ public class BatchRest {
     }
 
     @PostMapping("/{batchId}/animals-on-ground")
-    ResponseEntity<AnimalsOnGround> saveAnimalsOnGround(@PathVariable Integer batchId, @RequestBody AnimalsOnGround animalsOnGround){
+    ResponseEntity<List<AnimalsOnGround>> saveAnimalsOnGround(@PathVariable Integer batchId, @RequestBody AnimalsOnGround animalsOnGround){
         try {
             return ResponseEntity.ok(batchService.addAnimalsOnGround(batchId, animalsOnGround));
         } catch (BatchNotFoundException | AuctionNotFoundException e) {
@@ -117,7 +119,7 @@ public class BatchRest {
     ResponseEntity<AnimalsOnGround> updateAnimalsOnGroundById(@PathVariable Integer animalsId, @RequestBody AnimalsOnGroundDTO animalsOnGroundDTO){
         try {
             return ResponseEntity.ok(batchService.updateAnimalsOnGroundById(animalsId, animalsOnGroundDTO));
-        } catch (BadHttpRequest e) {
+        } catch (BadHttpRequest | IllegalArgumentException e) {
            logger.error(e.getMessage());
            return ResponseEntity.badRequest().build();
         } catch (AnimalsOnGroundNotFound | AuctionNotFoundException e) {
@@ -126,7 +128,7 @@ public class BatchRest {
         } catch (HttpForbidenException e) {
             logger.error(e.getMessage());
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        } catch ( Exception e) {
+        } catch( Exception e) {
             logger.error(e.getMessage());
             return ResponseEntity.internalServerError().build();
         }
@@ -168,7 +170,7 @@ public class BatchRest {
     ResponseEntity<BatchWithClientDTO> getBatchByAnimalsOnGroundId(@PathVariable Integer animalsOnGroundId){
         try {
             return ResponseEntity.ok(batchService.getBatchByAnimalsOnGroundIdWithClient(animalsOnGroundId));
-        } catch (BatchNotFoundException | ClientNotFoundException e) {
+        } catch (BatchNotFoundException | AnimalsOnGroundNotFound | ClientNotFoundException e) {
             logger.error(e.getMessage());
             return ResponseEntity.notFound().build();
         } catch (Exception e) {

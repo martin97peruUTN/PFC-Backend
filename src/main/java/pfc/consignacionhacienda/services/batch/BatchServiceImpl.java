@@ -97,10 +97,12 @@ public class BatchServiceImpl implements BatchService{
     @Override
     public Batch saveBatch(Batch newBatch, Integer auctionId) throws AuctionNotFoundException, IllegalArgumentException, HttpForbidenException {
         Auction auction = getAuctionNotDeletedById(auctionId);
+        logger.debug(auction.toString());
         if(newBatch.getAnimalsOnGround() == null || newBatch.getAnimalsOnGround().isEmpty()){
             throw new IllegalArgumentException("El lote debe tener al menos un conjunto de animales en pista.");
         }
         newBatch.setAuction(auction);
+        logger.debug(newBatch.toString());
         return batchDAO.save(newBatch);
     }
 
@@ -114,10 +116,15 @@ public class BatchServiceImpl implements BatchService{
     }
 
     @Override
-    public BatchWithClientDTO getBatchByAnimalsOnGroundIdWithClient(Integer animalsOnGroundId) throws BatchNotFoundException, ClientNotFoundException {
+    public BatchWithClientDTO getBatchByAnimalsOnGroundIdWithClient(Integer animalsOnGroundId) throws BatchNotFoundException, ClientNotFoundException, AnimalsOnGroundNotFound {
+        AnimalsOnGround animalsOnGround = animalsOnGroundService.findById(animalsOnGroundId);
+        if(animalsOnGround.getDeleted() != null && animalsOnGround.getDeleted()){
+            throw new AnimalsOnGroundNotFound("EL conjunto de Animales en Pista con id " + animalsOnGroundId + " no existe");
+        }
         Batch batch = getBatchByAnimalsOnGroundId(animalsOnGroundId);
+        logger.debug(batch.toString());
         if(batch.getDeleted() != null && batch.getDeleted()){
-            throw new BatchNotFoundException("El conjunto de animales en pista con id: "+animalsOnGroundId+"pertenece a un lote de animales inexistente");
+            throw new BatchNotFoundException("El conjunto de animales en pista con id " + animalsOnGroundId + " pertenece a un lote de animales inexistente");
         }
         Client c = clientService.findByProvenanceId(batch.getProvenance().getId());
         BatchWithClientDTO batchWithClientDTO = new BatchWithClientDTO();
@@ -126,7 +133,7 @@ public class BatchServiceImpl implements BatchService{
         batchWithClientDTO.setCorralNumber(batch.getCorralNumber());
         batchWithClientDTO.setDteNumber(batch.getDteNumber());
         batchWithClientDTO.setId(batch.getId());
-
+        logger.debug(c.toString());
         ClientForBatchDTO client = new ClientForBatchDTO();
         client.setCuit(c.getCuit());
         client.setId(c.getId());
@@ -139,6 +146,9 @@ public class BatchServiceImpl implements BatchService{
     @Override
     public AnimalsOnGround deleteAnimalsOnGroundById(Integer animalsId) throws AnimalsOnGroundNotFound, HttpForbidenException, AuctionNotFoundException, BatchNotFoundException {
         Batch batchOwn = getBatchByAnimalsOnGroundId(animalsId);
+        if(batchOwn == null){
+            throw new AnimalsOnGroundNotFound("El conjunto de Animales En Pista co id " + animalsId + " no existe");
+        }
         if(batchOwn.getDeleted() != null && batchOwn.getDeleted()){
             throw new BatchNotFoundException("El lote al que pertenece estos animales no existe");
         }
@@ -171,12 +181,12 @@ public class BatchServiceImpl implements BatchService{
     }
 
     @Override
-    public AnimalsOnGround updateAnimalsOnGroundById(Integer animalsId, AnimalsOnGroundDTO animalsOnGroundDTO) throws BadHttpRequest, AnimalsOnGroundNotFound, HttpForbidenException, AuctionNotFoundException {
+    public AnimalsOnGround updateAnimalsOnGroundById(Integer animalsId, AnimalsOnGroundDTO animalsOnGroundDTO) throws BadHttpRequest,IllegalArgumentException, AnimalsOnGroundNotFound, HttpForbidenException, AuctionNotFoundException {
         return animalsOnGroundService.updateAnimalsOnGround(animalsId,animalsOnGroundDTO );
     }
 
     @Override
-    public AnimalsOnGround addAnimalsOnGround(Integer batchId, AnimalsOnGround animalsOnGround) throws BatchNotFoundException, IllegalArgumentException, AuctionNotFoundException, HttpForbidenException {
+    public List<AnimalsOnGround> addAnimalsOnGround(Integer batchId, AnimalsOnGround animalsOnGround) throws BatchNotFoundException, IllegalArgumentException, AuctionNotFoundException, HttpForbidenException {
         Batch batch = findById(batchId);
         if(batch.getDeleted() != null && batch.getDeleted()){
             throw new BatchNotFoundException("El lote con id: " + batchId + " no existe.");
@@ -187,22 +197,22 @@ public class BatchServiceImpl implements BatchService{
         if(batch.getAuction().getFinished() != null && batch.getAuction().getFinished()){
             throw new HttpForbidenException("No se pueden editar lotes de un remate finalizado.");
         }
-        if(animalsOnGround.getAmount() < 0){
+        if(animalsOnGround.getAmount() <= 0){
             throw new IllegalArgumentException("La cantidad de animales a agregar debe ser mayor a 0");
         }
         batch.getAnimalsOnGround().add(animalsOnGround);
         logger.debug(batch.getAnimalsOnGround().toString());
         logger.debug(animalsOnGround.toString());
-        batchDAO.save(batch);
-        return animalsOnGround;
+        Batch updatedBatch = batchDAO.save(batch);
+        return updatedBatch.getAnimalsOnGround();
     }
 
     private Auction getAuctionNotDeletedById(Integer auctionId) throws AuctionNotFoundException, HttpForbidenException {
         Auction auction = auctionService.getAuctionById(auctionId);
-        if (auction.getDeleted()) {
+        if (auction.getDeleted() != null && auction.getDeleted()) {
             throw new AuctionNotFoundException("El remate con id: " + auctionId + " no existe.");
         }
-        if (auction.getFinished()) {
+        if (auction.getFinished() != null && auction.getFinished()) {
             throw new HttpForbidenException("El remate ya ha finalizado, por lo tanto, no puede agregarse este lote al mismo.");
         }
         return auction;

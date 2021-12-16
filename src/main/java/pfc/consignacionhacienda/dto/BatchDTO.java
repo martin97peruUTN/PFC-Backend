@@ -7,7 +7,7 @@ public class BatchDTO {
     private Integer id;
     private Provenance provenance;
     private Integer corralNumber;
-    private Integer dteNumber;
+    private String dteNumber;
     private Boolean deleted;
 
     public Integer getId() {
@@ -34,11 +34,11 @@ public class BatchDTO {
         this.corralNumber = corralNumber;
     }
 
-    public Integer getDteNumber() {
+    public String getDteNumber() {
         return dteNumber;
     }
 
-    public void setDteNumber(Integer dteNumber) {
+    public void setDteNumber(String dteNumber) {
         this.dteNumber = dteNumber;
     }
 

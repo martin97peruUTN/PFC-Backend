@@ -20,4 +20,6 @@ public interface AnimalsOnGroundService {
     AnimalsOnGround getAnimalsOnGroundNotDeletedById(Integer animalsId);
 
     AnimalsOnGround updateAnimalsOnGround(Integer animalsId, AnimalsOnGroundDTO animalsOnGroundDTO) throws BadHttpRequest, AnimalsOnGroundNotFound, AuctionNotFoundException, HttpForbidenException;
+
+    AnimalsOnGround findById(Integer animalsOnGroundId) throws AnimalsOnGroundNotFound;
 }

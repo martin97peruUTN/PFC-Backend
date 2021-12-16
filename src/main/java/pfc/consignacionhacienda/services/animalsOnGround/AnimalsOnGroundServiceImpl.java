@@ -1,5 +1,7 @@
 package pfc.consignacionhacienda.services.animalsOnGround;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,6 +22,8 @@ import java.util.Optional;
 
 @Service
 public class AnimalsOnGroundServiceImpl implements AnimalsOnGroundService{
+
+    private static final Logger logger = LoggerFactory.getLogger(AnimalsOnGroundServiceImpl.class);
 
     @Autowired
     AnimalsOnGroundDAO animalsOnGroundDAO;
@@ -56,6 +60,7 @@ public class AnimalsOnGroundServiceImpl implements AnimalsOnGroundService{
     @Override
     public AnimalsOnGround deleteById(Integer id) throws AnimalsOnGroundNotFound {
         AnimalsOnGround animalsOnGround = findById(id);
+        logger.debug(animalsOnGround.toString());
         if(animalsOnGround.getDeleted() != null && animalsOnGround.getDeleted()){
             throw new AnimalsOnGroundNotFound("El conjunto de animales en pista con id: " + id + " no existe");
         }
@@ -69,7 +74,7 @@ public class AnimalsOnGroundServiceImpl implements AnimalsOnGroundService{
     }
 
     @Override
-    public AnimalsOnGround updateAnimalsOnGround(Integer animalsId, AnimalsOnGroundDTO animalsOnGroundDTO) throws BadHttpRequest, AnimalsOnGroundNotFound, AuctionNotFoundException, HttpForbidenException {
+    public AnimalsOnGround updateAnimalsOnGround(Integer animalsId, AnimalsOnGroundDTO animalsOnGroundDTO) throws BadHttpRequest, IllegalArgumentException,AnimalsOnGroundNotFound, AuctionNotFoundException, HttpForbidenException {
         if(animalsOnGroundDTO.getId() != null && !animalsOnGroundDTO.getId().equals(animalsId)){
             throw new BadHttpRequest("El id del path no coincide con el id del body del request");
         }
@@ -97,7 +102,7 @@ public class AnimalsOnGroundServiceImpl implements AnimalsOnGroundService{
         return animalsOnGroundDAO.save(animalsOnGround);
     }
 
-    private AnimalsOnGround findById(Integer id) throws AnimalsOnGroundNotFound {
+     public AnimalsOnGround findById(Integer id) throws AnimalsOnGroundNotFound {
         Optional<AnimalsOnGround> animalsOnGround = animalsOnGroundDAO.findById(id);
         if(animalsOnGround.isPresent()){
             return animalsOnGround.get();
