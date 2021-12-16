@@ -1,6 +1,7 @@
 package pfc.consignacionhacienda.dto;
 
 import pfc.consignacionhacienda.model.AnimalsOnGround;
+import pfc.consignacionhacienda.model.Client;
 import pfc.consignacionhacienda.model.Provenance;
 
 import java.util.List;
@@ -10,7 +11,7 @@ public class BatchWithClientDTO {
     private Integer corralNumber;
     private String dteNumber;
     private Provenance provenance;
-    private ClientForBatchDTO client;
+    private Client client;
     List<AnimalsOnGround> animalsOnGround;
 
     public Integer getId() {
@@ -45,11 +46,11 @@ public class BatchWithClientDTO {
         this.provenance = provenance;
     }
 
-    public ClientForBatchDTO getClient() {
+    public Client getClient() {
         return client;
     }
 
-    public void setClient(ClientForBatchDTO client) {
+    public void setClient(Client client) {
         this.client = client;
     }
 

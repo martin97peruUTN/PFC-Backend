@@ -12,7 +12,6 @@ import pfc.consignacionhacienda.dao.BatchDAO;
 import pfc.consignacionhacienda.dto.AnimalsOnGroundDTO;
 import pfc.consignacionhacienda.dto.BatchDTO;
 import pfc.consignacionhacienda.dto.BatchWithClientDTO;
-import pfc.consignacionhacienda.dto.ClientForBatchDTO;
 import pfc.consignacionhacienda.exceptions.BadHttpRequest;
 import pfc.consignacionhacienda.exceptions.HttpForbidenException;
 import pfc.consignacionhacienda.exceptions.animalsOnGround.AnimalsOnGroundNotFound;
@@ -134,11 +133,7 @@ public class BatchServiceImpl implements BatchService{
         batchWithClientDTO.setDteNumber(batch.getDteNumber());
         batchWithClientDTO.setId(batch.getId());
         logger.debug(c.toString());
-        ClientForBatchDTO client = new ClientForBatchDTO();
-        client.setCuit(c.getCuit());
-        client.setId(c.getId());
-        client.setName(c.getName());
-        batchWithClientDTO.setClient(client);
+        batchWithClientDTO.setClient(c);
 
         return batchWithClientDTO;
     }
