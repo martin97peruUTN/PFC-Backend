@@ -127,7 +127,7 @@ public class AuctionServiceImpl implements AuctionService{
             throw new HttpForbidenException("No puede eliminarse un remate que ya se realizo.");
         }
         auction.setDeleted(true);
-        return this.saveAuction(auction);
+        return auctionDAO.save(auction);
     }
 
     @Override
@@ -156,10 +156,12 @@ public class AuctionServiceImpl implements AuctionService{
                 throw new InvalidCredentialsException("Debe existir al menos un usuario Consignatario o Administrador asociado al remate.");
             }
         }
-
+        if (fields.getDate() != null && Instant.now().isAfter(fields.getDate())) {
+            throw new InvalidCredentialsException("La fecha del remate es invalida");
+        }
         Auction auction = getAuctionById(id);
         auctionMapper.updateAuctionFromDto(fields, auction);
-        return saveAuction(auction);
+        return auctionDAO.save(auction);
     }
 
     @Override
