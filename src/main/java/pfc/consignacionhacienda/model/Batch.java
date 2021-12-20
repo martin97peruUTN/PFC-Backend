@@ -22,7 +22,7 @@ public class Batch {
     @JoinColumn(name = "auction_id")
     private Auction auction;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     @JoinColumn(name = "provenance_id")
     private Provenance provenance;
 
