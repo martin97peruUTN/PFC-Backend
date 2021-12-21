@@ -35,7 +35,7 @@ public class ClientRest {
     }
 
     @GetMapping("/{id}")
-    ResponseEntity<Client> getClientById(@PathVariable Integer id){
+    ResponseEntity<Client> getClientByPage(@PathVariable Integer id){
         try {
             return ResponseEntity.ok(clientService.getClientById(id));
         }catch (ClientNotFoundException e) {
@@ -48,7 +48,7 @@ public class ClientRest {
     }
 
     @GetMapping()
-    ResponseEntity<Page<Client>> getClientById(
+    ResponseEntity<Page<Client>> getClientByPage(
             @RequestParam(required = false, defaultValue = "0") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer limit,
             @RequestParam(required = false, name = "name", defaultValue = "") String clientName
