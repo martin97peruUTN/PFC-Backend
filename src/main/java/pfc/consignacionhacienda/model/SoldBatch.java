@@ -8,7 +8,7 @@ public class SoldBatch {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    private Integer dteNumber;
+    private String dteNumber;
 
     @Column(nullable = false)
     private Integer amount;
@@ -23,11 +23,11 @@ public class SoldBatch {
 
     private Boolean deleted;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     @JoinColumn(name = "animals_id")
     private AnimalsOnGround animalsOnGround;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     @JoinColumn(name = "client_id")
     private Client client;
 
@@ -39,11 +39,11 @@ public class SoldBatch {
         this.id = id;
     }
 
-    public Integer getDteNumber() {
+    public String getDteNumber() {
         return dteNumber;
     }
 
-    public void setDteNumber(Integer dteNumber) {
+    public void setDteNumber(String dteNumber) {
         this.dteNumber = dteNumber;
     }
 
