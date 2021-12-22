@@ -3,22 +3,32 @@ package pfc.consignacionhacienda.services.soldBatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import pfc.consignacionhacienda.dao.SoldBatchDAO;
 import pfc.consignacionhacienda.dto.SoldBatchDTO;
+import pfc.consignacionhacienda.dto.SoldBatchResponseDTO;
 import pfc.consignacionhacienda.exceptions.HttpForbidenException;
 import pfc.consignacionhacienda.exceptions.HttpUnauthorizedException;
 import pfc.consignacionhacienda.exceptions.animalsOnGround.AnimalsOnGroundNotFound;
 import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
 import pfc.consignacionhacienda.exceptions.batch.BatchNotFoundException;
 import pfc.consignacionhacienda.exceptions.soldBatch.SoldBatchNotFoundException;
-import pfc.consignacionhacienda.model.*;
+import pfc.consignacionhacienda.model.AnimalsOnGround;
+import pfc.consignacionhacienda.model.Auction;
+import pfc.consignacionhacienda.model.Batch;
+import pfc.consignacionhacienda.model.SoldBatch;
 import pfc.consignacionhacienda.services.animalsOnGround.AnimalsOnGroundService;
 import pfc.consignacionhacienda.services.auction.AuctionService;
 import pfc.consignacionhacienda.services.batch.BatchService;
+import pfc.consignacionhacienda.services.client.ClientService;
 import pfc.consignacionhacienda.services.user.UserService;
 import pfc.consignacionhacienda.utils.SoldBatchMapper;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -44,6 +54,9 @@ public class SoldBatchServiceImpl implements SoldBatchService{
 
     @Autowired
     private SoldBatchMapper soldBatchMapper;
+
+    @Autowired
+    private ClientService clientService;
 
     @Override
     public Integer getTotalSold(Integer id) {
@@ -147,6 +160,26 @@ public class SoldBatchServiceImpl implements SoldBatchService{
         }
         soldBatchMapper.updateSoldBatchFromDto(soldBatchDTO, soldBatch);
         return soldBatch;
+    }
+
+    @Override
+    public Page<SoldBatchResponseDTO> getSoldBatchsByAuctionAndPage(Integer auctionId, Integer page, Integer limit) {
+        Pageable p = PageRequest.of(page, limit);
+        Page<SoldBatch> soldBatches = soldBatchDAO.findByAuctionId(auctionId, p);
+        List<SoldBatchResponseDTO> responseDTOList = new ArrayList<>();
+        for(SoldBatch soldBatch: soldBatches){
+            SoldBatchResponseDTO soldBatchResponseDTO = new SoldBatchResponseDTO();
+            soldBatchResponseDTO.setAmount(soldBatch.getAmount());
+            soldBatchResponseDTO.setPrice(soldBatch.getPrice());
+            soldBatchResponseDTO.setDteNumber(soldBatch.getDteNumber());
+            soldBatchResponseDTO.setMustWeigh(soldBatchResponseDTO.getMustWeigh());
+            soldBatchResponseDTO.setWeight(soldBatch.getWeight());
+            soldBatchResponseDTO.setCategory(soldBatch.getAnimalsOnGround().getCategory());
+            soldBatchResponseDTO.setBuyer(soldBatch.getClient());
+            soldBatchResponseDTO.setSeller(clientService.findByProvenanceId(batchService.getBatchByAnimalsOnGroundId(soldBatch.getAnimalsOnGround().getId()).getProvenance().getId()));
+            responseDTOList.add(soldBatchResponseDTO);
+        }
+        return new PageImpl<>(responseDTOList, p, soldBatches.getTotalElements());
     }
 
     private SoldBatch findByIdNotDeleted(Integer soldBatchId) throws SoldBatchNotFoundException {

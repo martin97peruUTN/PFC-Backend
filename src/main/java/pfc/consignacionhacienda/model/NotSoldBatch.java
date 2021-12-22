@@ -1,7 +1,7 @@
 package pfc.consignacionhacienda.model;
 
 import javax.persistence.*;
-
+@Entity
 public class NotSoldBatch {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
