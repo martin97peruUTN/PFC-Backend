@@ -98,4 +98,23 @@ public class SoldBatchRest {
             return ResponseEntity.internalServerError().build();
         }
     }
+
+    @DeleteMapping("/{soldBatchId}")
+    ResponseEntity<SoldBatch> deleteById(@PathVariable Integer soldBatchId){
+        try {
+            return ResponseEntity.ok(soldBatchService.deleteById(soldBatchId));
+        } catch (HttpUnauthorizedException e) {
+           logger.error(e.getMessage());
+           return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        } catch (AnimalsOnGroundNotFound | SoldBatchNotFoundException | AuctionNotFoundException | BatchNotFoundException e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (HttpForbidenException e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }catch (Exception e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 }

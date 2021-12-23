@@ -10,6 +10,8 @@ public class AnimalsOnGroundDTO {
     private Client seller;
     private Integer amount;
     private Integer soldAmount;
+    private Boolean sold;
+    private Boolean notSold;
 
     public Integer getId() {
         return id;
@@ -59,6 +61,22 @@ public class AnimalsOnGroundDTO {
         this.soldAmount = soldAmount;
     }
 
+    public Boolean getSold() {
+        return sold;
+    }
+
+    public void setSold(Boolean sold) {
+        this.sold = sold;
+    }
+
+    public Boolean getNotSold() {
+        return notSold;
+    }
+
+    public void setNotSold(Boolean notSold) {
+        this.notSold = notSold;
+    }
+
     @Override
     public String toString() {
         return "AnimalsOnGroundDTO{" +
@@ -68,6 +86,8 @@ public class AnimalsOnGroundDTO {
                 ", seller=" + seller +
                 ", amount=" + amount +
                 ", soldAmount=" + soldAmount +
+                ", sold=" + sold +
+                ", notSold=" + notSold +
                 '}';
     }
 }

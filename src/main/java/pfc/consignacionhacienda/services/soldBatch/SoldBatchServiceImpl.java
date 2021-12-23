@@ -182,6 +182,34 @@ public class SoldBatchServiceImpl implements SoldBatchService{
         return new PageImpl<>(responseDTOList, p, soldBatches.getTotalElements());
     }
 
+    @Override
+    public SoldBatch deleteById(Integer soldBatchId) throws HttpUnauthorizedException, AnimalsOnGroundNotFound, SoldBatchNotFoundException, AuctionNotFoundException, HttpForbidenException, BatchNotFoundException {
+        SoldBatch soldBatch = findByIdNotDeleted(soldBatchId);
+        AnimalsOnGround animalsOnGround = animalsOnGroundService.findByIdNotDeleted(soldBatch.getAnimalsOnGround().getId());
+        Batch batch = batchService.getBatchByAnimalsOnGroundId(animalsOnGround.getId());
+        if(batch == null || (batch.getDeleted() != null && batch.getDeleted())){
+            throw new BatchNotFoundException("El Lote Vendido pertenece a un Lote de Venta inexistente");
+        }
+        Auction auction = batch.getAuction();
+        if(auction.getDeleted() != null && auction.getDeleted()){
+            throw new AuctionNotFoundException("El Lote Vendido pertenece a un Remate inexistente");
+        }
+
+        if(auction.getFinished() != null && auction.getFinished()){
+            throw new HttpForbidenException("No puede editarse un remate eliminado.");
+        }
+        if(!userService.getCurrentUserAuthorities().toArray()[0].toString().equals("Administrador")) {
+            boolean userBelongsToAuction = auction.getUsers().stream().anyMatch(u -> u.getId().equals(userService.getCurrentUser().getId()));
+            if (!userBelongsToAuction) {
+                throw new HttpUnauthorizedException("Usted no esta autorizado a editar este remate.");
+            }
+        }
+        animalsOnGround.setSold(false);
+        animalsOnGroundService.save(animalsOnGround);
+        soldBatchDAO.deleteById(soldBatchId);
+        return soldBatch;
+    }
+
     private SoldBatch findByIdNotDeleted(Integer soldBatchId) throws SoldBatchNotFoundException {
         Optional<SoldBatch> soldBatchOpt = soldBatchDAO.findById(soldBatchId);
         if(soldBatchOpt.isPresent()){
