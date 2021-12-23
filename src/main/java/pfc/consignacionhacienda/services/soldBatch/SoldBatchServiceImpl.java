@@ -159,7 +159,7 @@ public class SoldBatchServiceImpl implements SoldBatchService{
             }
         }
         soldBatchMapper.updateSoldBatchFromDto(soldBatchDTO, soldBatch);
-        return soldBatch;
+        return soldBatchDAO.save(soldBatch);
     }
 
     @Override
@@ -169,10 +169,11 @@ public class SoldBatchServiceImpl implements SoldBatchService{
         List<SoldBatchResponseDTO> responseDTOList = new ArrayList<>();
         for(SoldBatch soldBatch: soldBatches){
             SoldBatchResponseDTO soldBatchResponseDTO = new SoldBatchResponseDTO();
+            soldBatchResponseDTO.setId(soldBatch.getId());
             soldBatchResponseDTO.setAmount(soldBatch.getAmount());
             soldBatchResponseDTO.setPrice(soldBatch.getPrice());
             soldBatchResponseDTO.setDteNumber(soldBatch.getDteNumber());
-            soldBatchResponseDTO.setMustWeigh(soldBatchResponseDTO.getMustWeigh());
+            soldBatchResponseDTO.setMustWeigh(soldBatch.getMustWeigh());
             soldBatchResponseDTO.setWeight(soldBatch.getWeight());
             soldBatchResponseDTO.setCategory(soldBatch.getAnimalsOnGround().getCategory());
             soldBatchResponseDTO.setBuyer(soldBatch.getClient());

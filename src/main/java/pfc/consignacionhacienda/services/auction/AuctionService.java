@@ -1,6 +1,7 @@
 package pfc.consignacionhacienda.services.auction;
 
 import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
 import pfc.consignacionhacienda.dto.AuctionDTO;
 import pfc.consignacionhacienda.exceptions.HttpForbidenException;
 import pfc.consignacionhacienda.exceptions.HttpUnauthorizedException;
@@ -28,4 +29,6 @@ public interface AuctionService {
     List<User> getUsersByAuctionId(Integer auctionID) throws AuctionNotFoundException;
     Auction removeUserFromAuction(Integer auctionId, Integer UserId) throws AuctionNotFoundException, UserNotFoundException, HttpForbidenException, HttpUnauthorizedException;
     Auction addUserToAuction(Integer auctionId, Integer userId) throws AuctionNotFoundException, UserNotFoundException, HttpUnauthorizedException;
+
+    Auction finishAuctionById(Integer id) throws AuctionNotFoundException, HttpUnauthorizedException;
 }

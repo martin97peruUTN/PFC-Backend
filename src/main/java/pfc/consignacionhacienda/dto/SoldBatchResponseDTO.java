@@ -4,6 +4,7 @@ import pfc.consignacionhacienda.model.Category;
 import pfc.consignacionhacienda.model.Client;
 
 public class SoldBatchResponseDTO {
+    private Integer id;
     private Client buyer;
     private Client seller;
     private Integer amount;
@@ -12,6 +13,14 @@ public class SoldBatchResponseDTO {
     private Double weight;
     private Double price;
     private String dteNumber;
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
 
     public Client getBuyer() {
         return buyer;
@@ -80,7 +89,8 @@ public class SoldBatchResponseDTO {
     @Override
     public String toString() {
         return "SoldBatchResponseDTO{" +
-                "buyer=" + buyer +
+                "id=" + id +
+                ", buyer=" + buyer +
                 ", seller=" + seller +
                 ", amount=" + amount +
                 ", category=" + category +
