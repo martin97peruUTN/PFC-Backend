@@ -91,7 +91,7 @@ public class SoldBatchServiceImpl implements SoldBatchService{
             throw new HttpForbidenException("La cantidad de animales vendidos supera a la cantidad disponible para la venta.");
         }
         if(auction.getFinished() != null && auction.getFinished()){
-            throw new HttpForbidenException("No puede editarse un remate eliminado.");
+            throw new HttpForbidenException("No puede editarse un remate finalizado .");
         }
         if(!userService.getCurrentUserAuthorities().toArray()[0].toString().equals("Administrador")) {
             boolean userBelongsToAuction = auction.getUsers().stream().anyMatch(u -> u.getId().equals(userService.getCurrentUser().getId()));
@@ -126,7 +126,7 @@ public class SoldBatchServiceImpl implements SoldBatchService{
         }
 
         if(auction.getFinished() != null && auction.getFinished()){
-            throw new HttpForbidenException("No puede editarse un remate eliminado.");
+            throw new HttpForbidenException("No puede editarse un remate finalizado.");
         }
 
         if(!userService.getCurrentUserAuthorities().toArray()[0].toString().equals("Administrador")) {
@@ -197,7 +197,7 @@ public class SoldBatchServiceImpl implements SoldBatchService{
         }
 
         if(auction.getFinished() != null && auction.getFinished()){
-            throw new HttpForbidenException("No puede editarse un remate eliminado.");
+            throw new HttpForbidenException("No puede editarse un remate finalizado.");
         }
         if(!userService.getCurrentUserAuthorities().toArray()[0].toString().equals("Administrador")) {
             boolean userBelongsToAuction = auction.getUsers().stream().anyMatch(u -> u.getId().equals(userService.getCurrentUser().getId()));
