@@ -13,8 +13,10 @@ import pfc.consignacionhacienda.exceptions.HttpUnauthorizedException;
 import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
 import pfc.consignacionhacienda.exceptions.user.InvalidCredentialsException;
 import pfc.consignacionhacienda.exceptions.user.UserNotFoundException;
-import pfc.consignacionhacienda.model.Auction;
-import pfc.consignacionhacienda.model.User;
+import pfc.consignacionhacienda.model.*;
+import pfc.consignacionhacienda.services.batch.BatchService;
+import pfc.consignacionhacienda.services.notSoldBatch.NotSoldBatchService;
+import pfc.consignacionhacienda.services.soldBatch.SoldBatchService;
 import pfc.consignacionhacienda.services.user.UserService;
 import pfc.consignacionhacienda.utils.AuctionMapper;
 
@@ -37,6 +39,15 @@ public class AuctionServiceImpl implements AuctionService{
 
     @Autowired
     private AuctionMapper auctionMapper;
+
+    @Autowired
+    private BatchService batchService;
+
+    @Autowired
+    private SoldBatchService soldBatchService;
+
+    @Autowired
+    private NotSoldBatchService notSoldBatchService;
 
     @Override
     public Auction saveAuction(Auction auction) throws InvalidCredentialsException, HttpUnauthorizedException{
@@ -214,5 +225,38 @@ public class AuctionServiceImpl implements AuctionService{
             throw new HttpUnauthorizedException("Usted no es participante del remate que quiere modificar");
         }
         throw new AuctionNotFoundException("El remate con id: " + auctionId + " no existe");
+    }
+
+    @Override
+    public Auction finishAuctionById(Integer id) throws AuctionNotFoundException, HttpUnauthorizedException {
+        Auction thisAuction = getAuctionById(id);
+        if(thisAuction.getDeleted()!=null && thisAuction.getDeleted()){
+            throw new AuctionNotFoundException("No existe remate con id "+id);
+        }
+        if(!userService.getCurrentUserAuthorities().toArray()[0].toString().equals("Administrador")) {
+            boolean userBelongsToAuction = thisAuction.getUsers().stream().anyMatch(u -> u.getId().equals(userService.getCurrentUser().getId()));
+            if (!userBelongsToAuction) {
+                throw new HttpUnauthorizedException("Usted no esta autorizado a editar este remate.");
+            }
+        }
+        List<NotSoldBatch> notSoldBatches = new ArrayList<>();
+        List<Batch> batchList = batchService.getBatchesByAuctionId(id);
+        for(Batch b: batchList){
+            for(AnimalsOnGround a: b.getAnimalsOnGround()){
+                Integer amount = a.getAmount()-soldBatchService.getTotalSold(a.getId());
+                if(!a.getSold()){
+                    if(amount<=0){
+                        throw new IllegalStateException("El animalOnGround no esta vendido pero no tiene cantidades disponibles para vender");
+                    }
+                    NotSoldBatch notSoldBatch = new NotSoldBatch();
+                    notSoldBatch.setAnimalsOnGround(a);
+                    notSoldBatch.setAmount(amount);
+                    notSoldBatches.add(notSoldBatch);
+                }
+            }
+        }
+        notSoldBatchService.saveAll(notSoldBatches);
+        thisAuction.setFinished(true);
+        return auctionDAO.save(thisAuction);
     }
 }

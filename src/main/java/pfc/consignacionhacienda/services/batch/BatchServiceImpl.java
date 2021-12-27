@@ -242,4 +242,9 @@ public class BatchServiceImpl implements BatchService{
         batch.setDeleted(true);
         return batchDAO.save(batch);
     }
+
+    @Override
+    public List<Batch> getBatchesByAuctionId(Integer id) {
+        return batchDAO.findByAuctionId(id);
+    }
 }

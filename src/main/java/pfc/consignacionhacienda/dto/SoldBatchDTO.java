@@ -1,34 +1,22 @@
-package pfc.consignacionhacienda.model;
+package pfc.consignacionhacienda.dto;
 
-import javax.persistence.*;
+import pfc.consignacionhacienda.model.Client;
 
-@Entity
-public class SoldBatch {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class SoldBatchDTO {
     private Integer id;
 
     private String dteNumber;
 
-    @Column(nullable = false)
     private Integer amount;
 
-    @Column(nullable = false)
     private Double price;
 
-    @Column(nullable = false)
     private Boolean mustWeigh;
 
     private Double weight;
 
     private Boolean deleted;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "animals_id")
-    private AnimalsOnGround animalsOnGround;
-
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "client_id")
     private Client client;
 
     public Integer getId() {
@@ -79,12 +67,12 @@ public class SoldBatch {
         this.weight = weight;
     }
 
-    public AnimalsOnGround getAnimalsOnGround() {
-        return animalsOnGround;
+    public Boolean getDeleted() {
+        return deleted;
     }
 
-    public void setAnimalsOnGround(AnimalsOnGround animalsOnGround) {
-        this.animalsOnGround = animalsOnGround;
+    public void setDeleted(Boolean deleted) {
+        this.deleted = deleted;
     }
 
     public Client getClient() {
@@ -95,25 +83,16 @@ public class SoldBatch {
         this.client = client;
     }
 
-    public Boolean getDeleted() {
-        return deleted;
-    }
-
-    public void setDeleted(Boolean deleted) {
-        this.deleted = deleted;
-    }
-
     @Override
     public String toString() {
-        return "SoldBatch{" +
+        return "SoldBatchDTO{" +
                 "id=" + id +
-                ", dteNumber=" + dteNumber +
+                ", dteNumber='" + dteNumber + '\'' +
                 ", amount=" + amount +
                 ", price=" + price +
                 ", mustWeigh=" + mustWeigh +
                 ", weight=" + weight +
                 ", deleted=" + deleted +
-                ", animalsOnGround=" + animalsOnGround +
                 ", client=" + client +
                 '}';
     }

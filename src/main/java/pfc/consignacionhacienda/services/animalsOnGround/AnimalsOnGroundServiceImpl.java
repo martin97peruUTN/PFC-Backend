@@ -98,7 +98,12 @@ public class AnimalsOnGroundServiceImpl implements AnimalsOnGroundService{
         if(animalsOnGroundDTO.getAmount() != null && totalVendidos > animalsOnGroundDTO.getAmount()){
             throw new HttpForbidenException("La cantidad 'amount' de Animales En Pista no puede ser menor a la cantidad que ya se ha vendido.");
         }
+        if(animalsOnGroundDTO.getAmount() != null && animalsOnGround.getAmount() < animalsOnGroundDTO.getAmount() && animalsOnGround.getSold() != null && animalsOnGround.getSold()){
+            animalsOnGround.setSold(false);
+        }
+        logger.info(animalsOnGroundDTO.toString());
         animalsOnGoundMapper.updateAnimalsOnGroundFromDto(animalsOnGroundDTO, animalsOnGround);
+        logger.info(animalsOnGround.toString());
         return animalsOnGroundDAO.save(animalsOnGround);
     }
 
@@ -108,5 +113,19 @@ public class AnimalsOnGroundServiceImpl implements AnimalsOnGroundService{
             return animalsOnGround.get();
         }
         throw new AnimalsOnGroundNotFound("El conjunto de animales en pista con id: " + id + " no existe");
+    }
+
+    @Override
+    public AnimalsOnGround findByIdNotDeleted(Integer animalsOnGroundId) throws AnimalsOnGroundNotFound {
+        AnimalsOnGround animalsOnGround = this.findById(animalsOnGroundId);
+        if(animalsOnGround.getDeleted() != null && animalsOnGround.getDeleted()){
+            throw new AnimalsOnGroundNotFound("El conjunto de animales en pista con id: " + animalsOnGroundId + " no existe");
+        }
+        return animalsOnGround;
+    }
+
+    @Override
+    public AnimalsOnGround save(AnimalsOnGround animalsOnGround) {
+        return animalsOnGroundDAO.save(animalsOnGround);
     }
 }

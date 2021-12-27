@@ -116,4 +116,23 @@ public class AuctionRest {
             return ResponseEntity.internalServerError().build();
         }
     }
+
+    @PostMapping("/finish/{id}")
+    public ResponseEntity<Auction> finishAuctionById(@PathVariable Integer id) {
+        try {
+            return ResponseEntity.ok(auctionService.finishAuctionById(id));
+        } catch (IllegalStateException e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.unprocessableEntity().build();
+        } catch (AuctionNotFoundException e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.notFound().build();
+        } catch (HttpUnauthorizedException e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 }
