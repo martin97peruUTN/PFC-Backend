@@ -101,13 +101,14 @@ public class AnimalsOnGroundServiceImpl implements AnimalsOnGroundService{
         if(animalsOnGroundDTO.getAmount() != null && animalsOnGround.getAmount() < animalsOnGroundDTO.getAmount() && animalsOnGround.getSold() != null && animalsOnGround.getSold()){
             animalsOnGround.setSold(false);
         }
+        animalsOnGroundDTO.setSold(null);
         logger.info(animalsOnGroundDTO.toString());
         animalsOnGoundMapper.updateAnimalsOnGroundFromDto(animalsOnGroundDTO, animalsOnGround);
         logger.info(animalsOnGround.toString());
         return animalsOnGroundDAO.save(animalsOnGround);
     }
 
-     public AnimalsOnGround findById(Integer id) throws AnimalsOnGroundNotFound {
+    public AnimalsOnGround findById(Integer id) throws AnimalsOnGroundNotFound {
         Optional<AnimalsOnGround> animalsOnGround = animalsOnGroundDAO.findById(id);
         if(animalsOnGround.isPresent()){
             return animalsOnGround.get();
