@@ -146,7 +146,7 @@ public class AnimalsOnGroundServiceImpl implements AnimalsOnGroundService{
                     animalsOnGoundMapper.updateAnimalsOnGroundFromDto(animalsOnGroundDTO, animalsOnGround);
                     updatedAnimalsOnGroundList.add(animalsOnGround);
                 }else{
-                    throw new AnimalsOnGroundNotFound("Alguno de los animales no tienen id u orden de salida");
+                    throw new AnimalsOnGroundNotFound("Alguno de los animales no fue encontrado en la DB");
                 }
             }else{
                 throw new IllegalArgumentException("Alguno de los animales no tienen id u orden de salida");
