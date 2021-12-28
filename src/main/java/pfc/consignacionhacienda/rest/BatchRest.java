@@ -178,4 +178,23 @@ public class BatchRest {
             return ResponseEntity.internalServerError().build();
         }
     }
+
+    @PatchMapping("/animals-on-ground/sort/{auctionId}")
+    ResponseEntity<List<AnimalsOnGround>> sortAnimalsOnGround(
+            @PathVariable Integer auctionId,
+            @RequestBody List<AnimalsOnGroundDTO> animalsOnGroundDTOList
+    ){
+        try {
+            return ResponseEntity.ok(batchService.sortAnimalsOnGround(animalsOnGroundDTOList, auctionId));
+        } catch (IllegalArgumentException e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (AnimalsOnGroundNotFound e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 }

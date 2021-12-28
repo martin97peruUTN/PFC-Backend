@@ -9,6 +9,8 @@ import pfc.consignacionhacienda.exceptions.animalsOnGround.AnimalsOnGroundNotFou
 import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
 import pfc.consignacionhacienda.model.AnimalsOnGround;
 
+import java.util.List;
+
 public interface AnimalsOnGroundService {
     Page<AnimalsOnGround> getAnimalsOnGroundByAuction(Integer auctionId, Pageable of);
     Page<AnimalsOnGround> getAnimalsOnGroundByAuctionSold(Integer auctionId, Pageable of);
@@ -26,4 +28,6 @@ public interface AnimalsOnGroundService {
     AnimalsOnGround findByIdNotDeleted(Integer animalsOnGroundId) throws AnimalsOnGroundNotFound;
 
     AnimalsOnGround save(AnimalsOnGround animalsOnGround);
+
+    List<AnimalsOnGround> sortAnimalsOnGround(List<AnimalsOnGroundDTO> animalsOnGroundDTOList, Integer auctionId) throws IllegalArgumentException, AnimalsOnGroundNotFound;
 }

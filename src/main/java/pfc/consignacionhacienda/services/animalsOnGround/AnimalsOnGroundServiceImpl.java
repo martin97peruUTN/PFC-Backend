@@ -18,6 +18,8 @@ import pfc.consignacionhacienda.services.batch.BatchService;
 import pfc.consignacionhacienda.services.soldBatch.SoldBatchService;
 import pfc.consignacionhacienda.utils.AnimalsOnGoundMapper;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -128,5 +130,28 @@ public class AnimalsOnGroundServiceImpl implements AnimalsOnGroundService{
     @Override
     public AnimalsOnGround save(AnimalsOnGround animalsOnGround) {
         return animalsOnGroundDAO.save(animalsOnGround);
+    }
+
+    @Override
+    public List<AnimalsOnGround> sortAnimalsOnGround(List<AnimalsOnGroundDTO> animalsOnGroundDTOList, Integer auctionId) throws IllegalArgumentException, AnimalsOnGroundNotFound {
+        ArrayList<AnimalsOnGround> updatedAnimalsOnGroundList = new ArrayList<>();
+        //Hago esto para hacer un solo llamado a la DB
+        List<AnimalsOnGround> animalsOnGroundFromDB = animalsOnGroundDAO.getAllAnimalsOnGroundByAuctionForSell(auctionId);
+        for(AnimalsOnGroundDTO animalsOnGroundDTO: animalsOnGroundDTOList){
+            if(animalsOnGroundDTO.getId() != null && animalsOnGroundDTO.getStartingOrder() != null){
+                //Esto hacia antes, ahora me traigo toda la lista de una para hacer un solo llamado a la DB
+                //AnimalsOnGround animalsOnGround = getAnimalsOnGroundNotDeletedById(animalsOnGroundDTO.getId());
+                AnimalsOnGround animalsOnGround = animalsOnGroundFromDB.stream().filter(a -> a.getId()==animalsOnGroundDTO.getId()).findFirst().orElse(null);
+                if(animalsOnGround != null){
+                    animalsOnGoundMapper.updateAnimalsOnGroundFromDto(animalsOnGroundDTO, animalsOnGround);
+                    updatedAnimalsOnGroundList.add(animalsOnGround);
+                }else{
+                    throw new AnimalsOnGroundNotFound("Alguno de los animales no tienen id u orden de salida");
+                }
+            }else{
+                throw new IllegalArgumentException("Alguno de los animales no tienen id u orden de salida");
+            }
+        }
+        return animalsOnGroundDAO.saveAll(updatedAnimalsOnGroundList);
     }
 }

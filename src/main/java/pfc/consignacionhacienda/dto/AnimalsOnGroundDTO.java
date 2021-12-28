@@ -12,6 +12,7 @@ public class AnimalsOnGroundDTO {
     private Integer soldAmount;
     private Boolean sold;
     private Boolean notSold;
+    private Integer startingOrder;
 
     public Integer getId() {
         return id;
@@ -77,6 +78,14 @@ public class AnimalsOnGroundDTO {
         this.notSold = notSold;
     }
 
+    public Integer getStartingOrder() {
+        return startingOrder;
+    }
+
+    public void setStartingOrder(Integer startingOrder) {
+        this.startingOrder = startingOrder;
+    }
+
     @Override
     public String toString() {
         return "AnimalsOnGroundDTO{" +
@@ -88,6 +97,7 @@ public class AnimalsOnGroundDTO {
                 ", soldAmount=" + soldAmount +
                 ", sold=" + sold +
                 ", notSold=" + notSold +
+                ", startingOrder=" + startingOrder +
                 '}';
     }
 }

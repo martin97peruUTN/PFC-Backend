@@ -247,4 +247,10 @@ public class BatchServiceImpl implements BatchService{
     public List<Batch> getBatchesByAuctionId(Integer id) {
         return batchDAO.findByAuctionId(id);
     }
+
+    @Override
+    public List<AnimalsOnGround> sortAnimalsOnGround(List<AnimalsOnGroundDTO> animalsOnGroundDTOList, Integer auctionId) throws IllegalArgumentException, AnimalsOnGroundNotFound {
+        return animalsOnGroundService.sortAnimalsOnGround(animalsOnGroundDTOList, auctionId);
+    }
+
 }

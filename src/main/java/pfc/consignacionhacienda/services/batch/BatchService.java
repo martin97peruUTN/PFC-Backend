@@ -28,4 +28,6 @@ public interface BatchService {
     Batch deleteBatchById(Integer batchId) throws HttpForbidenException, AuctionNotFoundException, BatchNotFoundException;
 
     List<Batch> getBatchesByAuctionId(Integer id);
+
+    List<AnimalsOnGround> sortAnimalsOnGround(List<AnimalsOnGroundDTO> animalsOnGroundDTOList, Integer auctionId) throws IllegalArgumentException, AnimalsOnGroundNotFound;
 }
