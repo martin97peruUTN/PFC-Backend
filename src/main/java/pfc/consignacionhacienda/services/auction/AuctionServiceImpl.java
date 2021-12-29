@@ -259,4 +259,22 @@ public class AuctionServiceImpl implements AuctionService{
         thisAuction.setFinished(true);
         return auctionDAO.save(thisAuction);
     }
+
+    @Override
+    public List<NotSoldBatch> resumeAuctionById(Integer auctionId) throws AuctionNotFoundException, HttpUnauthorizedException {
+        Auction thisAuction = getAuctionById(auctionId);
+        if(thisAuction.getDeleted()!=null && thisAuction.getDeleted()){
+            throw new AuctionNotFoundException("No existe remate con id "+auctionId);
+        }
+        if(!userService.getCurrentUserAuthorities().toArray()[0].toString().equals("Administrador")) {
+            boolean userBelongsToAuction = thisAuction.getUsers().stream().anyMatch(u -> u.getId().equals(userService.getCurrentUser().getId()));
+            if (!userBelongsToAuction) {
+                throw new HttpUnauthorizedException("Usted no esta autorizado a editar este remate.");
+            }
+        }
+        //Esta parte no es "atomica", no se que pasaria si se setea en false y no llega a eliminar los notSoldBatches
+        thisAuction.setFinished(false);
+        auctionDAO.save(thisAuction);
+        return notSoldBatchService.deleteAllByAuctionId(auctionId);
+    }
 }

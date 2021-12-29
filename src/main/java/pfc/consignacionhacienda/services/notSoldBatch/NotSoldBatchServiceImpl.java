@@ -52,4 +52,13 @@ public class NotSoldBatchServiceImpl implements NotSoldBatchService{
     public List<NotSoldBatch> saveAll(List<NotSoldBatch> notSoldBatches) {
         return notSoldBatchDAO.saveAll(notSoldBatches);
     }
+
+    @Override
+    public List<NotSoldBatch> deleteAllByAuctionId(Integer auctionId) {
+        //Esto capaz se podria mejorar con una consulta especifica para hacer eliminaciones multiples
+        //pero es algo complicado y no creo que valga la pena, esta funcionalidad no deberia ser muy usada
+        List<NotSoldBatch> list = notSoldBatchDAO.findAllByAuctionId(auctionId);
+        notSoldBatchDAO.deleteAll(list);
+        return list;
+    }
 }

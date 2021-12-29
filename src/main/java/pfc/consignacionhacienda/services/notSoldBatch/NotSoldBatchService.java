@@ -12,4 +12,6 @@ public interface NotSoldBatchService {
     NotSoldBatch save(NotSoldBatch notSoldBatch);
 
     List<NotSoldBatch> saveAll(List<NotSoldBatch> notSoldBatches);
+
+    List<NotSoldBatch> deleteAllByAuctionId(Integer auctionId);
 }

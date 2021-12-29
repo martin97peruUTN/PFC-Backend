@@ -9,6 +9,7 @@ import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
 import pfc.consignacionhacienda.exceptions.user.InvalidCredentialsException;
 import pfc.consignacionhacienda.exceptions.user.UserNotFoundException;
 import pfc.consignacionhacienda.model.Auction;
+import pfc.consignacionhacienda.model.NotSoldBatch;
 import pfc.consignacionhacienda.model.User;
 
 import java.util.List;
@@ -31,4 +32,6 @@ public interface AuctionService {
     Auction addUserToAuction(Integer auctionId, Integer userId) throws AuctionNotFoundException, UserNotFoundException, HttpUnauthorizedException;
 
     Auction finishAuctionById(Integer id) throws AuctionNotFoundException, HttpUnauthorizedException;
+
+    List<NotSoldBatch> resumeAuctionById(Integer id) throws AuctionNotFoundException, HttpUnauthorizedException;
 }
