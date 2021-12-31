@@ -15,6 +15,7 @@ import pfc.consignacionhacienda.services.client.ClientService;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class NotSoldBatchServiceImpl implements NotSoldBatchService{
@@ -51,5 +52,16 @@ public class NotSoldBatchServiceImpl implements NotSoldBatchService{
     @Override
     public List<NotSoldBatch> saveAll(List<NotSoldBatch> notSoldBatches) {
         return notSoldBatchDAO.saveAll(notSoldBatches);
+    }
+
+    @Override
+    public Optional<NotSoldBatch> getNotSoldBatchesByAnimalsOnGroundId(Integer id) {
+        return notSoldBatchDAO.getByAnimalsOnGroundId(id);
+    }
+
+    @Override
+    public List<NotSoldBatch> deleteAll(List<NotSoldBatch> notSoldBatchesToDelete) {
+        notSoldBatchDAO.deleteAll(notSoldBatchesToDelete);
+        return notSoldBatchesToDelete;
     }
 }

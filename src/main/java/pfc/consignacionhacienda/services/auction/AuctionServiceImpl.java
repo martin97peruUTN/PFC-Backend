@@ -240,23 +240,74 @@ public class AuctionServiceImpl implements AuctionService{
             }
         }
         List<NotSoldBatch> notSoldBatches = new ArrayList<>();
+        List<NotSoldBatch> notSoldBatchesToDelete = new ArrayList<>();
         List<Batch> batchList = batchService.getBatchesByAuctionId(id);
         for(Batch b: batchList){
             for(AnimalsOnGround a: b.getAnimalsOnGround()){
                 Integer amount = a.getAmount()-soldBatchService.getTotalSold(a.getId());
-                if(!a.getSold()){
-                    if(amount<=0){
-                        throw new IllegalStateException("El animalOnGround no esta vendido pero no tiene cantidades disponibles para vender");
+                Optional<NotSoldBatch> optionalNotSoldBatch = notSoldBatchService.getNotSoldBatchesByAnimalsOnGroundId(a.getId());
+                //Si ya tengo en la DB un NSB para este AOG es porque ya se habia finalizado el remate antes,
+                //se reanudo, y ahora se volvio a finalizar
+                if(optionalNotSoldBatch.isPresent()){
+                    NotSoldBatch thisNotSoldBatch = optionalNotSoldBatch.get();
+                    //Si hay NSB para este AOG en la DB y getSold ahora es true, es porque antes habian quedado
+                    //animlaes del AOG por vender y ahora se vendieron (se finalizo el remate, se reanudo,
+                    //se vendieron esos animales, y ahora se esta volviendo a finalizar).
+                    //En este caso, tengo que eliminar el NSB, porque estan todos vendidos ahora
+                    if(a.getSold()){
+                        if(amount>0){
+                            throw new IllegalStateException("El animalOnGround esta vendido pero tiene cantidades disponibles para vender");
+                        }else{
+                            notSoldBatchesToDelete.add(thisNotSoldBatch);
+                        }
+                    }else{
+                        if(amount<=0){
+                            throw new IllegalStateException("El animalOnGround no esta vendido pero no tiene cantidades disponibles para vender");
+                        }else{
+                            //Si hay un NSB en la DB para este AOG, getSold es false y amount>0
+                            //tengo que actualizarlo con la nueva cantidad (si es que la misma cambio)
+                            if(amount!=thisNotSoldBatch.getAmount()){
+                                thisNotSoldBatch.setAmount(amount);
+                            }
+                        }
                     }
-                    NotSoldBatch notSoldBatch = new NotSoldBatch();
-                    notSoldBatch.setAnimalsOnGround(a);
-                    notSoldBatch.setAmount(amount);
-                    notSoldBatches.add(notSoldBatch);
+                }else{
+                    //Si no tengo un NSB en la DB para este AOG y el AOG no esta vendido tengo que
+                    //crear un NSB nuevo
+                    if(!a.getSold()){
+                        if(amount<=0){
+                            throw new IllegalStateException("El animalOnGround no esta vendido pero no tiene cantidades disponibles para vender");
+                        }
+                        NotSoldBatch notSoldBatch = new NotSoldBatch();
+                        notSoldBatch.setAnimalsOnGround(a);
+                        notSoldBatch.setAmount(amount);
+                        notSoldBatches.add(notSoldBatch);
+                    }
+                    //Si esta en sold el AOG y no habia un NSB en la DB, no tengo que hacer nada
                 }
             }
         }
         notSoldBatchService.saveAll(notSoldBatches);
+        notSoldBatchService.deleteAll(notSoldBatchesToDelete);
         thisAuction.setFinished(true);
         return auctionDAO.save(thisAuction);
+    }
+
+    @Override
+    public Auction resumeAuctionById(Integer auctionId) throws AuctionNotFoundException, HttpUnauthorizedException {
+        Auction thisAuction = getAuctionById(auctionId);
+        if(thisAuction.getDeleted()!=null && thisAuction.getDeleted()){
+            throw new AuctionNotFoundException("No existe remate con id "+auctionId);
+        }
+        if(!userService.getCurrentUserAuthorities().toArray()[0].toString().equals("Administrador")) {
+            boolean userBelongsToAuction = thisAuction.getUsers().stream().anyMatch(u -> u.getId().equals(userService.getCurrentUser().getId()));
+            if (!userBelongsToAuction) {
+                throw new HttpUnauthorizedException("Usted no esta autorizado a editar este remate.");
+            }
+        }
+        thisAuction.setFinished(false);
+        auctionDAO.save(thisAuction);
+        //return notSoldBatchService.deleteAllByAuctionId(auctionId);
+        return thisAuction;
     }
 }

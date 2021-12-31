@@ -13,8 +13,11 @@ import pfc.consignacionhacienda.exceptions.HttpUnauthorizedException;
 import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
 import pfc.consignacionhacienda.exceptions.user.InvalidCredentialsException;
 import pfc.consignacionhacienda.model.Auction;
+import pfc.consignacionhacienda.model.NotSoldBatch;
 import pfc.consignacionhacienda.services.auction.AuctionService;
 import pfc.consignacionhacienda.services.user.UserService;
+
+import java.util.List;
 
 
 @RestController
@@ -130,6 +133,22 @@ public class AuctionRest {
         } catch (HttpUnauthorizedException e) {
             logger.error(e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @PostMapping("/resume/{id}")
+    public ResponseEntity<Auction> resumeAuctionById(@PathVariable Integer id) {
+        try {
+            return ResponseEntity.ok(auctionService.resumeAuctionById(id));
+        } catch (HttpUnauthorizedException e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        } catch (AuctionNotFoundException e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.notFound().build();
         } catch (Exception e) {
             logger.error(e.getMessage());
             return ResponseEntity.internalServerError().build();
