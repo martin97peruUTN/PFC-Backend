@@ -33,5 +33,5 @@ public interface AuctionService {
 
     Auction finishAuctionById(Integer id) throws AuctionNotFoundException, HttpUnauthorizedException;
 
-    List<NotSoldBatch> resumeAuctionById(Integer id) throws AuctionNotFoundException, HttpUnauthorizedException;
+    Auction resumeAuctionById(Integer id) throws AuctionNotFoundException, HttpUnauthorizedException;
 }

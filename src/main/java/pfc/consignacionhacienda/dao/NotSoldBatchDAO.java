@@ -9,6 +9,7 @@ import pfc.consignacionhacienda.model.NotSoldBatch;
 import pfc.consignacionhacienda.model.SoldBatch;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface NotSoldBatchDAO extends JpaRepository<NotSoldBatch, Integer> {
@@ -33,4 +34,7 @@ public interface NotSoldBatchDAO extends JpaRepository<NotSoldBatch, Integer> {
             "AND  (ag.deleted is null or ag.deleted = false)" +
             "AND (au.deleted is null or au.deleted = false)")
     List<NotSoldBatch> findAllByAuctionId(Integer auctionId);
+
+    @Query("SELECT nsb FROM NotSoldBatch nsb JOIN nsb.animalsOnGround a WHERE a.id = :id")
+    Optional<NotSoldBatch> getByAnimalsOnGroundId(Integer id);
 }

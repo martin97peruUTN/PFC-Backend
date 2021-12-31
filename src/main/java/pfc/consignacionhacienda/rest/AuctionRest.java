@@ -140,7 +140,7 @@ public class AuctionRest {
     }
 
     @PostMapping("/resume/{id}")
-    public ResponseEntity<List<NotSoldBatch>> resumeAuctionById(@PathVariable Integer id) {
+    public ResponseEntity<Auction> resumeAuctionById(@PathVariable Integer id) {
         try {
             return ResponseEntity.ok(auctionService.resumeAuctionById(id));
         } catch (HttpUnauthorizedException e) {

@@ -15,6 +15,7 @@ import pfc.consignacionhacienda.services.client.ClientService;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class NotSoldBatchServiceImpl implements NotSoldBatchService{
@@ -54,11 +55,13 @@ public class NotSoldBatchServiceImpl implements NotSoldBatchService{
     }
 
     @Override
-    public List<NotSoldBatch> deleteAllByAuctionId(Integer auctionId) {
-        //Esto capaz se podria mejorar con una consulta especifica para hacer eliminaciones multiples
-        //pero es algo complicado y no creo que valga la pena, esta funcionalidad no deberia ser muy usada
-        List<NotSoldBatch> list = notSoldBatchDAO.findAllByAuctionId(auctionId);
-        notSoldBatchDAO.deleteAll(list);
-        return list;
+    public Optional<NotSoldBatch> getNotSoldBatchesByAnimalsOnGroundId(Integer id) {
+        return notSoldBatchDAO.getByAnimalsOnGroundId(id);
+    }
+
+    @Override
+    public List<NotSoldBatch> deleteAll(List<NotSoldBatch> notSoldBatchesToDelete) {
+        notSoldBatchDAO.deleteAll(notSoldBatchesToDelete);
+        return notSoldBatchesToDelete;
     }
 }
