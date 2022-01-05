@@ -253,4 +253,11 @@ public class BatchServiceImpl implements BatchService{
         return animalsOnGroundService.sortAnimalsOnGround(animalsOnGroundDTOList, auctionId);
     }
 
+    @Override
+    public Page<Batch> getBatchesByAuctionIdAndPage(Integer auctionId, Integer page, Integer limit) {
+        Pageable p = PageRequest.of(page, limit);
+        Page<Batch> batchList =  batchDAO.findByAuctionIdAndPage(auctionId, p);
+        return batchList;
+    }
+
 }

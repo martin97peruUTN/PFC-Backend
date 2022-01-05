@@ -197,4 +197,16 @@ public class BatchRest {
             return ResponseEntity.internalServerError().build();
         }
     }
+
+    @GetMapping("/by-auction/{auctionId}")
+    ResponseEntity<Page<Batch>> getBatchesByAuctionId(@PathVariable Integer auctionId,
+                                                      @RequestParam(name = "page", defaultValue = "0") Integer page,
+                                                      @RequestParam(name = "limit", defaultValue = "10") Integer limit){
+        try{
+            return ResponseEntity.ok(batchService.getBatchesByAuctionIdAndPage(auctionId, page, limit));
+        }catch (Exception e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 }
