@@ -103,6 +103,9 @@ public class AnimalsOnGroundServiceImpl implements AnimalsOnGroundService{
         if(animalsOnGroundDTO.getAmount() != null && animalsOnGround.getAmount() < animalsOnGroundDTO.getAmount() && animalsOnGround.getSold() != null && animalsOnGround.getSold()){
             animalsOnGround.setSold(false);
         }
+        if(animalsOnGroundDTO.getAmount() != null && animalsOnGroundDTO.getAmount() == totalVendidos && animalsOnGround.getSold() != null && !animalsOnGround.getSold()){
+            animalsOnGround.setSold(true);
+        }
         animalsOnGroundDTO.setSold(null);
         logger.info(animalsOnGroundDTO.toString());
         animalsOnGoundMapper.updateAnimalsOnGroundFromDto(animalsOnGroundDTO, animalsOnGround);
