@@ -254,7 +254,8 @@ public class AuctionServiceImpl implements AuctionService{
                     //animlaes del AOG por vender y ahora se vendieron (se finalizo el remate, se reanudo,
                     //se vendieron esos animales, y ahora se esta volviendo a finalizar).
                     //En este caso, tengo que eliminar el NSB, porque estan todos vendidos ahora
-                    if(a.getSold()){
+                    //Otro caso es que se haya eliminado el AOG, que ahi tambien lo elimino
+                    if(a.getSold() || (a.getDeleted()!=null && a.getDeleted())){
                         if(amount>0){
                             throw new IllegalStateException("El animalOnGround esta vendido pero tiene cantidades disponibles para vender");
                         }else{
@@ -268,6 +269,7 @@ public class AuctionServiceImpl implements AuctionService{
                             //tengo que actualizarlo con la nueva cantidad (si es que la misma cambio)
                             if(!amount.equals(thisNotSoldBatch.getAmount())){
                                 thisNotSoldBatch.setAmount(amount);
+                                notSoldBatches.add(thisNotSoldBatch);
                             }
                         }
                     }
