@@ -266,7 +266,7 @@ public class AuctionServiceImpl implements AuctionService{
                         }else{
                             //Si hay un NSB en la DB para este AOG, getSold es false y amount>0
                             //tengo que actualizarlo con la nueva cantidad (si es que la misma cambio)
-                            if(amount!=thisNotSoldBatch.getAmount()){
+                            if(!amount.equals(thisNotSoldBatch.getAmount())){
                                 thisNotSoldBatch.setAmount(amount);
                             }
                         }

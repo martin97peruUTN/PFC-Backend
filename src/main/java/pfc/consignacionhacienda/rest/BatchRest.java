@@ -12,6 +12,7 @@ import pfc.consignacionhacienda.dto.BatchDTO;
 import pfc.consignacionhacienda.dto.BatchWithClientDTO;
 import pfc.consignacionhacienda.exceptions.BadHttpRequest;
 import pfc.consignacionhacienda.exceptions.HttpForbidenException;
+import pfc.consignacionhacienda.exceptions.HttpUnauthorizedException;
 import pfc.consignacionhacienda.exceptions.animalsOnGround.AnimalsOnGroundNotFound;
 import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
 import pfc.consignacionhacienda.exceptions.batch.BatchNotFoundException;
@@ -189,9 +190,12 @@ public class BatchRest {
         } catch (IllegalArgumentException e) {
             logger.error(e.getMessage());
             return ResponseEntity.badRequest().build();
-        } catch (AnimalsOnGroundNotFound e) {
+        } catch (AnimalsOnGroundNotFound | AuctionNotFoundException e) {
             logger.error(e.getMessage());
             return ResponseEntity.notFound().build();
+        }  catch (HttpUnauthorizedException e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         } catch (Exception e) {
             logger.error(e.getMessage());
             return ResponseEntity.internalServerError().build();
