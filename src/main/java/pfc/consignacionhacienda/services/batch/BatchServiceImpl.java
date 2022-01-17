@@ -14,6 +14,7 @@ import pfc.consignacionhacienda.dto.BatchDTO;
 import pfc.consignacionhacienda.dto.BatchWithClientDTO;
 import pfc.consignacionhacienda.exceptions.BadHttpRequest;
 import pfc.consignacionhacienda.exceptions.HttpForbidenException;
+import pfc.consignacionhacienda.exceptions.HttpUnauthorizedException;
 import pfc.consignacionhacienda.exceptions.animalsOnGround.AnimalsOnGroundNotFound;
 import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
 import pfc.consignacionhacienda.exceptions.batch.BatchNotFoundException;
@@ -247,4 +248,17 @@ public class BatchServiceImpl implements BatchService{
     public List<Batch> getBatchesByAuctionId(Integer id) {
         return batchDAO.findByAuctionId(id);
     }
+
+    @Override
+    public List<AnimalsOnGround> sortAnimalsOnGround(List<AnimalsOnGroundDTO> animalsOnGroundDTOList, Integer auctionId) throws IllegalArgumentException, AnimalsOnGroundNotFound, HttpUnauthorizedException, AuctionNotFoundException {
+        return animalsOnGroundService.sortAnimalsOnGround(animalsOnGroundDTOList, auctionId);
+    }
+
+    @Override
+    public Page<Batch> getBatchesByAuctionIdAndPage(Integer auctionId, Integer page, Integer limit) {
+        Pageable p = PageRequest.of(page, limit);
+        Page<Batch> batchList =  batchDAO.findByAuctionIdAndPage(auctionId, p);
+        return batchList;
+    }
+
 }

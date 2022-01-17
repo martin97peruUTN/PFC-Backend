@@ -12,6 +12,7 @@ import pfc.consignacionhacienda.dto.BatchDTO;
 import pfc.consignacionhacienda.dto.BatchWithClientDTO;
 import pfc.consignacionhacienda.exceptions.BadHttpRequest;
 import pfc.consignacionhacienda.exceptions.HttpForbidenException;
+import pfc.consignacionhacienda.exceptions.HttpUnauthorizedException;
 import pfc.consignacionhacienda.exceptions.animalsOnGround.AnimalsOnGroundNotFound;
 import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
 import pfc.consignacionhacienda.exceptions.batch.BatchNotFoundException;
@@ -174,6 +175,40 @@ public class BatchRest {
             logger.error(e.getMessage());
             return ResponseEntity.notFound().build();
         } catch (Exception e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @PatchMapping("/animals-on-ground/sort/{auctionId}")
+    ResponseEntity<List<AnimalsOnGround>> sortAnimalsOnGround(
+            @PathVariable Integer auctionId,
+            @RequestBody List<AnimalsOnGroundDTO> animalsOnGroundDTOList
+    ){
+        try {
+            return ResponseEntity.ok(batchService.sortAnimalsOnGround(animalsOnGroundDTOList, auctionId));
+        } catch (IllegalArgumentException e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (AnimalsOnGroundNotFound | AuctionNotFoundException e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.notFound().build();
+        }  catch (HttpUnauthorizedException e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/by-auction/{auctionId}")
+    ResponseEntity<Page<Batch>> getBatchesByAuctionId(@PathVariable Integer auctionId,
+                                                      @RequestParam(name = "page", defaultValue = "0") Integer page,
+                                                      @RequestParam(name = "limit", defaultValue = "10") Integer limit){
+        try{
+            return ResponseEntity.ok(batchService.getBatchesByAuctionIdAndPage(auctionId, page, limit));
+        }catch (Exception e) {
             logger.error(e.getMessage());
             return ResponseEntity.internalServerError().build();
         }

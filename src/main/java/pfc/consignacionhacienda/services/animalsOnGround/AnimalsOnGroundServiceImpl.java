@@ -10,14 +10,19 @@ import pfc.consignacionhacienda.dao.AnimalsOnGroundDAO;
 import pfc.consignacionhacienda.dto.AnimalsOnGroundDTO;
 import pfc.consignacionhacienda.exceptions.BadHttpRequest;
 import pfc.consignacionhacienda.exceptions.HttpForbidenException;
+import pfc.consignacionhacienda.exceptions.HttpUnauthorizedException;
 import pfc.consignacionhacienda.exceptions.animalsOnGround.AnimalsOnGroundNotFound;
 import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
 import pfc.consignacionhacienda.model.AnimalsOnGround;
 import pfc.consignacionhacienda.model.Auction;
+import pfc.consignacionhacienda.services.auction.AuctionService;
 import pfc.consignacionhacienda.services.batch.BatchService;
 import pfc.consignacionhacienda.services.soldBatch.SoldBatchService;
+import pfc.consignacionhacienda.services.user.UserService;
 import pfc.consignacionhacienda.utils.AnimalsOnGoundMapper;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -36,6 +41,12 @@ public class AnimalsOnGroundServiceImpl implements AnimalsOnGroundService{
 
     @Autowired
     AnimalsOnGoundMapper animalsOnGoundMapper;
+
+    @Autowired
+    AuctionService auctionService;
+
+    @Autowired
+    UserService userService;
 
     @Override
     public Page<AnimalsOnGround> getAnimalsOnGroundByAuction(Integer auctionId, Pageable of) {
@@ -101,6 +112,9 @@ public class AnimalsOnGroundServiceImpl implements AnimalsOnGroundService{
         if(animalsOnGroundDTO.getAmount() != null && animalsOnGround.getAmount() < animalsOnGroundDTO.getAmount() && animalsOnGround.getSold() != null && animalsOnGround.getSold()){
             animalsOnGround.setSold(false);
         }
+        if(animalsOnGroundDTO.getAmount() != null && animalsOnGroundDTO.getAmount() == totalVendidos && animalsOnGround.getSold() != null && !animalsOnGround.getSold()){
+            animalsOnGround.setSold(true);
+        }
         animalsOnGroundDTO.setSold(null);
         logger.info(animalsOnGroundDTO.toString());
         animalsOnGoundMapper.updateAnimalsOnGroundFromDto(animalsOnGroundDTO, animalsOnGround);
@@ -128,5 +142,38 @@ public class AnimalsOnGroundServiceImpl implements AnimalsOnGroundService{
     @Override
     public AnimalsOnGround save(AnimalsOnGround animalsOnGround) {
         return animalsOnGroundDAO.save(animalsOnGround);
+    }
+
+    @Override
+    public List<AnimalsOnGround> sortAnimalsOnGround(List<AnimalsOnGroundDTO> animalsOnGroundDTOList, Integer auctionId) throws IllegalArgumentException, AnimalsOnGroundNotFound, AuctionNotFoundException, HttpUnauthorizedException {
+        Auction thisAuction = auctionService.getAuctionById(auctionId);
+        if(thisAuction.getDeleted()!=null && thisAuction.getDeleted()){
+            throw new AuctionNotFoundException("No existe remate con id "+auctionId);
+        }
+        if(!userService.getCurrentUserAuthorities().toArray()[0].toString().equals("Administrador")) {
+            boolean userBelongsToAuction = thisAuction.getUsers().stream().anyMatch(u -> u.getId().equals(userService.getCurrentUser().getId()));
+            if (!userBelongsToAuction) {
+                throw new HttpUnauthorizedException("Usted no esta autorizado a editar este remate.");
+            }
+        }
+        ArrayList<AnimalsOnGround> updatedAnimalsOnGroundList = new ArrayList<>();
+        //Hago esto para hacer un solo llamado a la DB
+        List<AnimalsOnGround> animalsOnGroundFromDB = animalsOnGroundDAO.getAllAnimalsOnGroundByAuctionForSell(auctionId);
+        for(AnimalsOnGroundDTO animalsOnGroundDTO: animalsOnGroundDTOList){
+            if(animalsOnGroundDTO.getId() != null && animalsOnGroundDTO.getStartingOrder() != null){
+                //Esto hacia antes, ahora me traigo toda la lista de una para hacer un solo llamado a la DB
+                //AnimalsOnGround animalsOnGround = getAnimalsOnGroundNotDeletedById(animalsOnGroundDTO.getId());
+                AnimalsOnGround animalsOnGround = animalsOnGroundFromDB.stream().filter(a -> a.getId().equals(animalsOnGroundDTO.getId())).findFirst().orElse(null);
+                if(animalsOnGround != null){
+                    animalsOnGoundMapper.updateAnimalsOnGroundFromDto(animalsOnGroundDTO, animalsOnGround);
+                    updatedAnimalsOnGroundList.add(animalsOnGround);
+                }else{
+                    throw new AnimalsOnGroundNotFound("Alguno de los animales no fue encontrado en la DB");
+                }
+            }else{
+                throw new IllegalArgumentException("Alguno de los animales no tienen id u orden de salida");
+            }
+        }
+        return animalsOnGroundDAO.saveAll(updatedAnimalsOnGroundList);
     }
 }

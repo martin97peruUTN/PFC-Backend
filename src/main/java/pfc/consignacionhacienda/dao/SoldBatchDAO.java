@@ -27,6 +27,7 @@ public interface SoldBatchDAO extends JpaRepository<SoldBatch, Integer> {
             "AND (a.deleted is null or a.deleted = false) " +
             "AND (ba.deleted is null or ba.deleted = false)" +
             "AND  (ag.deleted is null or ag.deleted = false)" +
-            "AND (au.deleted is null or au.deleted = false)")
+            "AND (au.deleted is null or au.deleted = false)" +
+            "ORDER BY b.id DESC")
     Page<SoldBatch> findByAuctionId(Integer auctionId, Pageable p);
 }
