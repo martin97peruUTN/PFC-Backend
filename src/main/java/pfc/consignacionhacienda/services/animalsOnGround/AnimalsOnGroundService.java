@@ -18,7 +18,7 @@ public interface AnimalsOnGroundService {
     Page<AnimalsOnGround> getAnimalsOnGroundByAuctionNotSold(Integer auctionId, Pageable of);
     Page<AnimalsOnGround> getAnimalsOnGroundByAuctionForSell(Integer auctionId, Pageable of);
 
-    AnimalsOnGround deleteById(Integer id) throws AnimalsOnGroundNotFound;
+    AnimalsOnGround deleteById(Integer id) throws AnimalsOnGroundNotFound, HttpForbidenException;
 
     AnimalsOnGround getAnimalsOnGroundNotDeletedById(Integer animalsId);
 

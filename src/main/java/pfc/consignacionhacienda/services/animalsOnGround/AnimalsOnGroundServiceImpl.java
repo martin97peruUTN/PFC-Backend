@@ -15,6 +15,7 @@ import pfc.consignacionhacienda.exceptions.animalsOnGround.AnimalsOnGroundNotFou
 import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
 import pfc.consignacionhacienda.model.AnimalsOnGround;
 import pfc.consignacionhacienda.model.Auction;
+import pfc.consignacionhacienda.model.SoldBatch;
 import pfc.consignacionhacienda.services.auction.AuctionService;
 import pfc.consignacionhacienda.services.batch.BatchService;
 import pfc.consignacionhacienda.services.soldBatch.SoldBatchService;
@@ -69,11 +70,15 @@ public class AnimalsOnGroundServiceImpl implements AnimalsOnGroundService{
     }
 
     @Override
-    public AnimalsOnGround deleteById(Integer id) throws AnimalsOnGroundNotFound {
+    public AnimalsOnGround deleteById(Integer id) throws AnimalsOnGroundNotFound, HttpForbidenException {
         AnimalsOnGround animalsOnGround = findById(id);
         logger.debug(animalsOnGround.toString());
         if(animalsOnGround.getDeleted() != null && animalsOnGround.getDeleted()){
             throw new AnimalsOnGroundNotFound("El conjunto de animales en pista con id: " + id + " no existe");
+        }
+        List<SoldBatch> soldBatches = soldBatchService.findSoldBatchesNotDeletedByAnimalsOnGroundId(id);
+        if(soldBatches != null && !soldBatches.isEmpty()) {
+            throw new HttpForbidenException("No se puede eliminar un conjunto de Animales en Pista que ya tiene animales vendidos.");
         }
         animalsOnGround.setDeleted(true);
         return animalsOnGroundDAO.save(animalsOnGround);
