@@ -154,6 +154,9 @@ public class BatchServiceImpl implements BatchService{
         if(batchOwn.getAuction().getFinished() != null && batchOwn.getAuction().getFinished()){
             throw new HttpForbidenException("No puede modificarse un remate que ya se ha realizado");
         }
+        if(batchOwn.getAnimalsOnGround().size() == 1){
+            throw new HttpForbidenException("El lote no puede quedar sin animales para vender.");
+        }
         return animalsOnGroundService.deleteById(animalsId);
     }
 
