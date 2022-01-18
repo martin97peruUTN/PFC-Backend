@@ -3,7 +3,6 @@ package pfc.consignacionhacienda.rest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,11 +11,8 @@ import pfc.consignacionhacienda.exceptions.HttpUnauthorizedException;
 import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
 import pfc.consignacionhacienda.exceptions.user.InvalidCredentialsException;
 import pfc.consignacionhacienda.exceptions.user.UserNotFoundException;
-import pfc.consignacionhacienda.model.Auction;
-import pfc.consignacionhacienda.model.User;
 import pfc.consignacionhacienda.services.auction.AuctionService;
-
-import java.util.List;
+import pfc.consignacionhacienda.utils.ErrorResponse;
 
 @RestController
 @RequestMapping("/api/auction-user")
@@ -28,7 +24,7 @@ public class AuctionUserRest {
     private AuctionService auctionService;
 
     @GetMapping("/own/{id}")
-    public ResponseEntity<Page<Auction>> getOwnAuctions(
+    public ResponseEntity<?> getOwnAuctions(
             @PathVariable Integer id,
             @RequestParam(name="page", defaultValue = "0") Integer page,
             @RequestParam(name="limit", defaultValue = "10") Integer limit
@@ -37,15 +33,15 @@ public class AuctionUserRest {
             return ResponseEntity.ok(auctionService.getOwnNotDeletedAuctionsByPageAndId(id, page, limit));
         }catch (HttpUnauthorizedException e) {
             logger.error(e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.UNAUTHORIZED);
         } catch (Exception e) {
             logger.error(e.getMessage());
-            return ResponseEntity.internalServerError().build();
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @GetMapping("/others/{id}")
-    public ResponseEntity<Page<Auction>> getOthersAuctions(
+    public ResponseEntity<?> getOthersAuctions(
             @PathVariable Integer id,
             @RequestParam(name="page", defaultValue = "0") Integer page,
             @RequestParam(name="limit", defaultValue = "10") Integer limit
@@ -54,73 +50,73 @@ public class AuctionUserRest {
             return ResponseEntity.ok(auctionService.getOthersNotDeletedAuctionsByPageAndId(id, page, limit));
         }catch (HttpUnauthorizedException e) {
             logger.error(e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.UNAUTHORIZED);
         } catch (Exception e) {
             logger.error(e.getMessage());
-            return ResponseEntity.internalServerError().build();
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @GetMapping()
-    public ResponseEntity<Page<Auction>> getAllNotDeletedAuctions(
+    public ResponseEntity<?> getAllNotDeletedAuctions(
             @RequestParam(name="page", defaultValue = "0") Integer page,
             @RequestParam(name="limit", defaultValue = "10") Integer limit){
         try {
             return ResponseEntity.ok(auctionService.getAllNotDeletedAndNotFinishedAuctionsByPage(page, limit));
         } catch (InvalidCredentialsException e) {
             logger.error(e.getMessage());
-            return ResponseEntity.badRequest().build();
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
             logger.error(e.getMessage());
-            return ResponseEntity.internalServerError().build();
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @GetMapping("/users/{auctionId}")
-    ResponseEntity<List<User>> getUsersFromAuction(@PathVariable Integer auctionId){
+    ResponseEntity<?> getUsersFromAuction(@PathVariable Integer auctionId){
         try {
             return ResponseEntity.ok(auctionService.getUsersByAuctionId(auctionId));
         } catch (AuctionNotFoundException e) {
             logger.error(e.getMessage());
-            return ResponseEntity.notFound().build();
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.NOT_FOUND);
         }catch (Exception e) {
             logger.error(e.getMessage());
-            return ResponseEntity.internalServerError().build();
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @PostMapping("/assignment/{idAuction}/adduser/{idUser}")
-    ResponseEntity<Auction> addUserToAuction(@PathVariable Integer idAuction, @PathVariable Integer idUser){
+    ResponseEntity<?> addUserToAuction(@PathVariable Integer idAuction, @PathVariable Integer idUser){
         try {
             return ResponseEntity.ok(auctionService.addUserToAuction(idAuction, idUser));
         } catch (AuctionNotFoundException | UserNotFoundException e) {
             logger.error(e.getMessage());
-            return ResponseEntity.notFound().build();
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.NOT_FOUND);
         } catch (HttpUnauthorizedException e) {
             logger.error(e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.UNAUTHORIZED);
         } catch (Exception e){
             logger.error(e.getMessage());
-            return ResponseEntity.internalServerError().build();
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @DeleteMapping("/assignment/{idAuction}/deleteuser/{idUser}")
-    ResponseEntity<Auction> deleteUserFromAuction(@PathVariable Integer idAuction, @PathVariable Integer idUser){
+    ResponseEntity<?> deleteUserFromAuction(@PathVariable Integer idAuction, @PathVariable Integer idUser){
         try {
             return ResponseEntity.ok(auctionService.removeUserFromAuction(idAuction, idUser));
         } catch (AuctionNotFoundException | UserNotFoundException e) {
             logger.error(e.getMessage());
-            return ResponseEntity.notFound().build();
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.NOT_FOUND);
         }catch (HttpForbidenException e) {
             logger.error(e.getMessage());
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.FORBIDDEN);
         } catch (HttpUnauthorizedException e) {
             logger.error(e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.UNAUTHORIZED);
         } catch (Exception e){
             logger.error(e.getMessage());
-            return ResponseEntity.internalServerError().build();
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }
