@@ -78,6 +78,19 @@ public class BatchRest {
         }
     }
 
+    @GetMapping("/animals-on-ground/by-auction/{auctionId}/allForSort")
+    ResponseEntity<List<AnimalsOnGroundDTO>> getAnimalsOnGroundByAuctionId(@PathVariable Integer auctionId){
+        try {
+            return ResponseEntity.ok(batchService.getAllAnimalsOnGroundDTO(auctionId));
+        } catch (AuctionNotFoundException e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.notFound().build();
+        } catch (Exception e){
+            logger.error(e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
     @PatchMapping("/{batchId}")
     ResponseEntity<Batch> updateBatchById(@PathVariable Integer batchId, @RequestBody BatchDTO batchDTO){
         try {

@@ -264,4 +264,29 @@ public class BatchServiceImpl implements BatchService{
         return batchList;
     }
 
+    @Override
+    public List<AnimalsOnGroundDTO> getAllAnimalsOnGroundDTO(Integer auctionId) throws AuctionNotFoundException {
+        Auction a = auctionService.getAuctionById(auctionId);
+        if(a.getDeleted() != null && a.getDeleted()){
+            throw new AuctionNotFoundException("El remate con id: " + auctionId + " no existe");
+        }
+        ArrayList<AnimalsOnGroundDTO> animalList = new ArrayList<>();
+        List<AnimalsOnGround> animalsOnGroundDB = animalsOnGroundService.getAllAnimalsOnGroundByAuctionForSell(auctionId);
+        if(animalsOnGroundDB == null){
+            return animalList;
+        }
+        for(AnimalsOnGround animalsOnGround: animalsOnGroundDB){
+            AnimalsOnGroundDTO newAnimalDTO = new AnimalsOnGroundDTO();
+            Batch batch = getBatchByAnimalsOnGroundId(animalsOnGround.getId());
+            newAnimalDTO.setId(animalsOnGround.getId());
+            newAnimalDTO.setAmount(animalsOnGround.getAmount());
+            newAnimalDTO.setCategory(animalsOnGround.getCategory());
+            newAnimalDTO.setCorralNumber(batch.getCorralNumber());
+            newAnimalDTO.setSeller(clientService.findByProvenanceId(batch.getProvenance().getId()));
+            newAnimalDTO.setSoldAmount(soldBatchService.getTotalSold(newAnimalDTO.getId()));
+            animalList.add(newAnimalDTO);
+        }
+        return animalList;
+    }
+
 }

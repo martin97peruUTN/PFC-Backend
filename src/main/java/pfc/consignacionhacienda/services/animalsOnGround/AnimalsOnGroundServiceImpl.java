@@ -181,4 +181,9 @@ public class AnimalsOnGroundServiceImpl implements AnimalsOnGroundService{
         }
         return animalsOnGroundDAO.saveAll(updatedAnimalsOnGroundList);
     }
+
+    @Override
+    public List<AnimalsOnGround> getAllAnimalsOnGroundByAuctionForSell(Integer auctionId) {
+        return animalsOnGroundDAO.getAllAnimalsOnGroundByAuctionForSell(auctionId);
+    }
 }

@@ -33,4 +33,6 @@ public interface BatchService {
     List<AnimalsOnGround> sortAnimalsOnGround(List<AnimalsOnGroundDTO> animalsOnGroundDTOList, Integer auctionId) throws IllegalArgumentException, AnimalsOnGroundNotFound, HttpUnauthorizedException, AuctionNotFoundException;
 
     Page<Batch> getBatchesByAuctionIdAndPage(Integer auctionId, Integer page, Integer limit);
+
+    List<AnimalsOnGroundDTO> getAllAnimalsOnGroundDTO(Integer auctionId) throws AuctionNotFoundException;
 }

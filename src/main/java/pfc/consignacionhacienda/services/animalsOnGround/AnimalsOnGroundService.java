@@ -31,4 +31,6 @@ public interface AnimalsOnGroundService {
     AnimalsOnGround save(AnimalsOnGround animalsOnGround);
 
     List<AnimalsOnGround> sortAnimalsOnGround(List<AnimalsOnGroundDTO> animalsOnGroundDTOList, Integer auctionId) throws IllegalArgumentException, AnimalsOnGroundNotFound, AuctionNotFoundException, HttpUnauthorizedException;
+
+    List<AnimalsOnGround> getAllAnimalsOnGroundByAuctionForSell(Integer auctionId);
 }
