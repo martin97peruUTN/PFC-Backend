@@ -134,6 +134,9 @@ public class AuctionServiceImpl implements AuctionService{
     @Override
     public Auction deleteAuctionById(Integer id) throws AuctionNotFoundException, HttpUnauthorizedException, HttpForbidenException {
         Auction auction = getAuctionById(id);
+        if(auction.getDeleted() != null && auction.getDeleted()){
+            throw new AuctionNotFoundException("No existe un remate con id: " + id);
+        }
         if(auction.getFinished() != null && auction.getFinished()){
             throw new HttpForbidenException("No puede eliminarse un remate que ya se realizo.");
         }

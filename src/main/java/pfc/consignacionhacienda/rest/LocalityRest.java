@@ -3,7 +3,7 @@ package pfc.consignacionhacienda.rest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pfc.consignacionhacienda.exceptions.BadHttpRequest;
@@ -12,6 +12,7 @@ import pfc.consignacionhacienda.exceptions.locality.LocalityNotFoundException;
 import pfc.consignacionhacienda.exceptions.user.InvalidCredentialsException;
 import pfc.consignacionhacienda.model.Locality;
 import pfc.consignacionhacienda.services.locality.LocalityService;
+import pfc.consignacionhacienda.utils.ErrorResponse;
 
 @RestController
 @RequestMapping("/api/locality")
@@ -23,20 +24,20 @@ public class LocalityRest {
     private LocalityService localityService;
 
     @GetMapping("/{id}")
-    public ResponseEntity<Locality> getLocalityById(@PathVariable Integer id){
+    public ResponseEntity<?> getLocalityById(@PathVariable Integer id){
         try {
             return ResponseEntity.ok(localityService.getLocalityById(id));
         } catch (LocalityNotFoundException e) {
             logger.error(e.getMessage());
-            return ResponseEntity.notFound().build();
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.NOT_FOUND);
         } catch (Exception e){
             logger.error(e.getMessage());
-            return ResponseEntity.internalServerError().build();
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @GetMapping()
-    public ResponseEntity<Page<Locality>> getAllLocalities(
+    public ResponseEntity<?> getAllLocalities(
             @RequestParam(required = false, defaultValue = "0") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer limit,
             @RequestParam(required = false, name = "name", defaultValue = "") String localitySearchName){
@@ -48,52 +49,52 @@ public class LocalityRest {
             }
         } catch (InvalidCredentialsException e){
             logger.error(e.getMessage());
-            return ResponseEntity.badRequest().build();
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
         } catch (Exception e){
             logger.error(e.getMessage());
-            return ResponseEntity.internalServerError().build();
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @PostMapping()
-    public ResponseEntity<Locality> createLocality(@RequestBody Locality newLocality){
+    public ResponseEntity<?> createLocality(@RequestBody Locality newLocality){
         try {
             return ResponseEntity.ok(localityService.saveLocality(newLocality));
         } catch (BadHttpRequest e) {
             logger.error(e.getMessage());
-            return ResponseEntity.badRequest().build();
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
         }catch (Exception e){
             logger.error(e.getMessage());
-            return ResponseEntity.internalServerError().build();
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<Locality> updateLocality(@PathVariable Integer id, @RequestBody Locality newLocality){
+    public ResponseEntity<?> updateLocality(@PathVariable Integer id, @RequestBody Locality newLocality){
         try {
             return ResponseEntity.ok(localityService.updateLocalityById(id, newLocality));
         }catch (LocalityNotFoundException e) {
             logger.error(e.getMessage());
-            return ResponseEntity.notFound().build();
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.NOT_FOUND);
         } catch (BadHttpRequest e) {
             logger.error(e.getMessage());
-            return ResponseEntity.badRequest().build();
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
         }catch (Exception e){
             logger.error(e.getMessage());
-            return ResponseEntity.internalServerError().build();
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Locality> deleteLocalityById(@PathVariable Integer id){
+    public ResponseEntity<?> deleteLocalityById(@PathVariable Integer id){
         try {
             return ResponseEntity.ok(localityService.deleteLocalityById(id));
         } catch (LocalityNotFoundException e) {
             logger.error(e.getMessage());
-            return ResponseEntity.notFound().build();
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.NOT_FOUND);
         } catch (InternalServerException e) {
             logger.error(e.getMessage());
-            return ResponseEntity.internalServerError().build();
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }
