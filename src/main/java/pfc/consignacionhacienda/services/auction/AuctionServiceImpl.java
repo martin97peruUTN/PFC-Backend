@@ -197,7 +197,7 @@ public class AuctionServiceImpl implements AuctionService{
             }
             List<User> autionUserList = auction.getUsers();
             Optional<User> userOptional = autionUserList.stream().filter(u -> u.getId().equals(userService.getCurrentUser().getId())).findFirst();
-            if(!userOptional.isPresent() && !userService.getCurrentUserAuthorities().toArray()[0].equals("Administrador")){
+            if(!userOptional.isPresent() && !userService.getCurrentUserAuthorities().toArray()[0].toString().equals("Administrador")){
                 throw new HttpUnauthorizedException("Usted no es participante del remate que quiere modificar");
             }
             Optional<User> userOpt = auction.getUsers().stream().filter(u -> u.getId().equals(userId)).findFirst();
@@ -224,7 +224,7 @@ public class AuctionServiceImpl implements AuctionService{
             }
             List<User> autionUserList = auction.getUsers();
             Optional<User> userOptional = autionUserList.stream().filter(u -> u.getId().equals(userService.getCurrentUser().getId())).findFirst();
-            if(userOptional.isPresent() || userService.getCurrentUserAuthorities().toArray()[0].equals("Administrador")){
+            if(userOptional.isPresent() || userService.getCurrentUserAuthorities().toArray()[0].toString().equals("Administrador")){
                 if(!auction.getUsers().contains(user)){
                     auction.getUsers().add(user);
                     return auctionDAO.save(auction);
