@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import pfc.consignacionhacienda.model.Auction;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,4 +37,18 @@ public interface AuctionDAO extends JpaRepository<Auction, Integer> {
 
     Optional<Auction> findByIdAndDeletedNullOrDeletedFalse(Integer id);
 
+    @Query(value = ("SELECT a FROM Auction a JOIN a.users u WHERE " +
+            " u.id = :userId " +
+            "AND a.finished IS TRUE" +
+            " AND a.date BETWEEN :since AND :until " +
+            "AND (a.deleted IS NULL OR a.deleted IS FALSE) " +
+            "ORDER BY a.date ASC"))
+    Page<Auction> findByFinishedAndBetween(Integer userId, Instant since, Instant until, Pageable of);
+
+    @Query(value = ("SELECT a FROM Auction a WHERE " +
+            " a.finished IS TRUE " +
+            " AND a.date BETWEEN :since AND :until " +
+            "AND (a.deleted IS NULL OR a.deleted IS FALSE) " +
+            "ORDER BY a.date ASC"))
+    Page<Auction> findByFinishedAndBetween(Instant since, Instant until, Pageable of);
 }

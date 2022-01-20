@@ -315,4 +315,13 @@ public class AuctionServiceImpl implements AuctionService{
         //return notSoldBatchService.deleteAllByAuctionId(auctionId);
         return thisAuction;
     }
+
+    @Override
+    public Page<Auction> getFishedAuctions(Integer userId, Instant since, Instant until, Integer page, Integer limit) throws UserNotFoundException {
+        User user = userService.findUserById(userId);
+        if(user.getRol().equals("Administrador")){
+            return auctionDAO.findByFinishedAndBetween(since, until, PageRequest.of(page, limit));
+        }
+        return auctionDAO.findByFinishedAndBetween(userId, since, until, PageRequest.of(page, limit));
+    }
 }
