@@ -42,13 +42,13 @@ public interface AuctionDAO extends JpaRepository<Auction, Integer> {
             "AND a.finished IS TRUE" +
             " AND a.date BETWEEN :since AND :until " +
             "AND (a.deleted IS NULL OR a.deleted IS FALSE) " +
-            "ORDER BY a.date ASC"))
+            "ORDER BY a.date DESC"))
     Page<Auction> findByFinishedAndBetween(Integer userId, Instant since, Instant until, Pageable of);
 
     @Query(value = ("SELECT a FROM Auction a WHERE " +
             " a.finished IS TRUE " +
             " AND a.date BETWEEN :since AND :until " +
             "AND (a.deleted IS NULL OR a.deleted IS FALSE) " +
-            "ORDER BY a.date ASC"))
+            "ORDER BY a.date DESC"))
     Page<Auction> findByFinishedAndBetween(Instant since, Instant until, Pageable of);
 }
