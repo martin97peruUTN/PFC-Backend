@@ -1,8 +1,11 @@
 package pfc.consignacionhacienda.model;
 
+import pfc.consignacionhacienda.services.websockets.DbListener;
+
 import javax.persistence.*;
 
 @Entity
+@EntityListeners(DbListener.class)
 public class SoldBatch {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
