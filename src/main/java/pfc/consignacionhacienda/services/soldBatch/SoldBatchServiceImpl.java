@@ -111,7 +111,7 @@ public class SoldBatchServiceImpl implements SoldBatchService{
 
     @Override
     public SoldBatch updateSoldBatchById(SoldBatchDTO soldBatchDTO, Integer soldBatchId) throws SoldBatchNotFoundException, AnimalsOnGroundNotFound, IllegalArgumentException, BatchNotFoundException, AuctionNotFoundException, HttpForbidenException, HttpUnauthorizedException {
-        if(soldBatchDTO.getId() != null && soldBatchId != soldBatchDTO.getId()){
+        if(soldBatchDTO.getId() != null && !soldBatchId.equals(soldBatchDTO.getId())){
             throw new IllegalArgumentException("Los id del path y del objeto a editar son distintos");
         }
         SoldBatch soldBatch = findByIdNotDeleted(soldBatchId);
