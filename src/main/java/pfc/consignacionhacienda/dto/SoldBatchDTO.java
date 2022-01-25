@@ -11,6 +11,8 @@ public class SoldBatchDTO {
 
     private Double price;
 
+    private Integer paymentTerm;
+
     private Boolean mustWeigh;
 
     private Double weight;
@@ -49,6 +51,14 @@ public class SoldBatchDTO {
 
     public void setPrice(Double price) {
         this.price = price;
+    }
+
+    public Integer getPaymentTerm() {
+        return paymentTerm;
+    }
+
+    public void setPaymentTerm(Integer paymentTerm) {
+        this.paymentTerm = paymentTerm;
     }
 
     public Boolean getMustWeigh() {
@@ -90,6 +100,7 @@ public class SoldBatchDTO {
                 ", dteNumber='" + dteNumber + '\'' +
                 ", amount=" + amount +
                 ", price=" + price +
+                ", paymentTerm=" + paymentTerm +
                 ", mustWeigh=" + mustWeigh +
                 ", weight=" + weight +
                 ", deleted=" + deleted +
