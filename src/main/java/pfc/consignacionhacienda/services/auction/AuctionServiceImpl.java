@@ -192,9 +192,12 @@ public class AuctionServiceImpl implements AuctionService{
         Optional<Auction> auctionOpt = auctionDAO.findById(auctionId);
         if(auctionOpt.isPresent()){
             Auction auction = auctionOpt.get();
+            if(auction.getDeleted() != null && auction.getDeleted()){
+                throw new AuctionNotFoundException("El remate con id: " + auctionId + " no existe.");
+            }
             List<User> autionUserList = auction.getUsers();
             Optional<User> userOptional = autionUserList.stream().filter(u -> u.getId().equals(userService.getCurrentUser().getId())).findFirst();
-            if(!userOptional.isPresent() && !userService.getCurrentUserAuthorities().toArray()[0].equals("Administrador")){
+            if(!userOptional.isPresent() && !userService.getCurrentUserAuthorities().toArray()[0].toString().equals("Administrador")){
                 throw new HttpUnauthorizedException("Usted no es participante del remate que quiere modificar");
             }
             Optional<User> userOpt = auction.getUsers().stream().filter(u -> u.getId().equals(userId)).findFirst();
@@ -216,9 +219,12 @@ public class AuctionServiceImpl implements AuctionService{
         Optional<Auction> auctionOpt = auctionDAO.findById(auctionId);
         if(auctionOpt.isPresent()){
             Auction auction = auctionOpt.get();
+            if(auction.getDeleted() != null && auction.getDeleted()){
+                throw new AuctionNotFoundException("El remate con id: " + auctionId + " no existe.");
+            }
             List<User> autionUserList = auction.getUsers();
             Optional<User> userOptional = autionUserList.stream().filter(u -> u.getId().equals(userService.getCurrentUser().getId())).findFirst();
-            if(userOptional.isPresent() || userService.getCurrentUserAuthorities().toArray()[0].equals("Administrador")){
+            if(userOptional.isPresent() || userService.getCurrentUserAuthorities().toArray()[0].toString().equals("Administrador")){
                 if(!auction.getUsers().contains(user)){
                     auction.getUsers().add(user);
                     return auctionDAO.save(auction);
@@ -314,5 +320,14 @@ public class AuctionServiceImpl implements AuctionService{
         auctionDAO.save(thisAuction);
         //return notSoldBatchService.deleteAllByAuctionId(auctionId);
         return thisAuction;
+    }
+
+    @Override
+    public Page<Auction> getFishedAuctions(Integer userId, Instant since, Instant until, Integer page, Integer limit) throws UserNotFoundException {
+        User user = userService.findUserById(userId);
+        if(user.getRol().equals("Administrador")){
+            return auctionDAO.findByFinishedAndBetween(since, until, PageRequest.of(page, limit));
+        }
+        return auctionDAO.findByFinishedAndBetween(userId, since, until, PageRequest.of(page, limit));
     }
 }
