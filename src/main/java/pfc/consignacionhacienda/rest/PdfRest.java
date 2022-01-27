@@ -5,11 +5,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import pfc.consignacionhacienda.exceptions.animalsOnGround.AnimalsOnGroundNotFound;
 import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
+import pfc.consignacionhacienda.exceptions.batch.BatchNotFoundException;
+import pfc.consignacionhacienda.exceptions.soldBatch.SoldBatchNotFoundException;
 import pfc.consignacionhacienda.services.pdfGeneratorService.PdfGeneratorService;
 import pfc.consignacionhacienda.utils.ErrorResponse;
 
@@ -35,5 +35,24 @@ public class PdfRest {
             logger.error(e.getMessage());
             return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    @GetMapping("/boleta/{soldBatchId}")
+    ResponseEntity<?> getTicketPurchasePdfBySoldBatchId(@PathVariable Integer soldBatchId,
+                                                     @RequestParam(name = "copyAmount", defaultValue = "1")  Integer copyAmount){
+        if(copyAmount < 1) {
+            return new ResponseEntity<>("El número de copias debe ser mayor a cero", HttpStatus.BAD_REQUEST);
+        }
+        logger.debug("Que onda");
+        try {
+            return ResponseEntity.ok(Base64.getEncoder().encode(pdfGeneratorService.getTicketPurchasePDFBySoldBatchId(soldBatchId)));
+        } catch (SoldBatchNotFoundException | AnimalsOnGroundNotFound | BatchNotFoundException | AuctionNotFoundException e) {
+            logger.error(e.getMessage());
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
     }
 }
