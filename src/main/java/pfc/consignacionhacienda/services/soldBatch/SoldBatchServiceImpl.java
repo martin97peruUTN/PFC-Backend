@@ -174,6 +174,7 @@ public class SoldBatchServiceImpl implements SoldBatchService{
             soldBatchResponseDTO.setPrice(soldBatch.getPrice());
             soldBatchResponseDTO.setDteNumber(soldBatch.getDteNumber());
             soldBatchResponseDTO.setMustWeigh(soldBatch.getMustWeigh());
+            soldBatchResponseDTO.setPaymentTerm(soldBatch.getPaymentTerm());
             soldBatchResponseDTO.setWeight(soldBatch.getWeight());
             soldBatchResponseDTO.setCategory(soldBatch.getAnimalsOnGround().getCategory());
             soldBatchResponseDTO.setBuyer(soldBatch.getClient());
