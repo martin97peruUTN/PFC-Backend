@@ -48,6 +48,8 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService{
     @Autowired
     private ClientService clientService;
 
+
+    // /api/pdf/starting-order/{auctionId}
     @Override
     public byte[] getStartingOrderListPDFByAuctionId(Integer auctionId) throws DocumentException, AuctionNotFoundException, DocumentException {
         //buscar los datos para llenar el PDF
@@ -156,6 +158,7 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService{
         pdfPTable.addCell(cell);
     }
 
+    // /api/pdf//boleta/3/{soldBatchId}
     @Autowired
     private SoldBatchService soldBatchService;
 
@@ -213,7 +216,7 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService{
 
         Paragraph paragraph = new Paragraph("SAN JUAN 957 - TEL: (0341) 4210223 - 4214311 - 4216107 - ROSARIO\n" +
                 "info@ganadosremates.com.ar - www.ganadosremates.com.ar\n" +
-                "Ventas en Mercado Rosarioa\n" +
+                "Ventas en Mercado Rosario\n" +
                 "Ferias: San Justo - Campo Andino - San Javier - La Criolla - Reconquista - Roldán\n" +
                 "Remates televisados en directo por Canal Rural\n", fontTitle);
         paragraph.setAlignment(Element.ALIGN_CENTER);
@@ -221,157 +224,7 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService{
         paragraph.setSpacingAfter(50f);
 
         //5.2 Add table to show the data
-        //column widths
-        float[] columnWidths = {2f, 5f, 2f, 4f};
-        final float HEIGHT = 35f;
-        PdfPTable pdfPTable = new PdfPTable(4);
-        pdfPTable.setWidthPercentage(90f);
-//        pdfPTable.setSplitLate(false); //Si una fila es muy alta, la tabla no se corta, sino que la fila es subdividida
-
-        //insert column headings
-        PdfPCell cell = new PdfPCell(new Phrase("INFORMACIÓN GENERAL"));
-        cell.setColspan(4);
-        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-        cell.setFixedHeight(HEIGHT);
-        pdfPTable.addCell(cell);
-
-        cell = new PdfPCell(new Phrase(" Fecha: " + getDateFormat(auction.getDate())));
-        cell.setColspan(1);
-        cell.setFixedHeight(HEIGHT-2);
-        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-        pdfPTable.addCell(cell);
-
-        cell = new PdfPCell(new Phrase(" Lugar: " + auction.getLocality().getName()));
-        cell.setFixedHeight(HEIGHT-2);
-        cell.setColspan(2);
-        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-        pdfPTable.addCell(cell);
-
-        cell = new PdfPCell(new Phrase(" Corral: " + batch.getCorralNumber()));
-        cell.setFixedHeight(HEIGHT-2);
-        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-        pdfPTable.addCell(cell);
-
-        cell = new PdfPCell(new Phrase(" "));
-        cell.setColspan(4);
-        cell.setFixedHeight(HEIGHT-2);
-        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-        pdfPTable.addCell(cell);
-
-        cell = new PdfPCell(new Phrase("Vendedor"));
-        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-        cell.setColspan(1);
-        cell.setFixedHeight(HEIGHT);
-        pdfPTable.addCell(cell);
-
-        cell = new PdfPCell(new Phrase(" "+vendedorName));
-        cell.setColspan(3);
-        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-        cell.setFixedHeight(HEIGHT-2);
-        pdfPTable.addCell(cell);
-
-        cell = new PdfPCell(new Phrase("Comprador"));
-        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-        cell.setColspan(1);
-        cell.setFixedHeight(HEIGHT);
-        pdfPTable.addCell(cell);
-
-        cell = new PdfPCell(new Phrase(" "+compradorName));
-        cell.setColspan(3);
-        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-        cell.setFixedHeight(HEIGHT);
-        pdfPTable.addCell(cell);
-
-        cell = new PdfPCell(new Phrase(" "));
-        cell.setColspan(4);
-        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-        cell.setFixedHeight(HEIGHT-2);
-        pdfPTable.addCell(cell);
-
-        cell = new PdfPCell(new Phrase("DATOS DE VENTA"));
-        cell.setColspan(4);
-        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-        cell.setFixedHeight(HEIGHT);
-        pdfPTable.addCell(cell);
-
-        cell = new PdfPCell(new Phrase("Categoría"));
-        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-        cell.setFixedHeight(HEIGHT-2);
-        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-        pdfPTable.addCell(cell);
-
-        cell = new PdfPCell(new Phrase("Cantidad"));
-        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-        cell.setFixedHeight(HEIGHT-2);
-        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-        pdfPTable.addCell(cell);
-
-        cell = new PdfPCell(new Phrase("Kilos en pie"));
-        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-        cell.setFixedHeight(HEIGHT-2);
-        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-        pdfPTable.addCell(cell);
-
-        cell = new PdfPCell(new Phrase("Precio"));
-        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-        cell.setFixedHeight(HEIGHT-2);
-        pdfPTable.addCell(cell);
-
-        cell = new PdfPCell(new Phrase(soldBatch.getAnimalsOnGround().getCategory().getName()));
-        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-        cell.setFixedHeight(HEIGHT-2);
-        pdfPTable.addCell(cell);
-
-        cell = new PdfPCell(new Phrase(soldBatch.getAmount()));
-        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-        cell.setFixedHeight(HEIGHT-2);
-        pdfPTable.addCell(cell);
-
-        cell = new PdfPCell(new Phrase(soldBatch.getWeight()!=null?String.valueOf(soldBatch.getWeight()):"---"));
-        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-        cell.setFixedHeight(HEIGHT-2);
-        pdfPTable.addCell(cell);
-
-        cell = new PdfPCell(new Phrase(String.valueOf(soldBatch.getPrice())));
-        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-        cell.setFixedHeight(HEIGHT-2);
-        pdfPTable.addCell(cell);
-
-        cell = new PdfPCell(new Phrase(" "));
-        cell.setColspan(4);
-        cell.setFixedHeight(HEIGHT-2);
-        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-        pdfPTable.addCell(cell);
-
-        cell = new PdfPCell(new Phrase("Plazo"));
-        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-        cell.setColspan(2);
-        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-        cell.setFixedHeight(HEIGHT-2);
-        pdfPTable.addCell(cell);
-
-        if(soldBatch.getPaymentTerm() != null && soldBatch.getPaymentTerm() != 0) {
-            cell = new PdfPCell(new Phrase(" "+soldBatch.getPaymentTerm() + " días"));
-            cell.setColspan(2);
-            cell.setFixedHeight(HEIGHT-2);
-            cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-            pdfPTable.addCell(cell);
-        } else {
-            cell = new PdfPCell(new Phrase(" ---"));
-            cell.setColspan(2);
-            cell.setFixedHeight(HEIGHT-2);
-            cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-            pdfPTable.addCell(cell);
-        }
+        PdfPTable pdfPTable = getPdfPTableForTicketPurchase(soldBatch, batch, auction, vendedorName, compradorName);
 
         for(int i=0; i<copyAmount;i++){
             document.add(image);
@@ -384,6 +237,104 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService{
         writer.close();
 
         return byteArrayOutputStream.toByteArray();
+    }
+
+    private PdfPTable getPdfPTableForTicketPurchase(SoldBatch soldBatch, Batch batch, Auction auction, String vendedorName, String compradorName) {
+        //column widths
+//        float[] columnWidths = {2f, 5f, 2f, 4f};
+        final float HEIGHT = 35f;
+        final float INDENT = 3f;
+        PdfPTable pdfPTable = new PdfPTable(4);
+        pdfPTable.setWidthPercentage(90f);
+//        pdfPTable.setSplitLate(false); //Si una fila es muy alta, la tabla no se corta, sino que la fila es subdividida
+
+        //insert column headings
+        PdfPCell cell = getPdfTableCell("INFORMACIÓN GENERAL", 4,Element.ALIGN_CENTER, Element.ALIGN_MIDDLE, 0, HEIGHT );
+        pdfPTable.addCell(cell);
+
+        cell = getPdfTableCell("Fecha: " + getDateFormat(auction.getDate()), 1,  Element.ALIGN_UNDEFINED,Element.ALIGN_MIDDLE,INDENT, HEIGHT-2);
+        pdfPTable.addCell(cell);
+
+        cell = getPdfTableCell("Lugar: " + auction.getLocality().getName(), 2, Element.ALIGN_UNDEFINED, Element.ALIGN_MIDDLE, INDENT, HEIGHT-2);
+        pdfPTable.addCell(cell);
+
+        cell = getPdfTableCell("Corral: " + batch.getCorralNumber(), 2, Element.ALIGN_UNDEFINED, Element.ALIGN_MIDDLE, INDENT,HEIGHT-2);
+        pdfPTable.addCell(cell);
+
+//        cell = new PdfPCell(new Phrase());
+//        cell.setFixedHeight(HEIGHT-2);
+//        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+//        pdfPTable.addCell(cell);
+
+        cell = getPdfTableCell(" ", 4, Element.ALIGN_UNDEFINED, Element.ALIGN_MIDDLE, 0, HEIGHT-2);
+        pdfPTable.addCell(cell);
+
+        cell = getPdfTableCell("Vendedor", 1, Element.ALIGN_CENTER, Element.ALIGN_MIDDLE, 0, HEIGHT);
+        pdfPTable.addCell(cell);
+
+        cell = getPdfTableCell(vendedorName, 3, Element.ALIGN_UNDEFINED, Element.ALIGN_MIDDLE, INDENT, HEIGHT);
+        pdfPTable.addCell(cell);
+
+        cell = getPdfTableCell("Comprador", 1, Element.ALIGN_CENTER, Element.ALIGN_MIDDLE, 0, HEIGHT);
+        pdfPTable.addCell(cell);
+
+        cell = getPdfTableCell(compradorName, 3, Element.ALIGN_UNDEFINED, Element.ALIGN_MIDDLE, INDENT, HEIGHT);
+        pdfPTable.addCell(cell);
+
+        cell = getPdfTableCell(" ", 4, Element.ALIGN_UNDEFINED, Element.ALIGN_MIDDLE, 0, HEIGHT-2);
+        pdfPTable.addCell(cell);
+
+        cell = getPdfTableCell("DATOS DE VENTA", 4, Element.ALIGN_CENTER, Element.ALIGN_MIDDLE, 0, HEIGHT);
+        pdfPTable.addCell(cell);
+
+        cell = getPdfTableCell("Categoría", 1, Element.ALIGN_CENTER, Element.ALIGN_MIDDLE, 0, HEIGHT-2);
+        pdfPTable.addCell(cell);
+
+        cell = getPdfTableCell("Cantidad", 1, Element.ALIGN_CENTER, Element.ALIGN_MIDDLE, 0, HEIGHT-2);
+        pdfPTable.addCell(cell);
+
+        cell = getPdfTableCell("Kilos en pie", 1, Element.ALIGN_CENTER, Element.ALIGN_MIDDLE, 0, HEIGHT-2);
+        pdfPTable.addCell(cell);
+
+        cell = getPdfTableCell("Precio", 1, Element.ALIGN_CENTER, Element.ALIGN_MIDDLE, 0, HEIGHT-2);
+        pdfPTable.addCell(cell);
+
+        cell = getPdfTableCell(soldBatch.getAnimalsOnGround().getCategory().getName(), 1, Element.ALIGN_CENTER, Element.ALIGN_MIDDLE, 0, HEIGHT-2);
+        pdfPTable.addCell(cell);
+
+        cell = getPdfTableCell(String.valueOf(soldBatch.getAmount()), 1, Element.ALIGN_CENTER, Element.ALIGN_MIDDLE, 0, HEIGHT-2);
+        pdfPTable.addCell(cell);
+
+        cell = getPdfTableCell(soldBatch.getWeight() != null ? String.valueOf(soldBatch.getWeight()) : "---", 1, Element.ALIGN_CENTER, Element.ALIGN_MIDDLE, 0, HEIGHT-2);
+        pdfPTable.addCell(cell);
+
+        cell = getPdfTableCell(String.valueOf(soldBatch.getPrice()), 1, Element.ALIGN_CENTER, Element.ALIGN_MIDDLE, 0, HEIGHT-2);
+        pdfPTable.addCell(cell);
+
+        cell = getPdfTableCell(" ", 4, Element.ALIGN_UNDEFINED, Element.ALIGN_MIDDLE, 0, HEIGHT-2);
+        pdfPTable.addCell(cell);
+
+        cell = getPdfTableCell("Plazo", 2, Element.ALIGN_CENTER, Element.ALIGN_MIDDLE, 0, HEIGHT-2);
+        pdfPTable.addCell(cell);
+
+        if(soldBatch.getPaymentTerm() != null && soldBatch.getPaymentTerm() != 0) {
+            cell = getPdfTableCell(soldBatch.getPaymentTerm() + " días", 2, Element.ALIGN_UNDEFINED, Element.ALIGN_MIDDLE, INDENT, HEIGHT-2);
+            pdfPTable.addCell(cell);
+        } else {
+            cell = getPdfTableCell(soldBatch.getPaymentTerm() + " días", 2, Element.ALIGN_UNDEFINED, Element.ALIGN_MIDDLE, INDENT, HEIGHT-2);
+            pdfPTable.addCell(cell);
+        }
+        return pdfPTable;
+    }
+
+    private PdfPCell getPdfTableCell(String text, int colspan, int horizontalAlignment, int verticalAlignment, float indent, float height) {
+        PdfPCell cell = new PdfPCell(new Phrase(text));
+        cell.setColspan(colspan);
+        cell.setHorizontalAlignment(horizontalAlignment);
+        cell.setVerticalAlignment(verticalAlignment);
+        cell.setFixedHeight(height);
+        cell.setIndent(indent);
+        return cell;
     }
 
     private String getDateFormat(Instant date) {
