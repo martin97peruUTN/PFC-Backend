@@ -45,7 +45,7 @@ public class PdfRest {
         }
         logger.debug("Que onda");
         try {
-            return ResponseEntity.ok(Base64.getEncoder().encode(pdfGeneratorService.getTicketPurchasePDFBySoldBatchId(soldBatchId)));
+            return ResponseEntity.ok(Base64.getEncoder().encode(pdfGeneratorService.getTicketPurchasePDFBySoldBatchId(soldBatchId, copyAmount)));
         } catch (SoldBatchNotFoundException | AnimalsOnGroundNotFound | BatchNotFoundException | AuctionNotFoundException e) {
             logger.error(e.getMessage());
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);

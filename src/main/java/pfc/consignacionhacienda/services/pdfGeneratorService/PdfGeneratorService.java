@@ -10,5 +10,5 @@ import java.io.IOException;
 
 public interface PdfGeneratorService {
     byte[] getStartingOrderListPDFByAuctionId(Integer auctionId) throws DocumentException, AuctionNotFoundException;
-    byte[] getTicketPurchasePDFBySoldBatchId(Integer soldBatchId) throws SoldBatchNotFoundException, AnimalsOnGroundNotFound, BatchNotFoundException, AuctionNotFoundException, DocumentException, IOException;
+    byte[] getTicketPurchasePDFBySoldBatchId(Integer soldBatchId, Integer copyAmount) throws SoldBatchNotFoundException, AnimalsOnGroundNotFound, BatchNotFoundException, AuctionNotFoundException, DocumentException, IOException;
 }

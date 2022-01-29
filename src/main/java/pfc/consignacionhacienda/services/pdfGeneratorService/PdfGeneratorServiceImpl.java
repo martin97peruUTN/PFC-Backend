@@ -160,7 +160,7 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService{
     private SoldBatchService soldBatchService;
 
     @Override
-    public byte[] getTicketPurchasePDFBySoldBatchId(Integer soldBatchId) throws SoldBatchNotFoundException, AnimalsOnGroundNotFound, BatchNotFoundException, AuctionNotFoundException, DocumentException, IOException {
+    public byte[] getTicketPurchasePDFBySoldBatchId(Integer soldBatchId, Integer copyAmount) throws SoldBatchNotFoundException, AnimalsOnGroundNotFound, BatchNotFoundException, AuctionNotFoundException, DocumentException, IOException {
         SoldBatch soldBatch = soldBatchService.findSoldBatchById(soldBatchId);
         AnimalsOnGround animalsOnGround = soldBatch.getAnimalsOnGround();
         if(animalsOnGround.getDeleted() != null && animalsOnGround.getDeleted()){
@@ -176,6 +176,9 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService{
         if(auction.getDeleted() != null && auction.getDeleted()){
             throw new AuctionNotFoundException("El remate asociado a este 'lote vendido' ha sido eliminado");
         }
+
+        String vendedorName = clientService.findByProvenanceId(batch.getProvenance().getId()).getName();
+        String compradorName = soldBatch.getClient().getName();
 
         // 1. Create document that contains the data
         Document document = new Document(PageSize.A4, 50, 50, 50, 50);
@@ -195,20 +198,18 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService{
         document.addAuthor(userService.getCurrentUser().getName() + " " + userService.getCurrentUser().getLastname());
         document.addCreationDate();
         document.addProducer();
-        document.addTitle("Boleta de venta de lote de animales");
+        document.addTitle("Boleta "+" "+vendedorName+" "+compradorName);
         document.addCreator("Sistema de Gestión de Consignación de Hacienda");
 
         // 4. Open document
         document.open();
 
         // 5. Add content
-        Image image = Image.getInstance("C:/Users/tomy_/Desktop/Proyecto Final/Desarrollo/PFC-Backend//src/main//resources/images/ganados-logo.png");
+        Image image = Image.getInstance("src/main/resources/images/ganados-logo.png");
         image.setAlignment(Element.ALIGN_CENTER);
         image.scaleAbsoluteHeight(image.getHeight()-50f);
         image.scaleAbsoluteWidth(image.getWidth()-150f);
         image.setSpacingAfter(20f);
-        document.add(image);
-
 
         Paragraph paragraph = new Paragraph("SAN JUAN 957 - TEL: (0341) 4210223 - 4214311 - 4216107 - ROSARIO\n" +
                 "info@ganadosremates.com.ar - www.ganadosremates.com.ar\n" +
@@ -216,8 +217,8 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService{
                 "Ferias: San Justo - Campo Andino - San Javier - La Criolla - Reconquista - Roldán\n" +
                 "Remates televisados en directo por Canal Rural\n", fontTitle);
         paragraph.setAlignment(Element.ALIGN_CENTER);
+        paragraph.setSpacingBefore(20f);
         paragraph.setSpacingAfter(50f);
-        document.add(paragraph);
 
         //5.2 Add table to show the data
         //column widths
@@ -235,19 +236,19 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService{
         cell.setFixedHeight(HEIGHT);
         pdfPTable.addCell(cell);
 
-        cell = new PdfPCell(new Phrase("Fecha: " + getDateFormat(auction.getDate())));
+        cell = new PdfPCell(new Phrase(" Fecha: " + getDateFormat(auction.getDate())));
         cell.setColspan(1);
         cell.setFixedHeight(HEIGHT-2);
         cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         pdfPTable.addCell(cell);
 
-        cell = new PdfPCell(new Phrase("Lugar: " + auction.getLocality().getName()));
+        cell = new PdfPCell(new Phrase(" Lugar: " + auction.getLocality().getName()));
         cell.setFixedHeight(HEIGHT-2);
         cell.setColspan(2);
         cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         pdfPTable.addCell(cell);
 
-        cell = new PdfPCell(new Phrase("Corral: " + batch.getCorralNumber()));
+        cell = new PdfPCell(new Phrase(" Corral: " + batch.getCorralNumber()));
         cell.setFixedHeight(HEIGHT-2);
         cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         pdfPTable.addCell(cell);
@@ -265,7 +266,7 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService{
         cell.setFixedHeight(HEIGHT);
         pdfPTable.addCell(cell);
 
-        cell = new PdfPCell(new Phrase(clientService.findByProvenanceId(batch.getProvenance().getId()).getName()));
+        cell = new PdfPCell(new Phrase(" "+vendedorName));
         cell.setColspan(3);
         cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         cell.setFixedHeight(HEIGHT-2);
@@ -278,7 +279,7 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService{
         cell.setFixedHeight(HEIGHT);
         pdfPTable.addCell(cell);
 
-        cell = new PdfPCell(new Phrase(soldBatch.getClient().getName()));
+        cell = new PdfPCell(new Phrase(" "+compradorName));
         cell.setColspan(3);
         cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         cell.setFixedHeight(HEIGHT);
@@ -333,7 +334,7 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService{
         cell.setFixedHeight(HEIGHT-2);
         pdfPTable.addCell(cell);
 
-        cell = new PdfPCell(new Phrase(String.valueOf(soldBatch.getWeight())));
+        cell = new PdfPCell(new Phrase(soldBatch.getWeight()!=null?String.valueOf(soldBatch.getWeight()):"---"));
         cell.setHorizontalAlignment(Element.ALIGN_CENTER);
         cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         cell.setFixedHeight(HEIGHT-2);
@@ -358,21 +359,26 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService{
         cell.setFixedHeight(HEIGHT-2);
         pdfPTable.addCell(cell);
 
-        if(soldBatch.getPaymentTerm() != 0) {
-            cell = new PdfPCell(new Phrase(soldBatch.getPaymentTerm() + " días"));
+        if(soldBatch.getPaymentTerm() != null && soldBatch.getPaymentTerm() != 0) {
+            cell = new PdfPCell(new Phrase(" "+soldBatch.getPaymentTerm() + " días"));
             cell.setColspan(2);
             cell.setFixedHeight(HEIGHT-2);
             cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
             pdfPTable.addCell(cell);
         } else {
-            cell = new PdfPCell(new Phrase("-"));
+            cell = new PdfPCell(new Phrase(" ---"));
             cell.setColspan(2);
             cell.setFixedHeight(HEIGHT-2);
             cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
             pdfPTable.addCell(cell);
         }
 
-        document.add(pdfPTable);
+        for(int i=0; i<copyAmount;i++){
+            document.add(image);
+            document.add(paragraph);
+            document.add(pdfPTable);
+            document.newPage();
+        }
         // 5. Close document
         document.close();
         writer.close();
