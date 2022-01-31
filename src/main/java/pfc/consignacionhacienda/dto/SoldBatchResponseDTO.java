@@ -11,6 +11,7 @@ public class SoldBatchResponseDTO {
     private Category category;
     private Boolean mustWeigh;
     private Double weight;
+    private Integer paymentTerm;
     private Double price;
     private String dteNumber;
 
@@ -86,6 +87,14 @@ public class SoldBatchResponseDTO {
         this.dteNumber = dteNumber;
     }
 
+    public Integer getPaymentTerm() {
+        return paymentTerm;
+    }
+
+    public void setPaymentTerm(Integer paymentTerm) {
+        this.paymentTerm = paymentTerm;
+    }
+
     @Override
     public String toString() {
         return "SoldBatchResponseDTO{" +
@@ -96,6 +105,7 @@ public class SoldBatchResponseDTO {
                 ", category=" + category +
                 ", mustWeigh=" + mustWeigh +
                 ", weight=" + weight +
+                ", paymentTerm=" + paymentTerm +
                 ", price=" + price +
                 ", dteNumber='" + dteNumber + '\'' +
                 '}';

@@ -16,6 +16,8 @@ public class SoldBatch {
     @Column(nullable = false)
     private Double price;
 
+    private Integer paymentTerm;
+
     @Column(nullable = false)
     private Boolean mustWeigh;
 
@@ -103,13 +105,22 @@ public class SoldBatch {
         this.deleted = deleted;
     }
 
+    public Integer getPaymentTerm() {
+        return paymentTerm;
+    }
+
+    public void setPaymentTerm(Integer paymentTerm) {
+        this.paymentTerm = paymentTerm;
+    }
+
     @Override
     public String toString() {
         return "SoldBatch{" +
                 "id=" + id +
-                ", dteNumber=" + dteNumber +
+                ", dteNumber='" + dteNumber + '\'' +
                 ", amount=" + amount +
                 ", price=" + price +
+                ", paymentTerm=" + paymentTerm +
                 ", mustWeigh=" + mustWeigh +
                 ", weight=" + weight +
                 ", deleted=" + deleted +

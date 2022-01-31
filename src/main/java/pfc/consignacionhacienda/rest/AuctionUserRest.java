@@ -14,6 +14,8 @@ import pfc.consignacionhacienda.exceptions.user.UserNotFoundException;
 import pfc.consignacionhacienda.services.auction.AuctionService;
 import pfc.consignacionhacienda.utils.ErrorResponse;
 
+import java.time.Instant;
+
 @RestController
 @RequestMapping("/api/auction-user")
 public class AuctionUserRest {
@@ -115,6 +117,29 @@ public class AuctionUserRest {
             logger.error(e.getMessage());
             return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.UNAUTHORIZED);
         } catch (Exception e){
+            logger.error(e.getMessage());
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/history/{userId}")
+    ResponseEntity<?> getFinishedAuctions(@PathVariable Integer userId,
+                                          @RequestParam(name="page", defaultValue = "0") Integer page,
+                                          @RequestParam(name="limit", defaultValue = "10") Integer limit,
+                                          @RequestParam(name="first-date", defaultValue = "null") String since,
+                                          @RequestParam(name="last-date", defaultValue = "null") String until){
+        if(since.equals("null")){
+            since = "1900-01-01T00:00:00Z";
+        }
+        if(until.equals("null")){
+            until = Instant.now().toString();
+        }
+        try {
+            return ResponseEntity.ok(auctionService.getFishedAuctions(userId, Instant.parse(since) ,Instant.parse(until), page, limit));
+        } catch (UserNotFoundException e) {
+            logger.error(e.getMessage());
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.NOT_FOUND);
+        }catch (Exception e) {
             logger.error(e.getMessage());
             return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
