@@ -163,7 +163,7 @@ public class SoldBatchServiceImpl implements SoldBatchService{
     }
 
     @Override
-    public Page<SoldBatchResponseDTO> getSoldBatchsByAuctionAndPage(Integer auctionId, Integer page, Integer limit) {
+    public Page<SoldBatchResponseDTO> getSoldBatchesByAuctionAndPage(Integer auctionId, Integer page, Integer limit) {
         Pageable p = PageRequest.of(page, limit);
         Page<SoldBatch> soldBatches = soldBatchDAO.findByAuctionId(auctionId, p);
         List<SoldBatchResponseDTO> responseDTOList = new ArrayList<>();
@@ -210,6 +210,15 @@ public class SoldBatchServiceImpl implements SoldBatchService{
         animalsOnGroundService.save(animalsOnGround);
         soldBatchDAO.deleteById(soldBatchId);
         return soldBatch;
+    }
+
+    @Override
+    public SoldBatch findSoldBatchById(Integer soldBatchId) throws SoldBatchNotFoundException {
+        Optional<SoldBatch> soldBatchOpt = soldBatchDAO.findById(soldBatchId);
+        if(soldBatchOpt.isPresent()){
+            return soldBatchOpt.get();
+        }
+        throw new SoldBatchNotFoundException("No existe Lote Vendido con id: " + soldBatchId);
     }
 
     private SoldBatch findByIdNotDeleted(Integer soldBatchId) throws SoldBatchNotFoundException {
