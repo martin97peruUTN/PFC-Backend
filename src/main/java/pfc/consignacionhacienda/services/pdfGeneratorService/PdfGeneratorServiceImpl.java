@@ -230,7 +230,9 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService{
             document.add(image);
             document.add(paragraph);
             document.add(pdfPTable);
-            document.newPage();
+            if(i<copyAmount-1){
+                document.newPage();
+            }
         }
         // 5. Close document
         document.close();
