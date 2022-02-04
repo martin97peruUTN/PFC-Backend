@@ -14,7 +14,7 @@ import pfc.consignacionhacienda.model.SoldBatch;
 import java.util.List;
 
 public interface SoldBatchService {
-    Integer getTotalSold(Integer id);
+    Integer getTotalSold(Integer animalsOnGroundId);
 
     List<SoldBatch> findSoldBatchesNotDeletedByAnimalsOnGroundId(Integer id);
     SoldBatch saveSoldBatch(SoldBatch soldBatch, Integer animalsOnGroundId) throws AnimalsOnGroundNotFound, HttpForbidenException, BatchNotFoundException, AuctionNotFoundException, HttpUnauthorizedException;
@@ -23,4 +23,6 @@ public interface SoldBatchService {
     SoldBatch deleteById(Integer soldBatchId) throws HttpUnauthorizedException, AnimalsOnGroundNotFound, SoldBatchNotFoundException, AuctionNotFoundException, HttpForbidenException, BatchNotFoundException;
 
     SoldBatch findSoldBatchById(Integer soldBatchId) throws SoldBatchNotFoundException;
+
+    List<SoldBatchResponseDTO> getAllSoldBatchesByAuctionId(Integer auctionId);
 }

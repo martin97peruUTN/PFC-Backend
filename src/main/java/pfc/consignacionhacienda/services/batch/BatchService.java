@@ -35,4 +35,6 @@ public interface BatchService {
     Page<Batch> getBatchesByAuctionIdAndPage(Integer auctionId, Integer page, Integer limit);
 
     List<AnimalsOnGroundDTO> getAllAnimalsOnGroundDTO(Integer auctionId) throws AuctionNotFoundException;
+
+    List<Batch> getBatchesByClientIdAndAuctionId(Integer id, Integer auctionId);
 }
