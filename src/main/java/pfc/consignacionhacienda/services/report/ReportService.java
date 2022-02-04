@@ -4,5 +4,5 @@ import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
 import pfc.consignacionhacienda.reports.dto.Report;
 
 public interface ReportService {
-    Report getReportByAuctionId(Integer auctionId) throws AuctionNotFoundException;
+    Report getReportByAuctionId(Integer auctionId, Boolean withCategoryList) throws AuctionNotFoundException;
 }

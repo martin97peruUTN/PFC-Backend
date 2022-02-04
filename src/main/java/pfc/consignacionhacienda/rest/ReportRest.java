@@ -24,7 +24,7 @@ public class ReportRest {
     @GetMapping("/{auctionId}")
     ResponseEntity<?> getReportByAuctionId(@PathVariable Integer auctionId){
         try {
-            return ResponseEntity.ok(reportService.getReportByAuctionId(auctionId));
+            return ResponseEntity.ok(reportService.getReportByAuctionId(auctionId, true ));
         } catch (AuctionNotFoundException e) {
             logger.error(e.getMessage());
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);

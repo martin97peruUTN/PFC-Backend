@@ -36,30 +36,54 @@ public class ReportServiceImpl implements ReportService{
     private ClientService clientService;
 
     @Override
-    public Report getReportByAuctionId(Integer auctionId) throws AuctionNotFoundException {
+    public Report getReportByAuctionId(Integer auctionId, Boolean withCategoryList) throws AuctionNotFoundException {
         Auction auction = auctionService.getAuctionById(auctionId);
         if(auction.getDeleted() != null && auction.getDeleted()){
             throw new AuctionNotFoundException("El remate con id: " + auctionId + " no existe.");
         }
+
+        //Inicializacion de variables importantes.
         List<Consignee> consigneeList = new ArrayList<>();
         List<Assistant> assistantList = new ArrayList<>();
+        Map<Integer, Seller> sellers = new LinkedHashMap<>();
+        Map<Integer, Buyer> buyers = new LinkedHashMap<>();
+        Report report = new Report();
 
-        //TODO Lista de consignatarios y asistentes
+        //Listado de todos los Batch de un remate
+        List<Batch> batchList = batchService.getBatchesByAuctionId(auctionId);
+
+        //Lista de consignatarios y asistentes
         for(User u: auction.getUsers()) {
             if(u.getRol().equals("Consignatario")){
                 Consignee c = new Consignee();
-                c.setName(u.getName());
+                c.setName(u.getName() + " " + u.getLastname());
                 consigneeList.add(c);
             } else {
                 if(u.getRol().equals("Asistente")){
                     Assistant a = new Assistant();
-                    a.setName(u.getName());
+                    a.setName(u.getName() + " " + u.getLastname());
                     assistantList.add(a);
                 }
             }
         }
 
-        //TODO Info general del remate
+        //Generar info general del remate
+        GeneralInfo generalInfo = this.getGeneralInfo(auction, consigneeList, assistantList, batchList);
+        //Completamos los datos de la info general
+        this.completeGeneralInfo(auctionId, sellers, buyers, batchList, generalInfo);
+        report.setGeneralInfo(generalInfo);
+
+        if(withCategoryList) {
+            //Generar info de cada categoria de animal que participo en el remate
+            Map<Integer, CommonInfo> categoryList = getCategoryListInfo(auctionId, batchList);
+            report.setCategoryList(new ArrayList<>(categoryList.values()));
+        }
+
+        return report;
+    }
+
+    //Seteamos la info general del remate (fecha, lugar, nro senasa, lista de participantes, cantida de lotes entrados)
+    private GeneralInfo getGeneralInfo(Auction auction, List<Consignee> consigneeList, List<Assistant> assistantList, List<Batch> batchList) {
         GeneralInfo generalInfo = new GeneralInfo();
         generalInfo.setDate(auction.getDate());
         generalInfo.setLocality(auction.getLocality().getName());
@@ -67,45 +91,23 @@ public class ReportServiceImpl implements ReportService{
         generalInfo.setConsignees(consigneeList);
         generalInfo.setAssistants(assistantList);
 
-
-//        List<Buyer> buyers = auctionService.getBuyers();
-//        List<Seller> sellers = auctionService.getSellers();
-        Map<Integer, Seller> sellers = new LinkedHashMap<>();
-        Map<Integer, Buyer> buyers = new LinkedHashMap<>();
-
-        //TODO listado de todos los Batch de un remate
-        List<Batch> batchList = batchService.getBatchesByAuctionId(auctionId);
-
         //EL tamaño del listado es la cantidad de Batch que hubo para la venta.
         generalInfo.setTotalBatchesForSell(batchList.size());
-//        generalInfo.setTotalCompletelySoldBatches(auctionService.getBatchesNotCompletelySold());
+        return generalInfo;
+    }
 
-        //TODO este map contendra la info de cada category (CommonInfo) Integer es el id de cada categoria.
-        Map<Integer, CommonInfo> categoryList = new LinkedHashMap<>();
-
-        //TODO inicializacion de categoryList para evitar valores null (en la mayoria de los casos).
-        for(Batch b: batchList){
-            for(AnimalsOnGround ag: b.getAnimalsOnGround()) {
-                CommonInfo commonInfo = new CommonInfo();
-                commonInfo.setSellers(new ArrayList<>());
-                commonInfo.setName(ag.getCategory().getName());
-                commonInfo.setBuyers(new ArrayList<>());
-                commonInfo.setTotalMoneyIncome(0d);
-                commonInfo.setTotalAnimalsNotSold(0);
-                commonInfo.setTotalAnimalsSold(0);
-                if (!categoryList.containsKey(ag.getCategory().getId())) {
-                    categoryList.put(ag.getCategory().getId(), commonInfo);
-                    //sellersInitial.put(ag.getCategory().getId(), List.of(s));
-                }
-            }
-        }
-
+    // Agregamos a la info general del remate info sobre cada vendedor, comprador,
+    // 'cantidad de animales vendidos', 'cantidad de animales no vendidos'
+    // y 'cantidad de lotes vendidos completamente'
+    private void completeGeneralInfo(Integer auctionId, Map<Integer, Seller> sellers, Map<Integer, Buyer> buyers, List<Batch> batchList, GeneralInfo generalInfo) {
         CommonInfo commonInfo = new CommonInfo();
-        int totalAnimalsSold = 0;
-        int totalAnimalsNotSold = 0;
-        int totalCompletelySoldBatches = 0;
+        Integer totalAnimalsNotSold = 0;
+        Integer totalAnimalsSold = 0;
+        Integer totalCompletelySoldBatches = 0;
 
-        //TODO recorremos cada Batch para obtener la info de CommonInfo General.
+        // Seteamos 'total de animales vendidos', 'total de animales no vendidos' y
+        // 'total de lotes vendidos completamente' en el remate.
+        //Recorremos cada Batch para obtener la info de CommonInfo General.
         for (Batch b: batchList){
             int contadorLotesVendidos = 0;
             for(AnimalsOnGround animalsOnGround: b.getAnimalsOnGround()) {
@@ -132,14 +134,37 @@ public class ReportServiceImpl implements ReportService{
                 totalCompletelySoldBatches++;
             }
         }
-//        System.out.println(notSoldBatchesByCategory);
 
-        //TODO completamos la info de cata CategoryInfo con los LotesVendidos.
-        double totalMoneyIncome = 0;
+        //TODO completamos la info de cada Vendedor y Comprador del remate, con los LotesVendidos.
+        double totalMoneyIncome = 0;// total dinero obtenido en el remate
+
+        //totalMoneyIncome se pasa como copia entonces lo retornamos, pero este metodo
+        // tambien modifica info de vendedores y compradores
+        totalMoneyIncome = getTotalMoneyIncome(auctionId, sellers, buyers, totalMoneyIncome);
+
+        //TODO IMPORTANTE! aqui lo que se hace es completar los datos de los animales que no se han vendido ya que
+        // anteriormente recorrimos SoldBatch pero puede existir casos en los que no se haya vendido ni una
+        // sola cabeza de un determinado AnimalsOnGround
+        sellers.forEach((id, s) -> s.setTotalAnimalsNotSold(getAnimalsNotSoldBySellerId(id, auctionId)));
+
+        //Completamos la info general del remate con los datos obtenidos.
+        commonInfo.setBuyers(new ArrayList<>(buyers.values()));
+        commonInfo.setSellers(new ArrayList<>(sellers.values()));
+        commonInfo.setTotalAnimalsNotSold(totalAnimalsNotSold);
+        commonInfo.setTotalAnimalsSold(totalAnimalsSold);
+        commonInfo.setTotalMoneyIncome(totalMoneyIncome);
+        generalInfo.setTotalBuyers(buyers.size());
+        generalInfo.setTotalSeller(sellers.size());
+        generalInfo.setTotalCompletelySoldBatches(totalCompletelySoldBatches);
+        generalInfo.setCommonInfo(commonInfo);
+    }
+
+    private double getTotalMoneyIncome(Integer auctionId, Map<Integer, Seller> sellers, Map<Integer, Buyer> buyers, double totalMoneyIncome) {
+        //Informacion sobre cada Vendedor y Comprador que participo en el remate
         for(SoldBatchResponseDTO sb: soldBatchService.getAllSoldBatchesByAuctionId(auctionId)){
             totalMoneyIncome += sb.getPrice();
 
-           //TODO Aqui, por cada cliente comprador calculamos toda la informacion de lo que compro en el remate
+            //TODO Aqui, por cada cliente comprador calculamos toda la informacion de lo que compro en el remate
             if(!buyers.containsKey(sb.getBuyer().getId())){
                 Buyer buyer = new Buyer();
                 buyer.setId(sb.getBuyer().getId());
@@ -184,35 +209,58 @@ public class ReportServiceImpl implements ReportService{
                 sellers.put(sb.getSeller().getId(), s); //TODO cada vendedor se corresponde a una unica posicion del map
             }
         }
-
-        //TODO aqui lo que se hace es completar los datos de los animales que no se han vendido ya que
-        // anteriormente recorrimos SoldBatch pero puede existir casos en los que no se haya vendido ni una
-        // sola cabeza de un determinado AnimalsOnGround
-        sellers.forEach((id, s) -> s.setTotalAnimalsNotSold(getAnimalsNotSoldBySellerId(id, auctionId)));
-
-        //TODO completamos la info general del remate con los datos obtenidos.
-        commonInfo.setBuyers(new ArrayList<>(buyers.values()));
-        commonInfo.setSellers(new ArrayList<>(sellers.values()));
-        generalInfo.setTotalBuyers(buyers.size());
-        generalInfo.setTotalSeller(sellers.size());
-        commonInfo.setTotalAnimalsNotSold(totalAnimalsNotSold);
-        commonInfo.setTotalAnimalsSold(totalAnimalsSold);
-        commonInfo.setTotalMoneyIncome(totalMoneyIncome);
-        generalInfo.setTotalCompletelySoldBatches(totalCompletelySoldBatches);
-        generalInfo.setCommonInfo(commonInfo);
-
-        Report report = new Report();
-        report.setGeneralInfo(generalInfo);
+        return totalMoneyIncome;
+    }
 
 
+    //Animales no Vendidos por id de vendedor en un remate
+    private Integer getAnimalsNotSoldBySellerId(Integer id, Integer auctionId) {
+        //TODO todos los lotes ofrecido por un determinado vendedor, para saber cuantos quedaron sin vender.
+        List<Batch> batchList = batchService.getBatchesByClientIdAndAuctionId(id, auctionId);
+        Integer result = 0;
+        for (Batch batch: batchList){
+            for(AnimalsOnGround a: batch.getAnimalsOnGround()){
+                Optional<NotSoldBatch> notSoldBatchOptional = notsoldBatchService.getNotSoldBatchesByAnimalsOnGroundId(a.getId());
+                if(notSoldBatchOptional.isPresent()){
+                    result += notSoldBatchOptional.get().getAmount();
+                } else {
+                    result += a.getAmount() - soldBatchService.getTotalSold(a.getId());
+                }
+            }
+        }
+        return result;
+    }
+
+    //-------------------------------------
+    // Sobre la lista de categorias de animales
+    private Map<Integer, CommonInfo> getCategoryListInfo(Integer auctionId, List<Batch> batchList) {
+        //TODO este map contendra la info de cada category (CommonInfo) Integer es el id de cada categoria.
+        Map<Integer, CommonInfo> categoryList = new LinkedHashMap<>();
+
+        //TODO inicializacion de categoryList para evitar valores null (en la mayoria de los casos).
+        for(Batch b: batchList){
+            for(AnimalsOnGround ag: b.getAnimalsOnGround()) {
+                CommonInfo commonInfo2 = new CommonInfo();
+                commonInfo2.setSellers(new ArrayList<>());
+                commonInfo2.setName(ag.getCategory().getName());
+                commonInfo2.setBuyers(new ArrayList<>());
+                commonInfo2.setTotalMoneyIncome(0d);
+                commonInfo2.setTotalAnimalsNotSold(0);
+                commonInfo2.setTotalAnimalsSold(0);
+                if (!categoryList.containsKey(ag.getCategory().getId())) {
+                    categoryList.put(ag.getCategory().getId(), commonInfo2);
+                    //sellersInitial.put(ag.getCategory().getId(), List.of(s));
+                }
+            }
+        }
         //TODO Seteamos en cad acategoria la info que se puede sacar de cada lote vendido.
-        for(SoldBatchResponseDTO sb: soldBatchService.getSoldBatchesByAuctionAndPage(auctionId, 0, 10000)){
+        for (SoldBatchResponseDTO sb : soldBatchService.getSoldBatchesByAuctionAndPage(auctionId, 0, 10000)) {
             CommonInfo category = new CommonInfo();
 
             //TODO tanto en la lista de compradores como vendedores de una categoria. Agregamos valores
             // repetidos de los mismos en un unico listado. Luego los volvemos a filtrar y combinamos
             // los valores para obtener el resultado final
-            if(!categoryList.containsKey(sb.getCategory().getId())) {
+            if (!categoryList.containsKey(sb.getCategory().getId())) {
                 category.setName(sb.getCategory().getName());
                 category.setTotalMoneyIncome(sb.getPrice());
                 category.setTotalAnimalsSold(sb.getAmount());
@@ -252,13 +300,12 @@ public class ReportServiceImpl implements ReportService{
             }
         }
 
-
-        // TODO Setemaos datos de compradores y vendedores por cada categoria.
+        // Setemaos datos de compradores y vendedores por cada categoria.
         categoryList.forEach((id, commonInfo1) -> {
             Map<Integer, Seller> sellerMap = new LinkedHashMap<>();
             Map<Integer, Buyer> buyerMap = new LinkedHashMap<>();
-            for(Buyer b: commonInfo1.getBuyers()){
-                if(!buyerMap.containsKey(b.getId())){
+            for (Buyer b : commonInfo1.getBuyers()) {
+                if (!buyerMap.containsKey(b.getId())) {
                     Buyer bAux = new Buyer();
                     bAux.setTotalBought(b.getTotalBought());
                     bAux.setId(b.getId());
@@ -273,8 +320,8 @@ public class ReportServiceImpl implements ReportService{
                     buyerMap.put(bAnt.getId(), bAnt);
                 }
             }
-            for(Seller s: commonInfo1.getSellers()){
-                if(!sellerMap.containsKey(s.getId())){
+            for (Seller s : commonInfo1.getSellers()) {
+                if (!sellerMap.containsKey(s.getId())) {
                     Seller sAux = new Seller();
                     sAux.setId(s.getId());
                     sAux.setName(s.getName());
@@ -296,7 +343,7 @@ public class ReportServiceImpl implements ReportService{
 
         //TODO Seteamos en cada categoria la cantidad de animales que quedaron sin vender (ademas de clientes que no vendieron ningun animal).
         getTotalNotSoldByCategory(auctionId, categoryList).forEach((id, totalNotSold) -> {
-            if(categoryList.containsKey(id)) {
+            if (categoryList.containsKey(id)) {
                 CommonInfo aux = categoryList.get(id);
                 aux.setTotalAnimalsNotSold(totalNotSold);
                 categoryList.put(id, aux);
@@ -306,12 +353,11 @@ public class ReportServiceImpl implements ReportService{
                 categoryList.put(id, aux);
             }
         });
-
-        report.setCategoryList(new ArrayList<>(categoryList.values()));
-
-        return report;
+        return categoryList;
     }
 
+    //Por cada Categoria participante en el remate, se calcula la cantidad de animales que no fueron vendidos,
+    // y se agregan aquellos vendedores que no vendieron ni un animal de dicha categoria.
     private Map<Integer, Integer> getTotalNotSoldByCategory(Integer auctionId, Map<Integer, CommonInfo> categoryList) {
         Map<Integer, Integer> totalNotSoldByCategory = new LinkedHashMap<>();
         for(Batch b: batchService.getBatchesByAuctionId(auctionId)){
@@ -370,20 +416,4 @@ public class ReportServiceImpl implements ReportService{
         return totalNotSoldByCategory;
     }
 
-    private Integer getAnimalsNotSoldBySellerId(Integer id, Integer auctionId) {
-        //TODO todos los lotes ofrecido por un determinado vendedor, para saber cuantos quedaron sin vender.
-        List<Batch> batchList = batchService.getBatchesByClientIdAndAuctionId(id, auctionId);
-        Integer result = 0;
-        for (Batch batch: batchList){
-            for(AnimalsOnGround a: batch.getAnimalsOnGround()){
-                Optional<NotSoldBatch> notSoldBatchOptional = notsoldBatchService.getNotSoldBatchesByAnimalsOnGroundId(a.getId());
-                if(notSoldBatchOptional.isPresent()){
-                    result += notSoldBatchOptional.get().getAmount();
-                } else {
-                    result += a.getAmount() - soldBatchService.getTotalSold(a.getId());
-                }
-            }
-        }
-        return result;
-    }
 }
