@@ -142,6 +142,20 @@ public class ReportServiceImpl implements ReportService{
         // tambien modifica info de vendedores y compradores
         totalMoneyIncome = getTotalMoneyIncome(auctionId, sellers, buyers, totalMoneyIncome);
 
+        for(Batch b: batchList){
+            for(AnimalsOnGround animalsOnGround: b.getAnimalsOnGround()){
+                Client c = clientService.findByProvenanceId(b.getProvenance().getId());
+                if(!sellers.containsKey(c.getId())){
+                    Seller s = new Seller();
+                    s.setId(c.getId());
+                    s.setName(c.getName());
+                    s.setTotalAnimalsNotSold(animalsOnGround.getAmount());
+                    s.setTotalMoneyIncome(0d);
+                    s.setTotalAnimalsSold(0);
+                    sellers.put(s.getId(), s);
+                }
+            }
+        }
         //TODO IMPORTANTE! aqui lo que se hace es completar los datos de los animales que no se han vendido ya que
         // anteriormente recorrimos SoldBatch pero puede existir casos en los que no se haya vendido ni una
         // sola cabeza de un determinado AnimalsOnGround
@@ -254,7 +268,7 @@ public class ReportServiceImpl implements ReportService{
             }
         }
         //TODO Seteamos en cad acategoria la info que se puede sacar de cada lote vendido.
-        for (SoldBatchResponseDTO sb : soldBatchService.getSoldBatchesByAuctionAndPage(auctionId, 0, 10000)) {
+        for (SoldBatchResponseDTO sb : soldBatchService.getAllSoldBatchesByAuctionId(auctionId)) {
             CommonInfo category = new CommonInfo();
 
             //TODO tanto en la lista de compradores como vendedores de una categoria. Agregamos valores
@@ -393,6 +407,7 @@ public class ReportServiceImpl implements ReportService{
                     Seller s = new Seller();
                     s.setId(idSeller);
                     s.setTotalMoneyIncome(0d);
+                    s.setTotalAnimalsSold(0);
                     s.setName(seller.getName());
                     cAux.getSellers().add(s);
                     categoryList.put(ag.getCategory().getId(), cAux);
