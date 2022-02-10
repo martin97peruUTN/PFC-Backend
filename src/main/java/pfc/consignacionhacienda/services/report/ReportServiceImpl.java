@@ -374,31 +374,38 @@ public class ReportServiceImpl implements ReportService{
     // y se agregan aquellos vendedores que no vendieron ni un animal de dicha categoria.
     private Map<Integer, Integer> getTotalNotSoldByCategory(Integer auctionId, Map<Integer, CommonInfo> categoryList) {
         Map<Integer, Integer> totalNotSoldByCategory = new LinkedHashMap<>();
+        List<Integer> amounts = new ArrayList<>();
+        List<Integer> count = new ArrayList<>();
         for(Batch b: batchService.getBatchesByAuctionId(auctionId)){
             Client seller = clientService.findByProvenanceId(b.getProvenance().getId());
             int idSeller = seller.getId();
             for(AnimalsOnGround ag: b.getAnimalsOnGround()){
                 //TODO recorremos OTRA VEZ todos los Animales En Pista.
-                int amount = 0;;
+                int totalAmountNotSold = 0;
+                int animalsNotSold = 0;
                 Optional<NotSoldBatch> notSoldBatchOptional = notsoldBatchService.getNotSoldBatchesByAnimalsOnGroundId(ag.getId());
                 //Si el remate no esta terminado, tal vez no existe notSoldBatch aun
                 if(notSoldBatchOptional.isPresent()){
                     if(!totalNotSoldByCategory.containsKey(ag.getCategory().getId())){
-                        amount = notSoldBatchOptional.get().getAmount();
-                        totalNotSoldByCategory.put(ag.getCategory().getId(), amount);
+                        totalAmountNotSold = notSoldBatchOptional.get().getAmount();
+                        animalsNotSold = notSoldBatchOptional.get().getAmount();
+                        totalNotSoldByCategory.put(ag.getCategory().getId(), totalAmountNotSold);
                     } else {
-                        amount = totalNotSoldByCategory.get(ag.getCategory().getId()) + notSoldBatchOptional.get().getAmount();
-                        totalNotSoldByCategory.put(ag.getCategory().getId(), amount);
+                        animalsNotSold =  notSoldBatchOptional.get().getAmount();
+                        totalAmountNotSold = totalNotSoldByCategory.get(ag.getCategory().getId()) + notSoldBatchOptional.get().getAmount();
+                        totalNotSoldByCategory.put(ag.getCategory().getId(), totalAmountNotSold);
                     }
                 } else {
                     //TODO Si no hay un NotSoldBatch asociado, a la cantidad de AnimalsOnGRound se le resta
                     // la cantidad que ya fue vendida.
                     if(!totalNotSoldByCategory.containsKey(ag.getCategory().getId())){
-                        amount = ag.getAmount() - soldBatchService.getTotalSold(ag.getId());
-                        totalNotSoldByCategory.put(ag.getCategory().getId(), amount);
+                        animalsNotSold = ag.getAmount() - soldBatchService.getTotalSold(ag.getId());
+                        totalAmountNotSold = ag.getAmount() - soldBatchService.getTotalSold(ag.getId());
+                        totalNotSoldByCategory.put(ag.getCategory().getId(), totalAmountNotSold);
                     } else {
-                        amount = totalNotSoldByCategory.get(ag.getCategory().getId()) + (ag.getAmount() - soldBatchService.getTotalSold(ag.getId()));
-                        totalNotSoldByCategory.put(ag.getCategory().getId(), amount);
+                        animalsNotSold = ag.getAmount() - soldBatchService.getTotalSold(ag.getId());
+                        totalAmountNotSold = totalNotSoldByCategory.get(ag.getCategory().getId()) + (ag.getAmount() - soldBatchService.getTotalSold(ag.getId()));
+                        totalNotSoldByCategory.put(ag.getCategory().getId(), totalAmountNotSold);
                     }
                 }
                 //TODO agregamos aquellos vendedores que no vendieron aun animales.
@@ -414,7 +421,8 @@ public class ReportServiceImpl implements ReportService{
                 }
 
                 //TODO la cantidad no vendidad se setea al vendedor correspondiente.
-                int finalAmount = amount;
+                int finalAmount = animalsNotSold;
+                amounts.add(finalAmount);
                 categoryList.get(ag.getCategory().getId()).setSellers(
                         categoryList.get(ag.getCategory().getId()).getSellers().stream().map(c -> {
                             if(c.getId().equals(idSeller)) {
@@ -428,6 +436,7 @@ public class ReportServiceImpl implements ReportService{
                         }).collect(Collectors.toList()));
             }
         }
+        logger.debug(amounts.toString());
         return totalNotSoldByCategory;
     }
 
