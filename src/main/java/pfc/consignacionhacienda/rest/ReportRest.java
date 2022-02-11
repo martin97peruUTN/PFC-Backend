@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import pfc.consignacionhacienda.exceptions.HttpForbidenException;
 import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
 import pfc.consignacionhacienda.services.report.ReportService;
+import pfc.consignacionhacienda.utils.ErrorResponse;
 
 @RestController
 @RequestMapping("/api/report")
@@ -28,14 +29,14 @@ public class ReportRest {
             return ResponseEntity.ok(reportService.getReportByAuctionId(auctionId, true ));
         } catch (AuctionNotFoundException e) {
             logger.error(e.getMessage());
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.NOT_FOUND);
         } catch (HttpForbidenException e){
             logger.error(e.getMessage());
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.FORBIDDEN);
         } catch (Exception e) {
             logger.error(e.getMessage());
             e.printStackTrace();
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }
