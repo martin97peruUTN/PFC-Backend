@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pfc.consignacionhacienda.dto.AnimalsOnGroundDTO;
+import pfc.consignacionhacienda.exceptions.HttpForbidenException;
 import pfc.consignacionhacienda.exceptions.animalsOnGround.AnimalsOnGroundNotFound;
 import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
 import pfc.consignacionhacienda.exceptions.batch.BatchNotFoundException;
@@ -17,14 +18,17 @@ import pfc.consignacionhacienda.model.AnimalsOnGround;
 import pfc.consignacionhacienda.model.Auction;
 import pfc.consignacionhacienda.model.Batch;
 import pfc.consignacionhacienda.model.SoldBatch;
+import pfc.consignacionhacienda.reports.dto.*;
 import pfc.consignacionhacienda.services.auction.AuctionService;
 import pfc.consignacionhacienda.services.batch.BatchService;
 import pfc.consignacionhacienda.services.client.ClientService;
+import pfc.consignacionhacienda.services.report.ReportService;
 import pfc.consignacionhacienda.services.soldBatch.SoldBatchService;
 import pfc.consignacionhacienda.services.user.UserService;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -347,4 +351,423 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService{
         LocalDateTime datetime = LocalDateTime.ofInstant(date, ZoneOffset.of("-03:00"));
         return DateTimeFormatter.ofPattern("dd-MM-yyyy").format(datetime);
     }
+
+    // /api/pdf/report
+    @Autowired
+    private ReportService reportService;
+
+    @Override
+    public byte[] getReportPdfByAuctionId(Integer auctionId, Boolean withCategoriesInfo, Boolean withSoldBatches) throws HttpForbidenException, AuctionNotFoundException, DocumentException, IOException {
+        Report report = reportService.getReportByAuctionId(auctionId, withCategoriesInfo);
+        CommonInfo auctionCommonInfo = report.getGeneralInfo().getCommonInfo();
+
+        List<Seller> sellers = auctionCommonInfo.getSellers();
+        List<Buyer> buyers = auctionCommonInfo.getBuyers();
+        Integer totalAnimalsSold = auctionCommonInfo.getTotalAnimalsSold();
+        Integer totalAnimalsNotSold = auctionCommonInfo.getTotalAnimalsNotSold();
+        Double totalMoneyIncome = auctionCommonInfo.getTotalMoneyIncome();
+        List<Assistant> assistants = report.getGeneralInfo().getAssistants();
+        List<Consignee> consignees = report.getGeneralInfo().getConsignees();
+
+        Document document = new Document(PageSize.A4, 50, 50, 50, 50);
+
+        //Para usar Arial, tuve que descargar el archivo de la fuente
+        Font fontTitle = FontFactory.getFont("/fonts/arial.ttf", 12, Font.BOLD, BaseColor.BLACK);
+        Font fontHeader = FontFactory.getFont("/fonts/arial.ttf", 10, Font.BOLD, BaseColor.BLACK);
+        Font fontBody = FontFactory.getFont("/fonts/arial.ttf", 10, Font.NORMAL, BaseColor.BLACK);
+
+        //El PDF generado saldra por este buffer para que sea enviado al frontend
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+        // 2. Create PdfWriter and the output is the byteArrayOutputStream
+        PdfWriter writer = PdfWriter.getInstance(document, byteArrayOutputStream);
+
+        // 3. Add metainfo to document
+        document.addAuthor(userService.getCurrentUser().getName() + " " + userService.getCurrentUser().getLastname());
+        document.addCreationDate();
+        document.addProducer();
+        document.addTitle("Reporte estadístico del remate");
+        document.addCreator("Sistema de Gestión de Consignación de Hacienda");
+
+
+        // 4. Open document
+        document.open();
+
+        // 5. Add content
+        // 5.1 add a title page
+        int red = BaseColor.LIGHT_GRAY.getRed();
+        int green = BaseColor.LIGHT_GRAY.getGreen();
+        int blue = BaseColor.LIGHT_GRAY.getBlue();
+        final int BRIGHTNESS = 35;
+        final float INDENT = 4f;
+        BaseColor baseColorLightGrayBrighter = new BaseColor(red+BRIGHTNESS, green+BRIGHTNESS, blue+BRIGHTNESS); //Para obtener un gris mas claro
+        BaseColor baseColor = baseColorLightGrayBrighter;
+
+        Image image = Image.getInstance("src/main/resources/images/ganados-logo.png");
+        image.setAlignment(Element.ALIGN_CENTER);
+        image.scaleAbsoluteHeight(image.getHeight()-50f);
+        image.scaleAbsoluteWidth(image.getWidth()-150f);
+        image.setSpacingAfter(20f);
+
+        document.add(image);
+
+        Paragraph paragraph = new Paragraph("SAN JUAN 957 - TEL: (0341) 4210223 - 4214311 - 4216107 - ROSARIO\n" +
+                "info@ganadosremates.com.ar - www.ganadosremates.com.ar\n" +
+                "Ventas en Mercado Rosario\n" +
+                "Ferias: San Justo - Campo Andino - San Javier - La Criolla - Reconquista - Roldán\n" +
+                "Remates televisados en directo por Canal Rural\n", fontTitle);
+        paragraph.setAlignment(Element.ALIGN_CENTER);
+        paragraph.setSpacingBefore(20f);
+        paragraph.setSpacingAfter(40f);
+        document.add(paragraph);
+
+        paragraph = new Paragraph("REPORTE DEL REMATE", fontTitle);
+        paragraph.setSpacingAfter(20f);
+        paragraph.setAlignment(Element.ALIGN_CENTER);
+        document.add(paragraph);
+
+        paragraph = new Paragraph("Informe del remate realizado en " + report.getGeneralInfo().getLocality() + " el día " + this.getDateFormat(report.getGeneralInfo().getDate()), fontBody);
+        paragraph.setSpacingAfter(10f);
+        document.add(paragraph);
+
+        paragraph = new Paragraph("Número de Senasa: " + report.getGeneralInfo().getSenasaNumber(), fontBody);
+        paragraph.setSpacingAfter(30f);
+        document.add(paragraph);
+
+        paragraph = new Paragraph("PARTICIPANTES: ", fontHeader);
+        document.add(paragraph);
+        paragraph = new Paragraph("Consignatario/s: " + getConsigneesString(consignees), fontBody);
+        paragraph.setIndentationLeft(INDENT*2);
+        document.add(paragraph);
+        paragraph = new Paragraph("Asistente/s: " + getAssistansString(assistants), fontBody);
+        paragraph.setIndentationLeft(INDENT*2);
+        paragraph.setSpacingAfter(30f);
+        document.add(paragraph);
+
+        paragraph = new Paragraph("BALANCE GENERAL: ", fontHeader);
+        document.add(paragraph);
+        paragraph = new Paragraph("Total animales ingresados: " + (auctionCommonInfo.getTotalAnimalsSold() + auctionCommonInfo.getTotalAnimalsNotSold()), fontBody);
+        document.add(paragraph);
+
+        paragraph = new Paragraph("Total animales vendidos: " + auctionCommonInfo.getTotalAnimalsSold(), fontBody);
+        paragraph.setIndentationLeft(INDENT*3);
+        document.add(paragraph);
+        paragraph = new Paragraph("Total animales sin vender: " + auctionCommonInfo.getTotalAnimalsNotSold(), fontBody);
+        paragraph.setIndentationLeft(INDENT*3);
+        paragraph.setSpacingAfter(10f);
+        document.add(paragraph);
+
+        BigDecimal totalMoney = BigDecimal.valueOf(auctionCommonInfo.getTotalMoneyIncome());
+        paragraph = new Paragraph("Ingreso total: $" + totalMoney.toPlainString(), fontBody);
+        paragraph.setSpacingAfter(10f);
+        document.add(paragraph);
+
+        paragraph = new Paragraph("Cantidad de lotes de entrada: " + report.getGeneralInfo().getTotalBatchesForSell(), fontBody);
+        document.add(paragraph);
+        paragraph = new Paragraph("Cantidad de lotes de salida: " + soldBatchService.getAllSoldBatchesByAuctionId(auctionId).size(), fontBody);
+        paragraph.setSpacingAfter(10f);
+        document.add(paragraph);
+
+        paragraph = new Paragraph("Cantidad de vendedores: " + report.getGeneralInfo().getTotalSeller(), fontBody);
+        document.add(paragraph);
+        paragraph = new Paragraph("Cantidad de compradores: " + report.getGeneralInfo().getTotalBuyers(), fontBody);
+        paragraph.setSpacingAfter(15f);
+        document.add(paragraph);
+
+        PdfPTable pdfPTable = new PdfPTable(new float[]{2f, 1f, 2f});
+        pdfPTable.setWidthPercentage(90f);
+
+        final float FIXEDCELLHEIGHTFACTOR = 25f;
+        PdfPCell cell = new PdfPCell(new Phrase("COMPRADORES", fontHeader));
+        cell.setFixedHeight(FIXEDCELLHEIGHTFACTOR);
+        cell.setColspan(3);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        cell.setBackgroundColor(baseColorLightGrayBrighter);
+        pdfPTable.addCell(cell);
+
+        cell = new PdfPCell(new Phrase("Nombre", fontHeader));
+        cell.setFixedHeight(FIXEDCELLHEIGHTFACTOR);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        cell.setBackgroundColor(baseColorLightGrayBrighter);
+        pdfPTable.addCell(cell);
+
+        cell = new PdfPCell(new Phrase("Cantidad", fontHeader));
+        cell.setFixedHeight(FIXEDCELLHEIGHTFACTOR);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        cell.setBackgroundColor(baseColorLightGrayBrighter);
+        pdfPTable.addCell(cell);
+
+        cell = new PdfPCell(new Phrase("Dinero invertido", fontHeader));
+        cell.setFixedHeight(FIXEDCELLHEIGHTFACTOR);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        cell.setBackgroundColor(baseColorLightGrayBrighter);
+        pdfPTable.addCell(cell);
+
+        addPdfTableBuyersData(pdfPTable, buyers, fontBody, FIXEDCELLHEIGHTFACTOR);
+        pdfPTable.setSpacingAfter(15f);
+        document.add(pdfPTable);
+
+//        pdfPTable.setSplitLate(false); //Si una fila es muy alta, la tabla no se corta, sino que la fila es subdividida
+        pdfPTable = new PdfPTable(new float[]{2f, 1f, 1f, 2f});
+        pdfPTable.setWidthPercentage(90f);
+
+        cell = new PdfPCell(new Phrase("VENDEDORES", fontHeader));
+        cell.setFixedHeight(FIXEDCELLHEIGHTFACTOR);
+        cell.setColspan(4);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        cell.setBackgroundColor(baseColorLightGrayBrighter);
+        pdfPTable.addCell(cell);
+
+        cell = new PdfPCell(new Phrase("Nombre", fontHeader));
+        cell.setFixedHeight(FIXEDCELLHEIGHTFACTOR);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        cell.setBackgroundColor(baseColorLightGrayBrighter);
+        pdfPTable.addCell(cell);
+
+        cell = new PdfPCell(new Phrase("Cantidad vendida", fontHeader));
+        cell.setFixedHeight(FIXEDCELLHEIGHTFACTOR);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        cell.setBackgroundColor(baseColorLightGrayBrighter);
+        pdfPTable.addCell(cell);
+
+        cell = new PdfPCell(new Phrase("Cantidad no vendida", fontHeader));
+        cell.setFixedHeight(FIXEDCELLHEIGHTFACTOR);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        cell.setBackgroundColor(baseColorLightGrayBrighter);
+        pdfPTable.addCell(cell);
+
+        cell = new PdfPCell(new Phrase("Dinero bruto obtenido", fontHeader));
+        cell.setFixedHeight(FIXEDCELLHEIGHTFACTOR);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        cell.setBackgroundColor(baseColorLightGrayBrighter);
+        pdfPTable.addCell(cell);
+
+
+        addPdfTableSellersData(pdfPTable, sellers, fontBody, FIXEDCELLHEIGHTFACTOR);
+        pdfPTable.setSpacingAfter(15f);
+        document.add(pdfPTable);
+
+        if(withCategoriesInfo) {
+            document.newPage();
+
+            List<CommonInfo> categoryList = report.getCategoryList();
+            for(CommonInfo category: categoryList){
+                document.newPage();
+                paragraph = new Paragraph("RESUMEN POR CATEGORÍA DE ANIMALES", fontTitle);
+                paragraph.setAlignment(Element.ALIGN_CENTER);
+                paragraph.setSpacingAfter(20f);
+                document.add(paragraph);
+
+                paragraph = new Paragraph("Categoría: " + category.getName(), fontHeader);
+                paragraph.setSpacingAfter(15f);
+                document.add(paragraph);
+
+                paragraph = new Paragraph("Total de animales ingresados: " + (category.getTotalAnimalsSold()+category.getTotalAnimalsNotSold()), fontBody);
+                paragraph.setSpacingAfter(10f);
+                document.add(paragraph);
+
+                paragraph = new Paragraph("Total de animales vendidos: " + category.getTotalAnimalsSold(), fontBody);
+                paragraph.setSpacingAfter(10f);
+                paragraph.setIndentationLeft(INDENT*3);
+                document.add(paragraph);
+
+                paragraph = new Paragraph("Total de animales sin vender: " + category.getTotalAnimalsNotSold(), fontBody);
+                paragraph.setSpacingAfter(10f);
+                paragraph.setIndentationLeft(INDENT*3);
+                document.add(paragraph);
+
+                BigDecimal totalMoneyByCategory = BigDecimal.valueOf(category.getTotalMoneyIncome());
+                paragraph = new Paragraph("Ingreso monetario total: $" + totalMoneyByCategory.toPlainString(), fontBody);
+                paragraph.setSpacingAfter(20f);
+                document.add(paragraph);
+
+
+                pdfPTable = new PdfPTable(new float[]{2f, 1f, 2f});
+                pdfPTable.setWidthPercentage(90f);
+
+                cell = new PdfPCell(new Phrase("COMPRADORES", fontHeader));
+                cell.setFixedHeight(FIXEDCELLHEIGHTFACTOR);
+                cell.setColspan(3);
+                cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                cell.setBackgroundColor(baseColorLightGrayBrighter);
+                pdfPTable.addCell(cell);
+
+                cell = new PdfPCell(new Phrase("Nombre", fontHeader));
+                cell.setFixedHeight(FIXEDCELLHEIGHTFACTOR);
+                cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                cell.setBackgroundColor(baseColorLightGrayBrighter);
+                pdfPTable.addCell(cell);
+
+                cell = new PdfPCell(new Phrase("Cantidad", fontHeader));
+                cell.setFixedHeight(FIXEDCELLHEIGHTFACTOR);
+                cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                cell.setBackgroundColor(baseColorLightGrayBrighter);
+                pdfPTable.addCell(cell);
+
+                cell = new PdfPCell(new Phrase("Dinero invertido", fontHeader));
+                cell.setFixedHeight(FIXEDCELLHEIGHTFACTOR);
+                cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                cell.setBackgroundColor(baseColorLightGrayBrighter);
+                pdfPTable.addCell(cell);
+
+                addPdfTableBuyersData(pdfPTable, category.getBuyers(), fontBody, FIXEDCELLHEIGHTFACTOR);
+                pdfPTable.setSpacingAfter(15f);
+                document.add(pdfPTable);
+
+//        pdfPTable.setSplitLate(false); //Si una fila es muy alta, la tabla no se corta, sino que la fila es subdividida
+                pdfPTable = new PdfPTable(new float[]{2f, 1f, 1f, 2f});
+                pdfPTable.setWidthPercentage(90f);
+
+                cell = new PdfPCell(new Phrase("VENDEDORES", fontHeader));
+                cell.setFixedHeight(FIXEDCELLHEIGHTFACTOR);
+                cell.setColspan(4);
+                cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                cell.setBackgroundColor(baseColorLightGrayBrighter);
+                pdfPTable.addCell(cell);
+
+                cell = new PdfPCell(new Phrase("Nombre", fontHeader));
+                cell.setFixedHeight(FIXEDCELLHEIGHTFACTOR);
+                cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                cell.setBackgroundColor(baseColorLightGrayBrighter);
+                pdfPTable.addCell(cell);
+
+                cell = new PdfPCell(new Phrase("Cantidad vendida", fontHeader));
+                cell.setFixedHeight(FIXEDCELLHEIGHTFACTOR);
+                cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                cell.setBackgroundColor(baseColorLightGrayBrighter);
+                pdfPTable.addCell(cell);
+
+                cell = new PdfPCell(new Phrase("Cantidad no vendida", fontHeader));
+                cell.setFixedHeight(FIXEDCELLHEIGHTFACTOR);
+                cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                cell.setBackgroundColor(baseColorLightGrayBrighter);
+                pdfPTable.addCell(cell);
+
+                cell = new PdfPCell(new Phrase("Dinero bruto obtenido", fontHeader));
+                cell.setFixedHeight(FIXEDCELLHEIGHTFACTOR);
+                cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                cell.setBackgroundColor(baseColorLightGrayBrighter);
+                pdfPTable.addCell(cell);
+
+
+                addPdfTableSellersData(pdfPTable, category.getSellers(), fontBody, FIXEDCELLHEIGHTFACTOR);
+                pdfPTable.setSpacingAfter(15f);
+                document.add(pdfPTable);
+
+            }
+        }
+        // 5. Close document
+        document.close();
+        writer.close();
+
+        return byteArrayOutputStream.toByteArray();
+    }
+
+    private void addPdfTableSellersData(PdfPTable pdfPTable, List<Seller> sellers, Font fontBody, float cellHeight){
+        PdfPCell cell;
+
+        if(sellers.isEmpty()){
+            cell = new PdfPCell(new Phrase("No hay vendedores", fontBody));
+            cell.setColspan(4);
+            cell.setFixedHeight(cellHeight);
+            cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+            cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            pdfPTable.addCell(cell);
+        }
+
+        for(Seller s: sellers){
+            cell = new PdfPCell(new Phrase(s.getName(), fontBody));
+            cell.setFixedHeight(cellHeight);
+            cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+            cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            pdfPTable.addCell(cell);
+
+            cell = new PdfPCell(new Phrase(s.getTotalAnimalsSold()!=0?String.valueOf(s.getTotalAnimalsSold()):"", fontBody));
+            cell.setFixedHeight(cellHeight);
+            cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+            cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            pdfPTable.addCell(cell);
+
+            cell = new PdfPCell(new Phrase(s.getTotalAnimalsNotSold()!=0?String.valueOf(s.getTotalAnimalsNotSold()):"", fontBody));
+            cell.setFixedHeight(cellHeight);
+            cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+            cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            pdfPTable.addCell(cell);
+
+            BigDecimal totalMoney = BigDecimal.valueOf(s.getTotalMoneyIncome());
+
+            cell = new PdfPCell(new Phrase("$" + totalMoney.toPlainString(), fontBody));
+            cell.setFixedHeight(cellHeight);
+            cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+            cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            pdfPTable.addCell(cell);
+        }
+    }
+
+    private void addPdfTableBuyersData(PdfPTable pdfPTable, List<Buyer> buyers, Font fontBody, float cellHeight) {
+        PdfPCell cell;
+        if(buyers.isEmpty()){
+            cell = new PdfPCell(new Phrase("No hay compradores", fontBody));
+            cell.setColspan(3);
+            cell.setFixedHeight(cellHeight);
+            cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+            cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            pdfPTable.addCell(cell);
+        }
+        for(Buyer b: buyers){
+            cell = new PdfPCell(new Phrase(b.getName(), fontBody));
+            cell.setFixedHeight(cellHeight);
+            cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+            cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            pdfPTable.addCell(cell);
+
+            cell = new PdfPCell(new Phrase(b.getTotalBought()!=0?String.valueOf(b.getTotalBought()):"", fontBody));
+            cell.setFixedHeight(cellHeight);
+            cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+            cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            pdfPTable.addCell(cell);
+
+            BigDecimal totalMoney = BigDecimal.valueOf(b.getTotalMoneyInvested());
+            cell = new PdfPCell(new Phrase("$" + totalMoney.toPlainString(), fontBody));
+            cell.setFixedHeight(cellHeight);
+            cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+            cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            pdfPTable.addCell(cell);
+        }
+    }
+
+    private String getConsigneesString(List<Consignee> consignees) {
+        StringBuilder stringBuffer = new StringBuilder();
+        for(Consignee c: consignees){
+            stringBuffer.append(", ").append(c.getName());
+        };
+        return stringBuffer.length() > 0 ? stringBuffer.deleteCharAt(0).deleteCharAt(0).toString() : stringBuffer.append("No hay consignatarios").toString();
+    }
+
+    private String getAssistansString(List<Assistant> assistants) {
+        StringBuilder stringBuffer = new StringBuilder();
+        for(Assistant a: assistants){
+            stringBuffer.append(", ").append(a.getName());
+        };
+        return stringBuffer.length() > 0 ? stringBuffer.deleteCharAt(0).deleteCharAt(0).toString() : stringBuffer.append("No hay asistentes").toString();
+    }
+
 }
