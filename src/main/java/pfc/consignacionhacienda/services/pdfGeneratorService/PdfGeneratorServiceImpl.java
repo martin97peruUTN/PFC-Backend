@@ -298,7 +298,11 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService{
         cell = getPdfTableCell("Kilos en pie", 1, Element.ALIGN_CENTER, Element.ALIGN_MIDDLE, 0, HEIGHT-2);
         pdfPTable.addCell(cell);
 
-        cell = getPdfTableCell("Precio", 1, Element.ALIGN_CENTER, Element.ALIGN_MIDDLE, 0, HEIGHT-2);
+        if(soldBatch.getMustWeigh() != null && soldBatch.getMustWeigh()) {
+            cell = getPdfTableCell("Precio ($/kg)", 1, Element.ALIGN_CENTER, Element.ALIGN_MIDDLE, 0, HEIGHT - 2);
+        } else {
+            cell = getPdfTableCell("Precio ($/u)", 1, Element.ALIGN_CENTER, Element.ALIGN_MIDDLE, 0, HEIGHT - 2);
+        }
         pdfPTable.addCell(cell);
 
         cell = getPdfTableCell(soldBatch.getAnimalsOnGround().getCategory().getName(), 1, Element.ALIGN_CENTER, Element.ALIGN_MIDDLE, 0, HEIGHT-2);

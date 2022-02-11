@@ -59,8 +59,8 @@ public class SoldBatchServiceImpl implements SoldBatchService{
     private ClientService clientService;
 
     @Override
-    public Integer getTotalSold(Integer id) {
-        Integer total = soldBatchDAO.getTotalSold(id);
+    public Integer getTotalSold(Integer animalsOnGroundId) {
+        Integer total = soldBatchDAO.getTotalSold(animalsOnGroundId);
         return total==null?0:total;
     }
 
@@ -219,6 +219,27 @@ public class SoldBatchServiceImpl implements SoldBatchService{
             return soldBatchOpt.get();
         }
         throw new SoldBatchNotFoundException("No existe Lote Vendido con id: " + soldBatchId);
+    }
+
+    @Override
+    public List<SoldBatchResponseDTO> getAllSoldBatchesByAuctionId(Integer auctionId) {
+        List<SoldBatch> soldBatches = soldBatchDAO.findAllByAuctionId(auctionId);
+        List<SoldBatchResponseDTO> responseDTOList = new ArrayList<>();
+        for(SoldBatch soldBatch: soldBatches){
+            SoldBatchResponseDTO soldBatchResponseDTO = new SoldBatchResponseDTO();
+            soldBatchResponseDTO.setId(soldBatch.getId());
+            soldBatchResponseDTO.setAmount(soldBatch.getAmount());
+            soldBatchResponseDTO.setPrice(soldBatch.getPrice());
+            soldBatchResponseDTO.setDteNumber(soldBatch.getDteNumber());
+            soldBatchResponseDTO.setMustWeigh(soldBatch.getMustWeigh());
+            soldBatchResponseDTO.setPaymentTerm(soldBatch.getPaymentTerm());
+            soldBatchResponseDTO.setWeight(soldBatch.getWeight());
+            soldBatchResponseDTO.setCategory(soldBatch.getAnimalsOnGround().getCategory());
+            soldBatchResponseDTO.setBuyer(soldBatch.getClient());
+            soldBatchResponseDTO.setSeller(clientService.findByProvenanceId(batchService.getBatchByAnimalsOnGroundId(soldBatch.getAnimalsOnGround().getId()).getProvenance().getId()));
+            responseDTOList.add(soldBatchResponseDTO);
+        }
+        return responseDTOList;
     }
 
     private SoldBatch findByIdNotDeleted(Integer soldBatchId) throws SoldBatchNotFoundException {

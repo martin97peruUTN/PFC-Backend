@@ -19,4 +19,11 @@ public interface BatchDAO extends JpaRepository<Batch, Integer> {
     Page<Batch> findByAuctionIdAndPage(Integer id, Pageable of);
 
     Batch findByAnimalsOnGroundId(Integer id);
+
+    @Query("SELECT DISTINCT b FROM Batch b, Client c JOIN b.provenance p JOIN b.auction a  JOIN c.provenances pr " +
+            "WHERE a.id = :auctionId  " +
+            "AND c.id=:id " +
+            "AND p.id = pr.id " +
+            "AND (b.deleted IS NULL OR b.deleted IS FALSE)")
+    List<Batch> findByClientIdAndAuctionId(Integer id, Integer auctionId);
 }
