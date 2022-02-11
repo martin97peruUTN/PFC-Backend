@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pfc.consignacionhacienda.dto.SoldBatchResponseDTO;
+import pfc.consignacionhacienda.exceptions.HttpForbidenException;
 import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
 import pfc.consignacionhacienda.model.*;
 import pfc.consignacionhacienda.reports.dto.*;
@@ -36,7 +37,7 @@ public class ReportServiceImpl implements ReportService{
     private ClientService clientService;
 
     @Override
-    public Report getReportByAuctionId(Integer auctionId, Boolean withCategoryList) throws AuctionNotFoundException {
+    public Report getReportByAuctionId(Integer auctionId, Boolean withCategoryList) throws AuctionNotFoundException, HttpForbidenException {
         Auction auction = auctionService.getAuctionById(auctionId);
         if(auction.getDeleted() != null && auction.getDeleted()){
             throw new AuctionNotFoundException("El remate con id: " + auctionId + " no existe.");
@@ -99,7 +100,7 @@ public class ReportServiceImpl implements ReportService{
     // Agregamos a la info general del remate info sobre cada vendedor, comprador,
     // 'cantidad de animales vendidos', 'cantidad de animales no vendidos'
     // y 'cantidad de lotes vendidos completamente'
-    private void completeGeneralInfo(Integer auctionId, Map<Integer, Seller> sellers, Map<Integer, Buyer> buyers, List<Batch> batchList, GeneralInfo generalInfo) {
+    private void completeGeneralInfo(Integer auctionId, Map<Integer, Seller> sellers, Map<Integer, Buyer> buyers, List<Batch> batchList, GeneralInfo generalInfo) throws HttpForbidenException {
         CommonInfo commonInfo = new CommonInfo();
         Integer totalAnimalsNotSold = 0;
         Integer totalAnimalsSold = 0;
@@ -173,10 +174,17 @@ public class ReportServiceImpl implements ReportService{
         generalInfo.setCommonInfo(commonInfo);
     }
 
-    private double getTotalMoneyIncome(Integer auctionId, Map<Integer, Seller> sellers, Map<Integer, Buyer> buyers, double totalMoneyIncome) {
+    private double getTotalMoneyIncome(Integer auctionId, Map<Integer, Seller> sellers, Map<Integer, Buyer> buyers, double totalMoneyIncome) throws HttpForbidenException {
         //Informacion sobre cada Vendedor y Comprador que participo en el remate
         for(SoldBatchResponseDTO sb: soldBatchService.getAllSoldBatchesByAuctionId(auctionId)){
-            totalMoneyIncome += sb.getPrice();
+            if(sb.getMustWeigh()!= null && sb.getMustWeigh()){
+                if(sb.getWeight()==null){
+                    throw new HttpForbidenException("No puede calcularse el resumen hasta que se hayan pesado todos los animales");
+                }
+                totalMoneyIncome += sb.getPrice()*sb.getWeight();
+            } else {
+                totalMoneyIncome += sb.getPrice()*sb.getAmount();
+            }
 
             //TODO Aqui, por cada cliente comprador calculamos toda la informacion de lo que compro en el remate
             if(!buyers.containsKey(sb.getBuyer().getId())){
@@ -184,14 +192,28 @@ public class ReportServiceImpl implements ReportService{
                 buyer.setId(sb.getBuyer().getId());
                 buyer.setName(sb.getBuyer().getName());
                 buyer.setTotalBought(sb.getAmount());
-                buyer.setTotalMoneyInvested(sb.getPrice());
+                if(sb.getMustWeigh() != null && sb.getMustWeigh()){
+                    if(sb.getWeight()==null){
+                        throw new HttpForbidenException("No puede calcularse el resumen hasta que se hayan pesado todos los animales");
+                    }
+                    buyer.setTotalMoneyInvested(sb.getPrice()*sb.getWeight());
+                } else {
+                    buyer.setTotalMoneyInvested(sb.getPrice()*sb.getAmount());
+                }
                 buyers.put(sb.getBuyer().getId(), buyer);
             } else {
                 Buyer buyer = new Buyer();
                 buyer.setId(sb.getBuyer().getId());
                 buyer.setName(sb.getBuyer().getName());
                 buyer.setTotalBought(buyers.get(sb.getBuyer().getId()).getTotalBought()+sb.getAmount());
-                buyer.setTotalMoneyInvested(buyers.get(sb.getBuyer().getId()).getTotalMoneyInvested()+sb.getPrice());
+                if(sb.getMustWeigh() != null && sb.getMustWeigh()){
+                    if(sb.getWeight()==null){
+                        throw new HttpForbidenException("No puede calcularse el resumen hasta que se hayan pesado todos los animales");
+                    }
+                    buyer.setTotalMoneyInvested(buyers.get(sb.getBuyer().getId()).getTotalMoneyInvested()+sb.getPrice()*sb.getWeight());
+                } else {
+                    buyer.setTotalMoneyInvested(buyers.get(sb.getBuyer().getId()).getTotalMoneyInvested()+sb.getPrice()*sb.getAmount());
+                }
                 buyers.put(sb.getBuyer().getId(), buyer); //TODO cada comprador se correspondo a una unica posicion del map.
             }
 
@@ -202,7 +224,14 @@ public class ReportServiceImpl implements ReportService{
                 s.setId(sb.getSeller().getId());
                 s.setName(sb.getSeller().getName());
                 s.setTotalAnimalsSold(sb.getAmount());
-                s.setTotalMoneyIncome(sb.getPrice());
+                if(sb.getMustWeigh() != null && sb.getMustWeigh()){
+                    if(sb.getWeight()==null){
+                        throw new HttpForbidenException("No puede calcularse el resumen hasta que se hayan pesado todos los animales");
+                    }
+                    s.setTotalMoneyIncome(sb.getPrice()*sb.getWeight());
+                } else {
+                    s.setTotalMoneyIncome(sb.getPrice()*sb.getAmount());
+                }
                 sellers.put(sb.getSeller().getId(), s);
             } else {
                 Seller s = new Seller();
@@ -215,9 +244,23 @@ public class ReportServiceImpl implements ReportService{
                 }
 
                 if (sellers.get(sb.getSeller().getId()).getTotalMoneyIncome() == null) {
-                    s.setTotalMoneyIncome(sb.getPrice());
+                    if(sb.getMustWeigh() != null && sb.getMustWeigh()){
+                        if(sb.getWeight() == null){
+                            throw new HttpForbidenException("No puede calcularse el resumen hasta que se hayan pesado todos los animales");
+                        }
+                        s.setTotalMoneyIncome(sb.getPrice()*sb.getWeight());
+                    } else {
+                        s.setTotalMoneyIncome(sb.getPrice()*sb.getAmount());
+                    }
                 } else {
-                    s.setTotalMoneyIncome(sellers.get(sb.getSeller().getId()).getTotalMoneyIncome() + sb.getPrice());
+                    if(sb.getMustWeigh() != null && sb.getMustWeigh()){
+                        if(sb.getWeight()==null){
+                            throw new HttpForbidenException("No puede calcularse el resumen hasta que se hayan pesado todos los animales");
+                        }
+                        s.setTotalMoneyIncome(sellers.get(sb.getSeller().getId()).getTotalMoneyIncome() + sb.getPrice()*sb.getWeight());
+                    } else {
+                        s.setTotalMoneyIncome(sellers.get(sb.getSeller().getId()).getTotalMoneyIncome() + sb.getPrice()*sb.getAmount());
+                    }
                 }
                 s.setTotalAnimalsNotSold(sellers.get(sb.getSeller().getId()).getTotalAnimalsNotSold());
                 sellers.put(sb.getSeller().getId(), s); //TODO cada vendedor se corresponde a una unica posicion del map
@@ -247,7 +290,7 @@ public class ReportServiceImpl implements ReportService{
 
     //-------------------------------------
     // Sobre la lista de categorias de animales
-    private Map<Integer, CommonInfo> getCategoryListInfo(Integer auctionId, List<Batch> batchList) {
+    private Map<Integer, CommonInfo> getCategoryListInfo(Integer auctionId, List<Batch> batchList) throws HttpForbidenException {
         //TODO este map contendra la info de cada category (CommonInfo) Integer es el id de cada categoria.
         Map<Integer, CommonInfo> categoryList = new LinkedHashMap<>();
 
@@ -276,37 +319,79 @@ public class ReportServiceImpl implements ReportService{
             // los valores para obtener el resultado final
             if (!categoryList.containsKey(sb.getCategory().getId())) {
                 category.setName(sb.getCategory().getName());
-                category.setTotalMoneyIncome(sb.getPrice());
+                if(sb.getMustWeigh() != null && sb.getMustWeigh()){
+                    if(sb.getWeight()==null){
+                        throw new HttpForbidenException("No puede calcularse el resumen hasta que se hayan pesado todos los animales");
+                    }
+                    category.setTotalMoneyIncome(sb.getPrice()*sb.getWeight());
+                } else {
+                    category.setTotalMoneyIncome(sb.getPrice()*sb.getAmount());
+                }
                 category.setTotalAnimalsSold(sb.getAmount());
                 Seller s = new Seller();
                 s.setId(sb.getSeller().getId());
                 s.setName(sb.getSeller().getName());
                 s.setTotalAnimalsSold(sb.getAmount());
-                s.setTotalMoneyIncome(sb.getPrice());
+                if(sb.getMustWeigh() != null && sb.getMustWeigh()){
+                    if(sb.getWeight()==null){
+                        throw new HttpForbidenException("No puede calcularse el resumen hasta que se hayan pesado todos los animales");
+                    }
+                    s.setTotalMoneyIncome(sb.getPrice()*sb.getWeight());
+                } else {
+                    s.setTotalMoneyIncome(sb.getPrice()*sb.getAmount());
+                }
                 category.setSellers(List.of(s));
                 Buyer buyer = new Buyer();
                 buyer.setId(sb.getBuyer().getId());
                 buyer.setName(sb.getBuyer().getName());
-                buyer.setTotalMoneyInvested(sb.getPrice());
+                if(sb.getMustWeigh() != null && sb.getMustWeigh()){
+                    if(sb.getWeight()==null){
+                        throw new HttpForbidenException("No puede calcularse el resumen hasta que se hayan pesado todos los animales");
+                    }
+                    buyer.setTotalMoneyInvested(sb.getPrice()*sb.getWeight());
+                } else {
+                    buyer.setTotalMoneyInvested(sb.getPrice()*sb.getAmount());
+                }
                 buyer.setTotalBought(sb.getAmount());
                 category.setBuyers(List.of(buyer));
                 categoryList.put(sb.getCategory().getId(), category);
             } else {
                 category.setName(sb.getCategory().getName());
                 CommonInfo aux = categoryList.get(sb.getCategory().getId());
-                category.setTotalMoneyIncome(aux.getTotalMoneyIncome() + sb.getPrice());
+                if(sb.getMustWeigh() != null && sb.getMustWeigh()){
+                    if(sb.getWeight()==null){
+                        throw new HttpForbidenException("No puede calcularse el resumen hasta que se hayan pesado todos los animales");
+                    }
+                    category.setTotalMoneyIncome(aux.getTotalMoneyIncome() + sb.getPrice()*sb.getWeight());
+                } else {
+                    category.setTotalMoneyIncome(aux.getTotalMoneyIncome() + sb.getPrice()*sb.getAmount());
+                }
                 category.setTotalAnimalsSold(aux.getTotalAnimalsSold() + sb.getAmount());
                 Seller s = new Seller();
                 s.setId(sb.getSeller().getId());
                 s.setName(sb.getSeller().getName());
                 s.setTotalAnimalsSold(sb.getAmount());
-                s.setTotalMoneyIncome(sb.getPrice());
+                if(sb.getMustWeigh() != null && sb.getMustWeigh()){
+                    if(sb.getWeight()==null){
+                        throw new HttpForbidenException("No puede calcularse el resumen hasta que se hayan pesado todos los animales");
+                    }
+                    s.setTotalMoneyIncome(sb.getPrice()*sb.getWeight());
+                } else {
+                    s.setTotalMoneyIncome(sb.getPrice()*sb.getAmount());
+                }
                 aux.getSellers().add(s);
                 category.setSellers(aux.getSellers());
                 Buyer buyer = new Buyer();
                 buyer.setId(sb.getBuyer().getId());
                 buyer.setName(sb.getBuyer().getName());
-                buyer.setTotalMoneyInvested(sb.getPrice());
+                if(sb.getMustWeigh() != null && sb.getMustWeigh()){
+                    if(sb.getWeight()==null){
+                        throw new HttpForbidenException("No puede calcularse el resumen hasta que se hayan pesado todos los animales");
+                    }
+                   buyer.setTotalMoneyInvested(sb.getPrice()*sb.getWeight());
+                } else {
+                    buyer.setTotalMoneyInvested(sb.getPrice()*sb.getAmount());
+                }
                 buyer.setTotalBought(sb.getAmount());
                 aux.getBuyers().add(buyer);
                 category.setBuyers(aux.getBuyers());
