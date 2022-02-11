@@ -36,6 +36,8 @@ public class ReportServiceImpl implements ReportService{
     @Autowired
     private ClientService clientService;
 
+    private String notWeightedAnimalsMessage = "No puede calcularse el resumen hasta que se hayan pesado todos los animales que deben pesarse";
+
     @Override
     public Report getReportByAuctionId(Integer auctionId, Boolean withCategoryList) throws AuctionNotFoundException, HttpForbidenException {
         Auction auction = auctionService.getAuctionById(auctionId);
@@ -179,7 +181,7 @@ public class ReportServiceImpl implements ReportService{
         for(SoldBatchResponseDTO sb: soldBatchService.getAllSoldBatchesByAuctionId(auctionId)){
             if(sb.getMustWeigh()!= null && sb.getMustWeigh()){
                 if(sb.getWeight()==null){
-                    throw new HttpForbidenException("No puede calcularse el resumen hasta que se hayan pesado todos los animales");
+                    throw new HttpForbidenException(notWeightedAnimalsMessage);
                 }
                 totalMoneyIncome += sb.getPrice()*sb.getWeight();
             } else {
@@ -194,7 +196,7 @@ public class ReportServiceImpl implements ReportService{
                 buyer.setTotalBought(sb.getAmount());
                 if(sb.getMustWeigh() != null && sb.getMustWeigh()){
                     if(sb.getWeight()==null){
-                        throw new HttpForbidenException("No puede calcularse el resumen hasta que se hayan pesado todos los animales");
+                        throw new HttpForbidenException(notWeightedAnimalsMessage);
                     }
                     buyer.setTotalMoneyInvested(sb.getPrice()*sb.getWeight());
                 } else {
@@ -208,7 +210,7 @@ public class ReportServiceImpl implements ReportService{
                 buyer.setTotalBought(buyers.get(sb.getBuyer().getId()).getTotalBought()+sb.getAmount());
                 if(sb.getMustWeigh() != null && sb.getMustWeigh()){
                     if(sb.getWeight()==null){
-                        throw new HttpForbidenException("No puede calcularse el resumen hasta que se hayan pesado todos los animales");
+                        throw new HttpForbidenException(notWeightedAnimalsMessage);
                     }
                     buyer.setTotalMoneyInvested(buyers.get(sb.getBuyer().getId()).getTotalMoneyInvested()+sb.getPrice()*sb.getWeight());
                 } else {
@@ -226,7 +228,7 @@ public class ReportServiceImpl implements ReportService{
                 s.setTotalAnimalsSold(sb.getAmount());
                 if(sb.getMustWeigh() != null && sb.getMustWeigh()){
                     if(sb.getWeight()==null){
-                        throw new HttpForbidenException("No puede calcularse el resumen hasta que se hayan pesado todos los animales");
+                        throw new HttpForbidenException(notWeightedAnimalsMessage);
                     }
                     s.setTotalMoneyIncome(sb.getPrice()*sb.getWeight());
                 } else {
@@ -246,7 +248,7 @@ public class ReportServiceImpl implements ReportService{
                 if (sellers.get(sb.getSeller().getId()).getTotalMoneyIncome() == null) {
                     if(sb.getMustWeigh() != null && sb.getMustWeigh()){
                         if(sb.getWeight() == null){
-                            throw new HttpForbidenException("No puede calcularse el resumen hasta que se hayan pesado todos los animales");
+                            throw new HttpForbidenException(notWeightedAnimalsMessage);
                         }
                         s.setTotalMoneyIncome(sb.getPrice()*sb.getWeight());
                     } else {
@@ -255,7 +257,7 @@ public class ReportServiceImpl implements ReportService{
                 } else {
                     if(sb.getMustWeigh() != null && sb.getMustWeigh()){
                         if(sb.getWeight()==null){
-                            throw new HttpForbidenException("No puede calcularse el resumen hasta que se hayan pesado todos los animales");
+                            throw new HttpForbidenException(notWeightedAnimalsMessage);
                         }
                         s.setTotalMoneyIncome(sellers.get(sb.getSeller().getId()).getTotalMoneyIncome() + sb.getPrice()*sb.getWeight());
                     } else {
@@ -321,7 +323,7 @@ public class ReportServiceImpl implements ReportService{
                 category.setName(sb.getCategory().getName());
                 if(sb.getMustWeigh() != null && sb.getMustWeigh()){
                     if(sb.getWeight()==null){
-                        throw new HttpForbidenException("No puede calcularse el resumen hasta que se hayan pesado todos los animales");
+                        throw new HttpForbidenException(notWeightedAnimalsMessage);
                     }
                     category.setTotalMoneyIncome(sb.getPrice()*sb.getWeight());
                 } else {
@@ -334,7 +336,7 @@ public class ReportServiceImpl implements ReportService{
                 s.setTotalAnimalsSold(sb.getAmount());
                 if(sb.getMustWeigh() != null && sb.getMustWeigh()){
                     if(sb.getWeight()==null){
-                        throw new HttpForbidenException("No puede calcularse el resumen hasta que se hayan pesado todos los animales");
+                        throw new HttpForbidenException(notWeightedAnimalsMessage);
                     }
                     s.setTotalMoneyIncome(sb.getPrice()*sb.getWeight());
                 } else {
@@ -346,7 +348,7 @@ public class ReportServiceImpl implements ReportService{
                 buyer.setName(sb.getBuyer().getName());
                 if(sb.getMustWeigh() != null && sb.getMustWeigh()){
                     if(sb.getWeight()==null){
-                        throw new HttpForbidenException("No puede calcularse el resumen hasta que se hayan pesado todos los animales");
+                        throw new HttpForbidenException(notWeightedAnimalsMessage);
                     }
                     buyer.setTotalMoneyInvested(sb.getPrice()*sb.getWeight());
                 } else {
@@ -360,7 +362,7 @@ public class ReportServiceImpl implements ReportService{
                 CommonInfo aux = categoryList.get(sb.getCategory().getId());
                 if(sb.getMustWeigh() != null && sb.getMustWeigh()){
                     if(sb.getWeight()==null){
-                        throw new HttpForbidenException("No puede calcularse el resumen hasta que se hayan pesado todos los animales");
+                        throw new HttpForbidenException(notWeightedAnimalsMessage);
                     }
                     category.setTotalMoneyIncome(aux.getTotalMoneyIncome() + sb.getPrice()*sb.getWeight());
                 } else {
@@ -373,7 +375,7 @@ public class ReportServiceImpl implements ReportService{
                 s.setTotalAnimalsSold(sb.getAmount());
                 if(sb.getMustWeigh() != null && sb.getMustWeigh()){
                     if(sb.getWeight()==null){
-                        throw new HttpForbidenException("No puede calcularse el resumen hasta que se hayan pesado todos los animales");
+                        throw new HttpForbidenException(notWeightedAnimalsMessage);
                     }
                     s.setTotalMoneyIncome(sb.getPrice()*sb.getWeight());
                 } else {
@@ -386,7 +388,7 @@ public class ReportServiceImpl implements ReportService{
                 buyer.setName(sb.getBuyer().getName());
                 if(sb.getMustWeigh() != null && sb.getMustWeigh()){
                     if(sb.getWeight()==null){
-                        throw new HttpForbidenException("No puede calcularse el resumen hasta que se hayan pesado todos los animales");
+                        throw new HttpForbidenException(notWeightedAnimalsMessage);
                     }
                    buyer.setTotalMoneyInvested(sb.getPrice()*sb.getWeight());
                 } else {
