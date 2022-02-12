@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pfc.consignacionhacienda.dto.AnimalsOnGroundDTO;
+import pfc.consignacionhacienda.dto.SoldBatchResponseDTO;
 import pfc.consignacionhacienda.exceptions.HttpForbidenException;
 import pfc.consignacionhacienda.exceptions.animalsOnGround.AnimalsOnGroundNotFound;
 import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
@@ -368,6 +369,7 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService{
         Double totalMoneyIncome = auctionCommonInfo.getTotalMoneyIncome();
         List<Assistant> assistants = report.getGeneralInfo().getAssistants();
         List<Consignee> consignees = report.getGeneralInfo().getConsignees();
+        List<SoldBatchResponseDTO> soldBatches = soldBatchService.getAllSoldBatchesByAuctionId(auctionId);
 
         Document document = new Document(PageSize.A4, 50, 50, 50, 50);
 
@@ -464,7 +466,7 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService{
 
         paragraph = new Paragraph("Cantidad de lotes de entrada: " + report.getGeneralInfo().getTotalBatchesForSell(), fontBody);
         document.add(paragraph);
-        paragraph = new Paragraph("Cantidad de lotes de salida: " + soldBatchService.getAllSoldBatchesByAuctionId(auctionId).size(), fontBody);
+        paragraph = new Paragraph("Cantidad de lotes de salida: " + soldBatches.size(), fontBody);
         paragraph.setSpacingAfter(10f);
         document.add(paragraph);
 
@@ -557,9 +559,9 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService{
         document.add(pdfPTable);
 
         if(withCategoriesInfo) {
-            document.newPage();
 
             List<CommonInfo> categoryList = report.getCategoryList();
+
             for(CommonInfo category: categoryList){
                 document.newPage();
                 paragraph = new Paragraph("RESUMEN POR CATEGORÍA DE ANIMALES", fontTitle);
@@ -673,6 +675,166 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService{
                 document.add(pdfPTable);
 
             }
+        }
+
+        if(withSoldBatches){
+            pdfPTable = new PdfPTable(new float[]{1f, 2f});
+            pdfPTable.setWidthPercentage(90f);
+            document.newPage();
+            cell = new PdfPCell(new Phrase("LOTES VENDIDOS", fontHeader));
+            cell.setFixedHeight(FIXEDCELLHEIGHTFACTOR);
+            cell.setColspan(2);
+            cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+            cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            cell.setBackgroundColor(baseColorLightGrayBrighter);
+            pdfPTable.addCell(cell);
+            pdfPTable.setHeaderRows(1);
+            if(soldBatches.isEmpty()) {
+                cell = new PdfPCell(new Phrase("No hay lotes vendidos", fontBody));
+                cell.setFixedHeight(FIXEDCELLHEIGHTFACTOR);
+                cell.setColspan(2);
+                cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                pdfPTable.addCell(cell);
+            }
+            for(SoldBatchResponseDTO soldBatch: soldBatches){
+                cell = new PdfPCell(new Phrase("Vendedor: ", fontHeader));
+                cell.setFixedHeight(FIXEDCELLHEIGHTFACTOR);
+                cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                cell.setIndent(INDENT);
+                cell.setBorderWidthRight(0f);
+                cell.setBorderWidthBottom(0f);
+                pdfPTable.addCell(cell);
+
+                cell = new PdfPCell(new Phrase(soldBatch.getSeller().getName(), fontBody));
+                cell.setFixedHeight(FIXEDCELLHEIGHTFACTOR);
+                cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                cell.setIndent(INDENT);
+                cell.setBorderWidthLeft(0f);
+                cell.setBorderWidthBottom(0f);
+                pdfPTable.addCell(cell);
+
+                cell = new PdfPCell(new Phrase("Comprador: ", fontHeader));
+                cell.setFixedHeight(FIXEDCELLHEIGHTFACTOR);
+                cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                cell.setIndent(INDENT);
+                cell.setBorderWidthRight(0f);
+                cell.setBorderWidthTop(0f);
+                cell.setBorderWidthBottom(0f);
+                pdfPTable.addCell(cell);
+
+                cell = new PdfPCell(new Phrase(soldBatch.getBuyer().getName(), fontBody));
+                cell.setFixedHeight(FIXEDCELLHEIGHTFACTOR);
+                cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                cell.setIndent(INDENT);
+                cell.setBorderWidthTop(0f);
+                cell.setBorderWidthLeft(0f);
+                cell.setBorderWidthBottom(0f);
+                pdfPTable.addCell(cell);
+
+                cell = new PdfPCell(new Phrase("Categoría: ", fontHeader));
+                cell.setFixedHeight(FIXEDCELLHEIGHTFACTOR);
+                cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                cell.setIndent(INDENT);
+                cell.setBorderWidthTop(0f);
+                cell.setBorderWidthRight(0f);
+                cell.setBorderWidthBottom(0f);
+                pdfPTable.addCell(cell);
+
+                cell = new PdfPCell(new Phrase(soldBatch.getCategory().getName(), fontBody));
+                cell.setFixedHeight(FIXEDCELLHEIGHTFACTOR);
+                cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                cell.setBorderWidthTop(0f);
+                cell.setBorderWidthLeft(0f);
+                cell.setBorderWidthBottom(0f);
+                cell.setIndent(INDENT);
+                pdfPTable.addCell(cell);
+
+                cell = new PdfPCell(new Phrase("Cantidad: ", fontHeader));
+                cell.setFixedHeight(FIXEDCELLHEIGHTFACTOR);
+                cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                cell.setIndent(INDENT);
+                cell.setBorderWidthTop(0f);
+                cell.setBorderWidthBottom(0f);
+                cell.setBorderWidthRight(0f);
+                pdfPTable.addCell(cell);
+
+                cell = new PdfPCell(new Phrase(String.valueOf(soldBatch.getAmount()), fontBody));
+                cell.setFixedHeight(FIXEDCELLHEIGHTFACTOR);
+                cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                cell.setIndent(INDENT);
+                cell.setBorderWidthTop(0f);
+                cell.setBorderWidthLeft(0f);
+                cell.setBorderWidthBottom(0f);
+                pdfPTable.addCell(cell);
+
+                BigDecimal bigDecimal;
+                boolean mustWeight = soldBatch.getMustWeigh() != null && soldBatch.getMustWeigh();
+                boolean hasPaymentTerm = soldBatch.getPaymentTerm() != null;
+                if(mustWeight){
+                    cell = new PdfPCell(new Phrase("Peso (kg): ", fontHeader));
+                    cell.setFixedHeight(FIXEDCELLHEIGHTFACTOR);
+                    cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                    cell.setIndent(INDENT);
+                    cell.setBorderWidthTop(0f);
+                    cell.setBorderWidthRight(0f);
+                    cell.setBorderWidthBottom(0f);
+                    pdfPTable.addCell(cell);
+
+                    bigDecimal = BigDecimal.valueOf(soldBatch.getWeight());
+                    cell = new PdfPCell(new Phrase(bigDecimal.toPlainString() + " kg", fontBody));
+                    cell.setFixedHeight(FIXEDCELLHEIGHTFACTOR);
+                    cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                    cell.setIndent(INDENT);
+                    cell.setBorderWidthTop(0f);
+                    cell.setBorderWidthLeft(0f);
+                    cell.setBorderWidthBottom(0f);
+                    pdfPTable.addCell(cell);
+                }
+
+                String precioString = mustWeight ? "($/kg)" : ("$/u");
+                cell = new PdfPCell(new Phrase("Precio " + precioString + ": ", fontHeader));
+                cell.setFixedHeight(FIXEDCELLHEIGHTFACTOR);
+                cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                cell.setBorderWidthTop(0f);
+                cell.setBorderWidthRight(0f);
+                cell.setIndent(INDENT);
+                if(hasPaymentTerm){
+                    cell.setBorderWidthBottom(0f);
+                }
+                pdfPTable.addCell(cell);
+
+                bigDecimal = BigDecimal.valueOf(soldBatch.getPrice());
+                cell = new PdfPCell(new Phrase("$" + bigDecimal.toPlainString(), fontBody));
+                cell.setFixedHeight(FIXEDCELLHEIGHTFACTOR);
+                cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                cell.setIndent(INDENT);
+                cell.setBorderWidthLeft(0f);
+                cell.setBorderWidthTop(0f);
+                if(hasPaymentTerm){
+                    cell.setBorderWidthBottom(0f);
+                }
+                pdfPTable.addCell(cell);
+
+                if(hasPaymentTerm){
+                    cell = new PdfPCell(new Phrase("Plazo: ", fontHeader));
+                    cell.setFixedHeight(FIXEDCELLHEIGHTFACTOR);
+                    cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                    cell.setIndent(INDENT);
+                    cell.setBorderWidthRight(0f);
+                    cell.setBorderWidthTop(0f);
+                    pdfPTable.addCell(cell);
+
+                    cell = new PdfPCell(new Phrase(soldBatch.getPaymentTerm() + " días", fontBody));
+                    cell.setFixedHeight(FIXEDCELLHEIGHTFACTOR);
+                    cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                    cell.setIndent(INDENT);
+                    cell.setBorderWidthLeft(0f);
+                    cell.setBorderWidthTop(0f);
+                    pdfPTable.addCell(cell);
+                }
+            }
+            document.add(pdfPTable);
         }
         // 5. Close document
         document.close();
