@@ -792,7 +792,7 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService{
                     pdfPTable.addCell(cell);
                 }
 
-                String precioString = mustWeight ? "($/kg)" : ("$/u");
+                String precioString = mustWeight ? "($/kg)" : "($/u)";
                 cell = new PdfPCell(new Phrase("Precio " + precioString + ": ", fontHeader));
                 cell.setFixedHeight(FIXEDCELLHEIGHTFACTOR);
                 cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
