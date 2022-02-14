@@ -364,9 +364,6 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService{
 
         List<Seller> sellers = auctionCommonInfo.getSellers();
         List<Buyer> buyers = auctionCommonInfo.getBuyers();
-        Integer totalAnimalsSold = auctionCommonInfo.getTotalAnimalsSold();
-        Integer totalAnimalsNotSold = auctionCommonInfo.getTotalAnimalsNotSold();
-        Double totalMoneyIncome = auctionCommonInfo.getTotalMoneyIncome();
         List<Assistant> assistants = report.getGeneralInfo().getAssistants();
         List<Consignee> consignees = report.getGeneralInfo().getConsignees();
         List<SoldBatchResponseDTO> soldBatches = soldBatchService.getAllSoldBatchesByAuctionId(auctionId);
@@ -437,6 +434,7 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService{
         document.add(paragraph);
 
         paragraph = new Paragraph("PARTICIPANTES: ", fontHeader);
+        paragraph.setSpacingAfter(10f);
         document.add(paragraph);
         paragraph = new Paragraph("Consignatario/s: " + getConsigneesString(consignees), fontBody);
         paragraph.setIndentationLeft(INDENT*2);
@@ -447,6 +445,7 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService{
         document.add(paragraph);
 
         paragraph = new Paragraph("BALANCE GENERAL: ", fontHeader);
+        paragraph.setSpacingAfter(10f);
         document.add(paragraph);
         paragraph = new Paragraph("Total animales ingresados: " + (auctionCommonInfo.getTotalAnimalsSold() + auctionCommonInfo.getTotalAnimalsNotSold()), fontBody);
         document.add(paragraph);
@@ -475,6 +474,7 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService{
         paragraph = new Paragraph("Cantidad de compradores: " + report.getGeneralInfo().getTotalBuyers(), fontBody);
         paragraph.setSpacingAfter(15f);
         document.add(paragraph);
+        document.newPage();
 
         PdfPTable pdfPTable = new PdfPTable(new float[]{2f, 1f, 2f});
         pdfPTable.setWidthPercentage(90f);
@@ -688,7 +688,7 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService{
             cell.setHorizontalAlignment(Element.ALIGN_CENTER);
             cell.setBackgroundColor(baseColorLightGrayBrighter);
             pdfPTable.addCell(cell);
-            pdfPTable.setHeaderRows(1);
+            //pdfPTable.setHeaderRows(1);
             if(soldBatches.isEmpty()) {
                 cell = new PdfPCell(new Phrase("No hay lotes vendidos", fontBody));
                 cell.setFixedHeight(FIXEDCELLHEIGHTFACTOR);
