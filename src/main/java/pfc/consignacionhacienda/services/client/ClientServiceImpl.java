@@ -18,6 +18,7 @@ import pfc.consignacionhacienda.model.Provenance;
 import pfc.consignacionhacienda.utils.ClientMapper;
 import pfc.consignacionhacienda.utils.ProvenanceMapper;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -60,25 +61,43 @@ public class ClientServiceImpl implements ClientService{
     @Override
     public Client updateClientById(ClientDTO clientDTO, Integer id) throws ClientNotFoundException, BadHttpRequest {
         List<ProvenanceDTO> auxiliar = clientDTO.getDeletedProvenances();
+        Boolean error = false;
         if (clientDTO.getDeletedProvenances() != null) {
             logger.debug(clientDTO.getDeletedProvenances().toString());
-            for (ProvenanceDTO p : clientDTO.getDeletedProvenances()) {
-                Provenance provenance = provenanceDAO.findById(p.getId()).get();
-                ProvenanceDTO aux = new ProvenanceDTO();
-                aux.setDeleted(true);
-                provenanceMapper.updateProvenanceFromDto(aux, provenance);
-                logger.debug(provenance.toString());
-                provenanceDAO.save(provenance);
+           List<ProvenanceDTO> pList = clientDTO.getDeletedProvenances();
+           List<Provenance> provenancesToSave = new ArrayList<>();
+           int counter = 0;
+           while(counter < pList.size() && !error){
+                ProvenanceDTO p = pList.get(counter);
+                if(provenanceDAO.isBeingUsed(p.getId())){
+                    error = true;
+                }
+                counter++;
+                if(!error) {
+                    Provenance provenance = provenanceDAO.findById(p.getId()).get();
+                    ProvenanceDTO aux = new ProvenanceDTO();
+                    aux.setDeleted(true);
+                    provenanceMapper.updateProvenanceFromDto(aux, provenance);
+                    provenancesToSave.add(provenance);
+                }
+//                logger.debug(provenance.toString());
+//                provenanceDAO.save(provenance);
             }
+           if(!error){
+               provenanceDAO.saveAllAndFlush(provenancesToSave);
+           }
             clientDTO.setDeletedProvenances(null);
         }
         Client c = getClientById(id);
         clientMapper.updateClientFromDto(clientDTO, c);
         try {
+            if(error){
+                throw new BadHttpRequest("No se pueden eliminar procedencias que están siendo utilizadas por remates en progreso");
+            }
             return saveClient(c);
         } catch (BadHttpRequest e){
             //Esto lo hago porque si al momento de guardar el cliente modificado lanza un error porque no quedar procedencias, debo mantener el estado inicial con las procedencias originales sin ser eliminadas.
-            if(auxiliar != null) {
+            if(auxiliar != null && !error) {
                 for (ProvenanceDTO p : auxiliar) {
                     Provenance provenance = provenanceDAO.findById(p.getId()).get();
                     ProvenanceDTO aux = new ProvenanceDTO();
