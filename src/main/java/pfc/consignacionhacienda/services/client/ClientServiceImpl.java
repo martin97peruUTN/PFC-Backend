@@ -38,14 +38,20 @@ public class ClientServiceImpl implements ClientService{
     public Client getClientById(Integer id) throws ClientNotFoundException {
         Optional<Client> clientOptional = clientDAO.findById(id);
         if(clientOptional.isPresent()){
-            return clientOptional.get();
+            Client c = clientOptional.get();
+            c.setProvenances(provenanceDAO.getProvenancesNotDeletedByClientId(c.getId()));
+            return c;
         }
         throw new ClientNotFoundException("El cliente con id: " + id + " no existe." );
     }
 
     @Override
     public Page<Client> getClientsByPage(Integer page, Integer size, String name) {
-        return clientDAO.findByNotDeletedAndName(name, PageRequest.of(page, size, Sort.by(Sort.Order.asc("name"))));
+        Page<Client> clients = clientDAO.findByNotDeletedAndName(name, PageRequest.of(page, size, Sort.by(Sort.Order.asc("name"))));
+        return clients.map((c) -> {
+            c.setProvenances(provenanceDAO.getProvenancesNotDeletedByClientId(c.getId()));
+            return c;
+        }); //clientDAO.findByNotDeletedAndName(name, PageRequest.of(page, size, Sort.by(Sort.Order.asc("name"))));
     }
 
     @Override
@@ -61,7 +67,7 @@ public class ClientServiceImpl implements ClientService{
     @Override
     public Client updateClientById(ClientDTO clientDTO, Integer id) throws ClientNotFoundException, BadHttpRequest {
         List<ProvenanceDTO> auxiliar = clientDTO.getDeletedProvenances();
-        Boolean error = false;
+        boolean error = false;
         if (clientDTO.getDeletedProvenances() != null) {
             logger.debug(clientDTO.getDeletedProvenances().toString());
            List<ProvenanceDTO> pList = clientDTO.getDeletedProvenances();
