@@ -261,6 +261,9 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService{
         PdfPCell cell = getPdfTableCell("INFORMACIÓN GENERAL", 4, ALIGN_CENTER, ALIGN_MIDDLE, 0, HEIGHT );
         pdfPTable.addCell(cell);
 
+        cell = getPdfTableCell("Lote numero: " + soldBatch.getId(), 4, ALIGN_UNDEFINED, ALIGN_MIDDLE, INDENT,HEIGHT-2);
+        pdfPTable.addCell(cell);
+
         cell = getPdfTableCell("Fecha: " + getDateFormat(auction.getDate()), 1,  ALIGN_UNDEFINED, ALIGN_MIDDLE,INDENT, HEIGHT-2);
         pdfPTable.addCell(cell);
 
@@ -596,12 +599,24 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService{
                 pdfPTable.addCell(getPdfTableCellForReports("No hay lotes vendidos", 2, ALIGN_CENTER, ALIGN_MIDDLE, 0, FIXEDCELLHEIGHTFACTOR, fontBody, BaseColor.WHITE));
             }
             for(SoldBatchResponseDTO soldBatch: soldBatches){
-                cell = getPdfTableCellForReports("Vendedor: ", 1, ALIGN_UNDEFINED, ALIGN_MIDDLE, INDENT, FIXEDCELLHEIGHTFACTOR, fontHeader, BaseColor.WHITE);
+                cell = getPdfTableCellForReports("Numero de lote: ", 1, ALIGN_UNDEFINED, ALIGN_MIDDLE, INDENT, FIXEDCELLHEIGHTFACTOR, fontHeader, BaseColor.WHITE);
                 cell.setBorderWidthRight(0f);
                 cell.setBorderWidthBottom(0f);
                 pdfPTable.addCell(cell);
 
+                cell = getPdfTableCellForReports(String.valueOf(soldBatch.getId()), 1, ALIGN_UNDEFINED, ALIGN_MIDDLE, INDENT, FIXEDCELLHEIGHTFACTOR, fontBody, BaseColor.WHITE);
+                cell.setBorderWidthLeft(0f);
+                cell.setBorderWidthBottom(0f);
+                pdfPTable.addCell(cell);
+
+                cell = getPdfTableCellForReports("Vendedor: ", 1, ALIGN_UNDEFINED, ALIGN_MIDDLE, INDENT, FIXEDCELLHEIGHTFACTOR, fontHeader, BaseColor.WHITE);
+                cell.setBorderWidthRight(0f);
+                cell.setBorderWidthTop(0f);
+                cell.setBorderWidthBottom(0f);
+                pdfPTable.addCell(cell);
+
                 cell = getPdfTableCellForReports(soldBatch.getSeller().getName(), 1, ALIGN_UNDEFINED, ALIGN_MIDDLE, INDENT, FIXEDCELLHEIGHTFACTOR, fontBody, BaseColor.WHITE);
+                cell.setBorderWidthTop(0f);
                 cell.setBorderWidthLeft(0f);
                 cell.setBorderWidthBottom(0f);
                 pdfPTable.addCell(cell);
