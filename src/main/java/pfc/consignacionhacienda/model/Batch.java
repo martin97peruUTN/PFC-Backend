@@ -26,7 +26,7 @@ public class Batch {
     @JoinColumn(name = "provenance_id")
     private Provenance provenance;
 
-    @OneToMany(cascade = CascadeType.ALL)
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "batch_id", referencedColumnName ="id")
     @Where(clause = "deleted is null or deleted = false")
     private List<AnimalsOnGround> animalsOnGround;

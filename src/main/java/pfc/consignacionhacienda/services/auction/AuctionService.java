@@ -1,7 +1,6 @@
 package pfc.consignacionhacienda.services.auction;
 
 import org.springframework.data.domain.Page;
-import org.springframework.http.ResponseEntity;
 import pfc.consignacionhacienda.dto.AuctionDTO;
 import pfc.consignacionhacienda.exceptions.HttpForbidenException;
 import pfc.consignacionhacienda.exceptions.HttpUnauthorizedException;
@@ -9,9 +8,9 @@ import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
 import pfc.consignacionhacienda.exceptions.user.InvalidCredentialsException;
 import pfc.consignacionhacienda.exceptions.user.UserNotFoundException;
 import pfc.consignacionhacienda.model.Auction;
-import pfc.consignacionhacienda.model.NotSoldBatch;
 import pfc.consignacionhacienda.model.User;
 
+import java.time.Instant;
 import java.util.List;
 
 public interface AuctionService {
@@ -34,4 +33,6 @@ public interface AuctionService {
     Auction finishAuctionById(Integer id) throws AuctionNotFoundException, HttpUnauthorizedException;
 
     Auction resumeAuctionById(Integer id) throws AuctionNotFoundException, HttpUnauthorizedException;
+
+    Page<Auction> getFishedAuctions(Integer userId, Instant since, Instant until, Integer page, Integer limit);
 }

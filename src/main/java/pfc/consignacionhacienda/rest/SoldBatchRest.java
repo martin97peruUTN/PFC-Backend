@@ -80,7 +80,7 @@ public class SoldBatchRest {
                                                               @RequestParam(required = false, defaultValue = "0") Integer page,
                                                               @RequestParam(required = false, defaultValue = "10") Integer limit){
         try {
-            return ResponseEntity.ok(soldBatchService.getSoldBatchsByAuctionAndPage(auctionId, page, limit));
+            return ResponseEntity.ok(soldBatchService.getSoldBatchesByAuctionAndPage(auctionId, page, limit));
         } catch (Exception e){
             logger.error(e.getMessage());
             return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);

@@ -17,14 +17,12 @@ import pfc.consignacionhacienda.exceptions.animalsOnGround.AnimalsOnGroundNotFou
 import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
 import pfc.consignacionhacienda.exceptions.batch.BatchNotFoundException;
 import pfc.consignacionhacienda.exceptions.soldBatch.SoldBatchNotFoundException;
-import pfc.consignacionhacienda.model.AnimalsOnGround;
-import pfc.consignacionhacienda.model.Auction;
-import pfc.consignacionhacienda.model.Batch;
-import pfc.consignacionhacienda.model.SoldBatch;
+import pfc.consignacionhacienda.model.*;
 import pfc.consignacionhacienda.services.animalsOnGround.AnimalsOnGroundService;
 import pfc.consignacionhacienda.services.auction.AuctionService;
 import pfc.consignacionhacienda.services.batch.BatchService;
 import pfc.consignacionhacienda.services.client.ClientService;
+import pfc.consignacionhacienda.services.notSoldBatch.NotSoldBatchService;
 import pfc.consignacionhacienda.services.user.UserService;
 import pfc.consignacionhacienda.utils.SoldBatchMapper;
 
@@ -58,9 +56,12 @@ public class SoldBatchServiceImpl implements SoldBatchService{
     @Autowired
     private ClientService clientService;
 
+    @Autowired
+    private NotSoldBatchService notSoldBatchService;
+
     @Override
-    public Integer getTotalSold(Integer id) {
-        Integer total = soldBatchDAO.getTotalSold(id);
+    public Integer getTotalSold(Integer animalsOnGroundId) {
+        Integer total = soldBatchDAO.getTotalSold(animalsOnGroundId);
         return total==null?0:total;
     }
 
@@ -105,6 +106,12 @@ public class SoldBatchServiceImpl implements SoldBatchService{
         if(totalSold.equals(animalsOnGround.getAmount())){
             animalsOnGround.setSold(true);
             animalsOnGroundService.save(animalsOnGround);
+        }
+        Optional<NotSoldBatch> notSoldBatch = notSoldBatchService.getNotSoldBatchesByAnimalsOnGroundId(animalsOnGroundId);
+        if(notSoldBatch.isPresent()){
+            NotSoldBatch notSoldBatch1 = notSoldBatch.get();
+            notSoldBatch1.setAmount(notSoldBatch1.getAmount()-soldBatchSaved.getAmount());
+            notSoldBatchService.save(notSoldBatch1);
         }
         return soldBatchSaved;
     }
@@ -163,7 +170,7 @@ public class SoldBatchServiceImpl implements SoldBatchService{
     }
 
     @Override
-    public Page<SoldBatchResponseDTO> getSoldBatchsByAuctionAndPage(Integer auctionId, Integer page, Integer limit) {
+    public Page<SoldBatchResponseDTO> getSoldBatchesByAuctionAndPage(Integer auctionId, Integer page, Integer limit) {
         Pageable p = PageRequest.of(page, limit);
         Page<SoldBatch> soldBatches = soldBatchDAO.findByAuctionId(auctionId, p);
         List<SoldBatchResponseDTO> responseDTOList = new ArrayList<>();
@@ -174,6 +181,7 @@ public class SoldBatchServiceImpl implements SoldBatchService{
             soldBatchResponseDTO.setPrice(soldBatch.getPrice());
             soldBatchResponseDTO.setDteNumber(soldBatch.getDteNumber());
             soldBatchResponseDTO.setMustWeigh(soldBatch.getMustWeigh());
+            soldBatchResponseDTO.setPaymentTerm(soldBatch.getPaymentTerm());
             soldBatchResponseDTO.setWeight(soldBatch.getWeight());
             soldBatchResponseDTO.setCategory(soldBatch.getAnimalsOnGround().getCategory());
             soldBatchResponseDTO.setBuyer(soldBatch.getClient());
@@ -209,6 +217,36 @@ public class SoldBatchServiceImpl implements SoldBatchService{
         animalsOnGroundService.save(animalsOnGround);
         soldBatchDAO.deleteById(soldBatchId);
         return soldBatch;
+    }
+
+    @Override
+    public SoldBatch findSoldBatchById(Integer soldBatchId) throws SoldBatchNotFoundException {
+        Optional<SoldBatch> soldBatchOpt = soldBatchDAO.findById(soldBatchId);
+        if(soldBatchOpt.isPresent()){
+            return soldBatchOpt.get();
+        }
+        throw new SoldBatchNotFoundException("No existe Lote Vendido con id: " + soldBatchId);
+    }
+
+    @Override
+    public List<SoldBatchResponseDTO> getAllSoldBatchesByAuctionId(Integer auctionId) {
+        List<SoldBatch> soldBatches = soldBatchDAO.findAllByAuctionId(auctionId);
+        List<SoldBatchResponseDTO> responseDTOList = new ArrayList<>();
+        for(SoldBatch soldBatch: soldBatches){
+            SoldBatchResponseDTO soldBatchResponseDTO = new SoldBatchResponseDTO();
+            soldBatchResponseDTO.setId(soldBatch.getId());
+            soldBatchResponseDTO.setAmount(soldBatch.getAmount());
+            soldBatchResponseDTO.setPrice(soldBatch.getPrice());
+            soldBatchResponseDTO.setDteNumber(soldBatch.getDteNumber());
+            soldBatchResponseDTO.setMustWeigh(soldBatch.getMustWeigh());
+            soldBatchResponseDTO.setPaymentTerm(soldBatch.getPaymentTerm());
+            soldBatchResponseDTO.setWeight(soldBatch.getWeight());
+            soldBatchResponseDTO.setCategory(soldBatch.getAnimalsOnGround().getCategory());
+            soldBatchResponseDTO.setBuyer(soldBatch.getClient());
+            soldBatchResponseDTO.setSeller(clientService.findByProvenanceId(batchService.getBatchByAnimalsOnGroundId(soldBatch.getAnimalsOnGround().getId()).getProvenance().getId()));
+            responseDTOList.add(soldBatchResponseDTO);
+        }
+        return responseDTOList;
     }
 
     private SoldBatch findByIdNotDeleted(Integer soldBatchId) throws SoldBatchNotFoundException {
