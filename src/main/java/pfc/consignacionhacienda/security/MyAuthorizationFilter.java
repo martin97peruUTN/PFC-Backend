@@ -34,7 +34,7 @@ public class MyAuthorizationFilter extends BasicAuthenticationFilter{
                                     FilterChain chain) throws IOException, ServletException {
         String header = req.getHeader(SecurityConstants.TOKEN_HEADER);
         if(!req.getRequestURI().equals("/api/login")) {
-            if(req.getRequestURI().contains("/payroll")){
+            if(req.getRequestURI().contains("/websocket")){
                 chain.doFilter(req, res);
             }
             else {

@@ -8,9 +8,7 @@ import org.springframework.stereotype.Component;
 import pfc.consignacionhacienda.model.SoldBatch;
 import pfc.consignacionhacienda.services.batch.BatchService;
 
-import javax.persistence.PrePersist;
-import javax.persistence.PreRemove;
-import javax.persistence.PreUpdate;
+import javax.persistence.*;
 
 @Component
 public class DbListener {
@@ -43,13 +41,13 @@ public class DbListener {
     static private BatchService batchService;
 
 
-    @PrePersist
-    @PreUpdate
-    @PreRemove
+    @PostPersist
+    @PostUpdate
+    @PostRemove
     private void postAnyUpdate(SoldBatch soldBatch) {
         Integer id = batchService.getBatchByAnimalsOnGroundId(soldBatch.getAnimalsOnGround().getId()).getAuction().getId();
         websocket.convertAndSend(
-                WebSocketConfiguration.MESSAGE_PREFIX + "/newSoldBatch/"+id, soldBatch.toString());
+                WebSocketConfiguration.MESSAGE_PREFIX + "/sold-batch/"+id, soldBatch.toString());
     }
 
 }
