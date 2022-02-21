@@ -289,4 +289,9 @@ public class BatchServiceImpl implements BatchService{
         return animalList;
     }
 
+    @Override
+    public List<Batch> getBatchesByClientIdAndAuctionId(Integer id, Integer auctionId) {
+        return batchDAO.findByClientIdAndAuctionId(id, auctionId );
+    }
+
 }

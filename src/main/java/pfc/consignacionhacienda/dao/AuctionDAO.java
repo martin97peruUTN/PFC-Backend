@@ -23,9 +23,14 @@ public interface AuctionDAO extends JpaRepository<Auction, Integer> {
             "ORDER BY a.date ASC"))
     Page<Auction> findOwnById(Integer userId, Pageable of);
 
-    @Query(value = ("SELECT a FROM Auction a JOIN a.users u WHERE u.id != :userId " +
-            "AND (a.finished IS NULL OR a.finished IS FALSE) " +
-            "AND (a.deleted IS NULL OR a.deleted IS FALSE) " +
+    @Query(value = ("SELECT DISTINCT a FROM Auction a " +
+            "WHERE a NOT IN " +
+            "(SELECT DISTINCT a1 FROM Auction a1 JOIN a1.users u " +
+            " WHERE :userId = u.id AND (a1.finished IS NULL OR a1.finished IS FALSE) " +
+            " AND (a1.deleted IS NULL OR a1.deleted IS FALSE) " +
+            " AND (a1.deleted IS NULL OR a1.deleted IS FALSE)) " +
+            " AND (a.finished IS NULL OR a.finished IS FALSE) " +
+            " AND (a.deleted IS NULL OR a.deleted IS FALSE) " +
             "ORDER BY a.date ASC"))
     Page<Auction> findOthersById(Integer userId, Pageable of);
 

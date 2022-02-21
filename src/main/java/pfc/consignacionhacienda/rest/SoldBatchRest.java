@@ -47,6 +47,7 @@ public class SoldBatchRest {
             logger.error(e.getMessage());
             return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.UNAUTHORIZED);
         } catch (Exception e) {
+            e.printStackTrace();
             logger.error(e.getMessage());
             return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -69,6 +70,7 @@ public class SoldBatchRest {
             logger.error(e.getMessage());
             return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.UNAUTHORIZED);
         } catch (Exception e){
+            e.printStackTrace();
             logger.error(e.getMessage());
             return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }

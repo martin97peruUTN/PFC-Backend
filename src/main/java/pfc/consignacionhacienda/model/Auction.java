@@ -25,7 +25,7 @@ public class Auction {
     @ManyToOne(optional = false)
     private Locality locality;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany()
     private List<User> users;
 
     public Integer getId() {

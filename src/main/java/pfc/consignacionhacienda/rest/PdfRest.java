@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import pfc.consignacionhacienda.exceptions.HttpForbidenException;
 import pfc.consignacionhacienda.exceptions.animalsOnGround.AnimalsOnGroundNotFound;
 import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
 import pfc.consignacionhacienda.exceptions.batch.BatchNotFoundException;
@@ -43,16 +44,33 @@ public class PdfRest {
         if(copyAmount < 1) {
             return new ResponseEntity<>("El número de copias debe ser mayor a cero", HttpStatus.BAD_REQUEST);
         }
-        logger.debug("Que onda");
         try {
             return ResponseEntity.ok(Base64.getEncoder().encode(pdfGeneratorService.getTicketPurchasePDFBySoldBatchId(soldBatchId, copyAmount)));
         } catch (SoldBatchNotFoundException | AnimalsOnGroundNotFound | BatchNotFoundException | AuctionNotFoundException e) {
             logger.error(e.getMessage());
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.NOT_FOUND);
         } catch (Exception e) {
             logger.error(e.getMessage());
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
+    }
+
+    @GetMapping("/report/{auctionId}")
+    ResponseEntity<?> getReportByAuctionId(@PathVariable Integer auctionId,
+                                           @RequestParam(name = "withCategoriesInfo", defaultValue = "false", required = false)  Boolean withCategoriesInfo,
+                                           @RequestParam(name = "withSoldBatches", defaultValue = "false", required = false)  Boolean withSoldBatches){
+        try {
+            return ResponseEntity.ok(Base64.getEncoder().encode(pdfGeneratorService.getReportPdfByAuctionId(auctionId, withCategoriesInfo, withSoldBatches)));
+        } catch (AuctionNotFoundException e) {
+            logger.error(e.getMessage());
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.NOT_FOUND);
+        } catch (HttpForbidenException e) {
+            logger.error(e.getMessage());
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.FORBIDDEN);
+        }catch (Exception e) {
+            logger.error(e.getMessage());
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 }
