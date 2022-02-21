@@ -17,14 +17,12 @@ import pfc.consignacionhacienda.exceptions.animalsOnGround.AnimalsOnGroundNotFou
 import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
 import pfc.consignacionhacienda.exceptions.batch.BatchNotFoundException;
 import pfc.consignacionhacienda.exceptions.soldBatch.SoldBatchNotFoundException;
-import pfc.consignacionhacienda.model.AnimalsOnGround;
-import pfc.consignacionhacienda.model.Auction;
-import pfc.consignacionhacienda.model.Batch;
-import pfc.consignacionhacienda.model.SoldBatch;
+import pfc.consignacionhacienda.model.*;
 import pfc.consignacionhacienda.services.animalsOnGround.AnimalsOnGroundService;
 import pfc.consignacionhacienda.services.auction.AuctionService;
 import pfc.consignacionhacienda.services.batch.BatchService;
 import pfc.consignacionhacienda.services.client.ClientService;
+import pfc.consignacionhacienda.services.notSoldBatch.NotSoldBatchService;
 import pfc.consignacionhacienda.services.user.UserService;
 import pfc.consignacionhacienda.utils.SoldBatchMapper;
 
@@ -57,6 +55,9 @@ public class SoldBatchServiceImpl implements SoldBatchService{
 
     @Autowired
     private ClientService clientService;
+
+    @Autowired
+    private NotSoldBatchService notSoldBatchService;
 
     @Override
     public Integer getTotalSold(Integer animalsOnGroundId) {
@@ -106,12 +107,18 @@ public class SoldBatchServiceImpl implements SoldBatchService{
             animalsOnGround.setSold(true);
             animalsOnGroundService.save(animalsOnGround);
         }
+        Optional<NotSoldBatch> notSoldBatch = notSoldBatchService.getNotSoldBatchesByAnimalsOnGroundId(animalsOnGroundId);
+        if(notSoldBatch.isPresent()){
+            NotSoldBatch notSoldBatch1 = notSoldBatch.get();
+            notSoldBatch1.setAmount(notSoldBatch1.getAmount()-soldBatchSaved.getAmount());
+            notSoldBatchService.save(notSoldBatch1);
+        }
         return soldBatchSaved;
     }
 
     @Override
     public SoldBatch updateSoldBatchById(SoldBatchDTO soldBatchDTO, Integer soldBatchId) throws SoldBatchNotFoundException, AnimalsOnGroundNotFound, IllegalArgumentException, BatchNotFoundException, AuctionNotFoundException, HttpForbidenException, HttpUnauthorizedException {
-        if(soldBatchDTO.getId() != null && soldBatchId != soldBatchDTO.getId()){
+        if(soldBatchDTO.getId() != null && !soldBatchId.equals(soldBatchDTO.getId())){
             throw new IllegalArgumentException("Los id del path y del objeto a editar son distintos");
         }
         SoldBatch soldBatch = findByIdNotDeleted(soldBatchId);
