@@ -24,6 +24,8 @@ import pfc.consignacionhacienda.dto.ClientDTO;
 import pfc.consignacionhacienda.dto.ProvenanceDTO;
 import pfc.consignacionhacienda.exceptions.BadHttpRequest;
 import pfc.consignacionhacienda.exceptions.client.ClientNotFoundException;
+import pfc.consignacionhacienda.exceptions.user.DuplicateUsernameException;
+import pfc.consignacionhacienda.exceptions.user.UserNotFoundException;
 import pfc.consignacionhacienda.model.Client;
 import pfc.consignacionhacienda.model.Locality;
 import pfc.consignacionhacienda.model.Provenance;
@@ -35,6 +37,7 @@ import pfc.consignacionhacienda.utils.ClientPageDTO;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
@@ -68,14 +71,24 @@ public class ClientRestTest {
     ProvenanceDAO provenanceDAO;
 
     @BeforeEach
-    void initTests(){
+    void initTests() throws DuplicateUsernameException, BadHttpRequest {
         objectMapper = new ObjectMapper();
         roles = new ArrayList<>();
         roles.add(new SimpleGrantedAuthority("Administrador"));
         when(list2.toArray()).thenReturn(roles.toArray());
         Mockito.doReturn(list2).when(userService).getCurrentUserAuthorities();
-
-        User u = userService.findUserById(1);
+        User u;
+        try{
+            u = userService.findUserById(1);
+        } catch (UserNotFoundException e){
+            u = new User();
+            u.setPassword("1234");
+            u.setRol("Administrador");
+            u.setName("testUser");
+            u.setLastname("lastname");
+            u.setUsername(UUID.randomUUID().toString());
+            u = userService.saveUser(u);
+        }
         ArrayList<User> users = new ArrayList<>();
         users.add(u);
         Mockito.doReturn(u).when(userService).getCurrentUser();

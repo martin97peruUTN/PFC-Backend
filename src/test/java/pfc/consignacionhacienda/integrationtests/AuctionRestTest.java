@@ -24,8 +24,13 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.web.client.RestTemplate;
 import pfc.consignacionhacienda.dto.AuctionDTO;
+import pfc.consignacionhacienda.exceptions.BadHttpRequest;
+import pfc.consignacionhacienda.exceptions.HttpForbidenException;
 import pfc.consignacionhacienda.exceptions.HttpUnauthorizedException;
+import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
 import pfc.consignacionhacienda.exceptions.locality.LocalityNotFoundException;
+import pfc.consignacionhacienda.exceptions.user.DuplicateUsernameException;
+import pfc.consignacionhacienda.exceptions.user.UserNotFoundException;
 import pfc.consignacionhacienda.model.Auction;
 import pfc.consignacionhacienda.model.User;
 import pfc.consignacionhacienda.services.auction.AuctionService;
@@ -39,6 +44,7 @@ import java.time.Period;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
@@ -69,13 +75,24 @@ public class AuctionRestTest {
     private List<GrantedAuthority> roles;
 
     @BeforeEach
-    void initTests(){
+    void initTests() throws DuplicateUsernameException, BadHttpRequest {
         roles = new ArrayList<>();
         roles.add(new SimpleGrantedAuthority("Consignatario"));
         when(list2.toArray()).thenReturn(roles.toArray());
         Mockito.doReturn(list2).when(userService).getCurrentUserAuthorities();
 
-        User u = userService.findUserById(1);
+        User u;
+        try{
+            u = userService.findUserById(1);
+        } catch (UserNotFoundException e){
+            u = new User();
+            u.setPassword("1234");
+            u.setRol("Administrador");
+            u.setName("testUser");
+            u.setLastname("lastname");
+            u.setUsername(UUID.randomUUID().toString());
+            u = userService.saveUser(u);
+        }
         ArrayList<User> users = new ArrayList<>();
         users.add(u);
         Mockito.doReturn(u).when(userService).getCurrentUser();
@@ -135,9 +152,9 @@ public class AuctionRestTest {
     //-----------------
     //Actualizar remates
     @Test
-    void updateAuctionSuccesfully(){
+    void updateAuctionSuccesfully() throws HttpUnauthorizedException {
         AuctionDTO auctionDTO = new AuctionDTO();
-        auction.setId(1);
+        auction = auctionService.saveAuction(auction);
         try {
             assertEquals(auction.getLocality().getId(),1);
             auctionDTO.setLocality(localityService.getLocalityById(2));
@@ -154,13 +171,13 @@ public class AuctionRestTest {
                 Auction.class);
 
         assertEquals(response.getStatusCode(), HttpStatus.OK);
-        assertEquals(response.getBody().getId(),1);
+        assertEquals(response.getBody().getId(),auction.getId());
         assertEquals(response.getBody().getLocality().getId(),2);
     }
 //
     @Test
-    void updateAuctionWithInvalidDate(){
-        auction.setId(1);
+    void updateAuctionWithInvalidDate() throws HttpUnauthorizedException {
+        auction = auctionService.saveAuction(auction);
         String server = "http://localhost:" + puerto + "/api/auction/"+auction.getId();
         AuctionDTO auctionDTO = new AuctionDTO();
         auctionDTO.setDate(Instant.now().minus(Period.ofDays(10)));
@@ -172,15 +189,19 @@ public class AuctionRestTest {
     }
 
     @Test
-    void updateAuctionWithInvalidParticipants(){
+    void updateAuctionWithInvalidParticipants() throws DuplicateUsernameException, BadHttpRequest, HttpUnauthorizedException {
         AuctionDTO auctionDTO = new AuctionDTO();
         ArrayList<User> users = new ArrayList<>();
         User u = new User();
-        u.setId(1);
+        u.setPassword("1234");
         u.setRol("Asistente");
+        u.setName("testUser");
+        u.setLastname("lastname");
+        u.setUsername(UUID.randomUUID().toString());
+        u = userService.saveUser(u);
         users.add(u);
         auctionDTO.setUsers(users);
-        auction.setId(1);
+        auction = auctionService.saveAuction(auction);
         String server = "http://localhost:" + puerto + "/api/auction/"+auction.getId();
         testRestTemplatePatch.setRequestFactory(new HttpComponentsClientHttpRequestFactory(HttpClientBuilder.create().build()));
         HttpEntity<AuctionDTO> auctionDTOHttpEntity = new HttpEntity<>(auctionDTO);
@@ -190,12 +211,12 @@ public class AuctionRestTest {
     }
 
     @Test
-    void updateAuctionWithValidDate(){
+    void updateAuctionWithValidDate() throws HttpUnauthorizedException {
         AuctionDTO auctionDTO = new AuctionDTO();
         assertEquals(auction.getLocality().getId(),1);
         Instant before = auction.getDate();
         auctionDTO.setDate(auction.getDate().plus(Period.ofDays(10)));
-        auction.setId(1);
+        auction = auctionService.saveAuction(auction);
         String server = "http://localhost:" + puerto + "/api/auction/"+auction.getId();
         testRestTemplatePatch.setRequestFactory(new HttpComponentsClientHttpRequestFactory(HttpClientBuilder.create().build()));
         HttpEntity<AuctionDTO> auctionDTOHttpEntity = new HttpEntity<>(auctionDTO);
@@ -207,10 +228,10 @@ public class AuctionRestTest {
     }
 
     @Test
-    void updateInexistentAuction(){
+    void updateInexistentAuction() throws HttpUnauthorizedException {
         AuctionDTO auctionDTO = new AuctionDTO();
-        auction.setId(1);
-        String server = "http://localhost:" + puerto + "/api/auction/"+(auction.getId()+1000);
+        auction = auctionService.saveAuction(auction);
+        String server = "http://localhost:" + puerto + "/api/auction/"+(auction.getId()*-1);
         testRestTemplatePatch.setRequestFactory(new HttpComponentsClientHttpRequestFactory(HttpClientBuilder.create().build()));
         HttpEntity<AuctionDTO> auctionDTOHttpEntity = new HttpEntity<>(auctionDTO);
         ResponseEntity<Auction> response = testRestTemplate.exchange(server, HttpMethod.PATCH, auctionDTOHttpEntity,
@@ -232,9 +253,10 @@ public class AuctionRestTest {
     }
 
     @Test
-    void deleteFinishedAuction(){
+    void deleteFinishedAuction() throws HttpUnauthorizedException, HttpForbidenException, AuctionNotFoundException {
         //Seter en true el atributo finished en la BD del auction cuyo id es 2.
-        auction.setId(2);
+        auction = auctionService.saveAuction(auction);
+        auction = auctionService.finishAuctionById(auction.getId());
         String server = "http://localhost:" + puerto + "/api/auction/"+auction.getId();
         HttpEntity<Auction> auctionDTOHttpEntity = new HttpEntity<>(auction);
         ResponseEntity<Auction> response = testRestTemplate.exchange(server, HttpMethod.DELETE, auctionDTOHttpEntity,
@@ -243,9 +265,9 @@ public class AuctionRestTest {
     }
 
     @Test
-    void deleteInexistentAuction(){
-        auction.setId(2);
-        String server = "http://localhost:" + puerto + "/api/auction/"+(auction.getId()+10000);
+    void deleteInexistentAuction() throws HttpUnauthorizedException {
+        auction = auctionService.saveAuction(auction);
+        String server = "http://localhost:" + puerto + "/api/auction/"+(auction.getId()*-1);
         HttpEntity<Auction> auctionDTOHttpEntity = new HttpEntity<>(auction);
         ResponseEntity<Auction> response = testRestTemplate.exchange(server, HttpMethod.DELETE, auctionDTOHttpEntity,
                 Auction.class);
