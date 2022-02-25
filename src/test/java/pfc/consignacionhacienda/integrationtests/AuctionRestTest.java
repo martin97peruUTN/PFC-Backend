@@ -10,6 +10,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -23,9 +24,11 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.web.client.RestTemplate;
 import pfc.consignacionhacienda.dto.AuctionDTO;
+import pfc.consignacionhacienda.exceptions.HttpUnauthorizedException;
 import pfc.consignacionhacienda.exceptions.locality.LocalityNotFoundException;
 import pfc.consignacionhacienda.model.Auction;
 import pfc.consignacionhacienda.model.User;
+import pfc.consignacionhacienda.services.auction.AuctionService;
 import pfc.consignacionhacienda.services.locality.LocalityService;
 import pfc.consignacionhacienda.services.user.UserService;
 import pfc.consignacionhacienda.unittests.AuctionServiceImplTest;
@@ -45,6 +48,9 @@ public class AuctionRestTest {
     private static final Logger logger = LoggerFactory.getLogger(AuctionServiceImplTest.class);
     private TestRestTemplate testRestTemplate = new TestRestTemplate();
     private RestTemplate testRestTemplatePatch = testRestTemplate.getRestTemplate();
+
+    @Autowired
+    private AuctionService auctionService;
 
     @LocalServerPort
     String puerto;
@@ -215,9 +221,9 @@ public class AuctionRestTest {
     //--------------
     //Borrar remates
     @Test
-    void deleteNotFinishedAuction(){
-        auction.setId(1);
-        String server = "http://localhost:" + puerto + "/api/auction/"+auction.getId();
+    void deleteNotFinishedAuction() throws HttpUnauthorizedException {
+        auction.setId(null);
+        String server = "http://localhost:" + puerto + "/api/auction/"+auctionService.saveAuction(auction).getId();
         HttpEntity<Auction> auctionDTOHttpEntity = new HttpEntity<>(auction);
         ResponseEntity<Auction> response = testRestTemplate.exchange(server, HttpMethod.DELETE, auctionDTOHttpEntity,
                 Auction.class);

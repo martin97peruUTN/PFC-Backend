@@ -1,6 +1,8 @@
 package pfc.consignacionhacienda.unittests;
 
-import org.junit.jupiter.api.Assertions;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.Jwts;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -17,8 +19,10 @@ import pfc.consignacionhacienda.exceptions.user.DuplicateUsernameException;
 import pfc.consignacionhacienda.exceptions.user.InvalidCredentialsException;
 import pfc.consignacionhacienda.exceptions.user.UserNotFoundException;
 import pfc.consignacionhacienda.model.User;
+import pfc.consignacionhacienda.security.SecurityConstants;
 import pfc.consignacionhacienda.services.user.UserService;
 import pfc.consignacionhacienda.utils.ChangePassword;
+import pfc.consignacionhacienda.utils.JwtToken;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -50,59 +54,64 @@ public class UserServiceImplTest {
     private User user;
     @BeforeEach
     public void initTest() throws DuplicateUsernameException {
-        User u = userService.findUserById(1);
-        //pass encoded: 1234
-        System.out.println(u.getId());
-        u.setPassword("$2a$10$.K6U/unji7nI/Xvqfj5Z7efTBTN9/xbGuNj1n96d2ZCeANpJqR2uC");
-        u.setName("testUser");
-        u.setUsername("test");
-        u.setRol("Administrador");
-        try {
-            userService.saveUser(u);
-        } catch (BadHttpRequest e) {
-            e.printStackTrace();
-        }
-        Mockito.doReturn(u).when(userService).getCurrentUser();
-
         user = new User();
         //pass encoded: 1234
+//        System.out.println(u.getId());
         user.setPassword("$2a$10$.K6U/unji7nI/Xvqfj5Z7efTBTN9/xbGuNj1n96d2ZCeANpJqR2uC");
         user.setName("testUser");
         user.setUsername("test");
         user.setRol("Administrador");
+//        try {
+//            userService.saveUser(u);
+//        } catch (BadHttpRequest e) {
+//            e.printStackTrace();
+//        }
+        Mockito.doReturn(user).when(userService).getCurrentUser();
+
+//        user = new User();
+//        //pass encoded: 1234
+//        user.setPassword("$2a$10$.K6U/unji7nI/Xvqfj5Z7efTBTN9/xbGuNj1n96d2ZCeANpJqR2uC");
+//        user.setName("testUser");
+//        user.setUsername("test");
+//        user.setRol("Administrador");
     }
 
     //Tests de cambio de password
     @Test
-    void testChangePasswordSuccesfully(){
+    void testChangePasswordSuccesfully() throws DuplicateUsernameException, BadHttpRequest {
         String oldPassword = "1234";
         String newPassword = "nueva";
         ChangePassword changePassword = new ChangePassword(oldPassword, newPassword);
-        try {
-            userService.changePasswordById(1, changePassword);
-        } catch (DuplicateUsernameException | HttpForbidenException e) {
-            e.printStackTrace();
-        }
-        User u = userService.findUserById(1);
-        System.out.println(u.getPassword());
-        Assertions.assertTrue(passwordEncoder.matches(changePassword.getNewPassword(),u.getPassword()));
+        user.setId(1);
+//        user.setPassword(changePassword.getNewPassword());
+        Mockito.doReturn(Optional.of(user)).when(userDAOMock).findById(any(Integer.class));
+        Mockito.doReturn(user).when(userService).saveUser(any(User.class));
+        assertDoesNotThrow(()->userService.changePasswordById(1, changePassword));
     }
 
     @Test
-    void testChangePasswordWithSameOldPasswordAndNewPasswrod(){
+    void testChangePasswordWithSameOldPasswordAndNewPasswrod() throws DuplicateUsernameException, BadHttpRequest {
         String oldPassword = "1234";
         String newPassword = "1234";
+        user.setId(1);
         ChangePassword changePassword = new ChangePassword(oldPassword, newPassword);
+//        user.setPassword(changePassword.getNewPassword());
+//        user.setPassword();
+        Mockito.doReturn(Optional.of(user)).when(userDAOMock).findById(any(Integer.class));
+        Mockito.doReturn(user).when(userService).saveUser(any(User.class));
         Exception e = assertThrows(InvalidCredentialsException.class, () -> {
             userService.changePasswordById(1, changePassword);
         });
         assertEquals("Las contraseñas deben ser distintas", e.getMessage());
     }
     @Test
-    void testChangePasswordWithDifferentOldDBPasswordAndOldPassword(){
+    void testChangePasswordWithDifferentOldDBPasswordAndOldPassword() throws DuplicateUsernameException, BadHttpRequest {
         String oldPassword = "aPass";
         String newPassword = "1234";
+        user.setId(1);
         ChangePassword changePassword = new ChangePassword(oldPassword, newPassword);
+        Mockito.doReturn(Optional.of(user)).when(userDAOMock).findById(any(Integer.class));
+        Mockito.doReturn(user).when(userService).saveUser(any(User.class));
         Exception e = assertThrows(InvalidCredentialsException.class, () -> {
             userService.changePasswordById(1, changePassword);
         });
@@ -111,66 +120,74 @@ public class UserServiceImplTest {
 
     //Tests de modificacion de otros atributos del usuario.
     @Test
-    void testChangeUserDataSuccesfully(){
-        User userToEdit = userService.findUserById(1);
-        assertEquals(userToEdit.getName(), "testUser");
+    void testChangeUserDataSuccesfully() throws DuplicateUsernameException, BadHttpRequest {
+//        User userToEdit = userService.findUserById(1);
+//        assertEquals(userToEdit.getName(), "testUser");
+        user.setId(1);
+        user.setName("user");
         String nameEdited = "userEdited";
         Map<Object, Object> map = new LinkedHashMap<>();
         map.put("name", nameEdited);
-        try {
-            userService.updateUserProfileById(1, map);
-        } catch (DuplicateUsernameException | BadHttpRequest e) {
-            e.printStackTrace();
-        }
-        User userEdited = userService.findUserById(1);
-        assertEquals(userEdited.getName(), nameEdited);
+        User userEdited = user;
+        userEdited.setName(nameEdited);
+        Mockito.doReturn(userEdited).when(userService).saveUser(any(User.class));
+        Mockito.doReturn(Optional.of(user)).when(userDAOMock).findById(any(Integer.class));
+        AtomicReference<JwtToken> jwt = new AtomicReference<>();
+        assertDoesNotThrow(()-> {
+            jwt.set(userService.updateUserProfileById(user.getId(), map));
+        });
+        Jws<Claims> parsedToken = Jwts.parserBuilder()
+                                    .setSigningKey(SecurityConstants.JWT_SECRET)
+                                    .build()
+                                    .parseClaimsJws(jwt.getPlain().getToken().replace(SecurityConstants.TOKEN_PREFIX,""));
+        assertEquals(parsedToken.getBody().get("uid", Integer.class), user.getId());
+        assertEquals(parsedToken.getBody().get("name", String.class), nameEdited);
     }
 
     @Test
-    void testChangeUserDataInexistentUser(){
-        User userToEdit = userService.findUserById(1);
-        assertEquals(userToEdit.getName(), "testUser");
+    void testChangeUserDataInexistentUser() throws DuplicateUsernameException, BadHttpRequest {
+//        User userToEdit = userService.findUserById(1);
+//        assertEquals(userToEdit.getName(), "testUser");
+        Mockito.doReturn(Optional.empty()).when(userDAOMock).findById(any(Integer.class));
         String nameEdited = "userEdited";
-//        Map<Object, Object> map = new LinkedHashMap<>();
-//        map.put("name", nameEdited);
-        UserDTO userDTO = new UserDTO();
-        userDTO.setName(nameEdited);
-        assertThrows(UserNotFoundException.class,()->{userService.updateUserById(2, userDTO);});
+        Map<Object, Object> map = new LinkedHashMap<>();
+        map.put("name", nameEdited);
+//        UserDTO userDTO = new UserDTO();
+//        userDTO.setName(nameEdited);
+        user.setId(1);
+        Mockito.doReturn(user).when(userService).saveUser(any(User.class));
+        assertThrows(UserNotFoundException.class,()->{userService.updateUserProfileById(1, map);});
     }
 
     @Test
-    void testChangeUserInexistentAttribute(){
-        User userToEdit = userService.findUserById(1);
-        assertEquals(userToEdit.getName(), "testUser");
+    void testChangeUserInexistentAttribute() throws DuplicateUsernameException, BadHttpRequest {
         String otherAttribute = "value";
         Map<Object, Object> map = new LinkedHashMap<>();
         map.put("otroAtributo", otherAttribute);
-        try {
-            userService.updateUserProfileById(1, map);
-        } catch (DuplicateUsernameException | BadHttpRequest e) {
-            e.printStackTrace();
-        }
-        User userEdited = userService.findUserById(1);
-        assertEquals(userToEdit.toString(),userEdited.toString());
+        user.setId(1);
+        Mockito.doReturn(Optional.of(user)).when(userDAOMock).findById(any(Integer.class));
+        Mockito.doReturn(new User()).when(userService).saveUser(any(User.class));
+        assertDoesNotThrow(()->userService.updateUserProfileById(1, map)); //porque lo ignora
     }
 
     //Tests historia: CRUD usuarios.
 
     //deleteUserById
     @Test
-    void testDeleteUserByIdSuccessfully() {
-        User userDeleted = user;
+    void testDeleteUserByIdSuccessfully() throws DuplicateUsernameException, BadHttpRequest {
+        user.setId(1);
+        User userDeleted = new User();
+        userDeleted.setId(user.getId());
+        userDeleted.setName(user.getName());
+        userDeleted.setLastname(user.getLastname());
+        userDeleted.setUsername(user.getUsername());
+        userDeleted.setRol(user.getRol());
         userDeleted.setDeleted(true);
+        Mockito.doReturn(Optional.of(user)).when(userDAOMock).findById(any(Integer.class));
+        Mockito.doReturn(Optional.of(user)).when(userDAOMock).findByUsername(any(String.class));
         Mockito.doReturn(userDeleted).when(userDAOMock).save(any(User.class));
-        try {
-            user = userService.deleteUserById(1);
-            Mockito.doReturn(Optional.of(user)).when(userDAOMock).findById(any(Integer.class));
-            assertEquals(user.isDeleted(),true);
-        } catch (DuplicateUsernameException e) {
-            e.printStackTrace();
-        } catch (BadHttpRequest e) {
-            e.printStackTrace();
-        }
+        assertDoesNotThrow(() -> userService.deleteUserById(1));
+        assertEquals(user.isDeleted(),true);
     }
     //deleteUserById inexistent user
     @Test
@@ -179,6 +196,7 @@ public class UserServiceImplTest {
         userDeleted.setDeleted(true);
         Mockito.doReturn(userDeleted).when(userDAOMock).save(any(User.class));
         Mockito.doReturn(Optional.empty()).when(userDAOMock).findById(any(Integer.class));
+        Mockito.doReturn(Optional.of(user)).when(userDAOMock).findByUsername(any(String.class));
         assertThrows(UserNotFoundException.class, ()->{userService.deleteUserById(1);});
     }
 
@@ -189,6 +207,7 @@ public class UserServiceImplTest {
         AtomicReference<User> userToSave = new AtomicReference<>(user);
         user.setId(2);
         Mockito.doReturn(user).when(userDAOMock).save(any(User.class));
+        Mockito.doReturn(Optional.of(user)).when(userDAOMock).findByUsername(any(String.class));
         assertDoesNotThrow(()-> userToSave.set(userService.saveUser(userToSave.get())));
         assertEquals(userToSave.get().getId(), user.getId());
     }
@@ -210,6 +229,7 @@ public class UserServiceImplTest {
         changes.setLastname("ApellidoEditad");
         changes.setUsername("usernameEditado");
         changes.setPassword("newPassword");
+        user.setId(1);
         Mockito.doReturn(Optional.of(user)).when(userDAOMock).findById(any(Integer.class));
         assertNotEquals(user.getName(), changes.getName());
         user.setName(changes.getName());
@@ -217,6 +237,7 @@ public class UserServiceImplTest {
         user.setUsername(changes.getUsername());
         user.setPassword(changes.getPassword());
         Mockito.doReturn(user).when(userDAOMock).save(any(User.class));
+        Mockito.doReturn(Optional.of(user)).when(userDAOMock).findByUsername(any(String.class));
         User uModified=null;
         try {
             uModified = userService.updateUserById(1, changes);
@@ -234,6 +255,7 @@ public class UserServiceImplTest {
     void testUpdateUserWithExistentUsername() {
         UserDTO changes = new UserDTO();
         changes.setName("test");
+        Mockito.doReturn(Optional.of(user)).when(userDAOMock).findById(any(Integer.class));
         Mockito.doReturn(Optional.of(user)).when(userDAOMock).findByUsername(any(String.class));
         assertThrows(DuplicateUsernameException.class, ()->userService.updateUserById(1,changes));
     }
@@ -243,6 +265,7 @@ public class UserServiceImplTest {
     void testUpdateUserRol() {
         UserDTO changes = new UserDTO();
         changes.setRol("Asistente");
+        Mockito.doReturn(Optional.of(user)).when(userDAOMock).findById(any(Integer.class));
         Mockito.doReturn(Optional.empty()).when(userDAOMock).findByUsername(any(String.class));
         assertThrows(HttpForbidenException.class, ()->userService.updateUserById(1,changes));
     }
@@ -262,8 +285,8 @@ public class UserServiceImplTest {
     void testUpdateUserWithSamePassword() {
         UserDTO changes = new UserDTO();
         changes.setPassword("1234");
-        Mockito.doReturn(Optional.empty()).when(userDAOMock).findByUsername(any(String.class));
-//        Mockito.doReturn(Optional.empty()).when(userDAOMock).findById(any(Integer.class));
+        Mockito.doReturn(Optional.of(user)).when(userDAOMock).findByUsername(any(String.class));
+        Mockito.doReturn(Optional.of(user)).when(userDAOMock).findById(any(Integer.class));
         assertThrows(InvalidCredentialsException.class, ()->userService.updateUserById(1,changes));
     }
 }

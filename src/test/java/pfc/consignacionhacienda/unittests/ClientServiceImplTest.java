@@ -153,13 +153,15 @@ public class ClientServiceImplTest {
         when(clientDAO.findById(any(Integer.class))).thenReturn(Optional.of(client));
         Provenance provenance = new Provenance();
         provenance.setId(1);
+//        when(provenanceDAO.isBeingUsed(any(Integer.class))).thenReturn(true);
         when(provenanceDAO.findById(any(Integer.class))).thenReturn(Optional.of(provenance));
-        when(provenanceDAO.save(any(Provenance.class))).thenReturn(provenance);
+//        when(provenanceDAO.save(any(Provenance.class))).thenReturn(provenance);
+        when(provenanceDAO.saveAllAndFlush(any((List.class)))).thenReturn(List.of(provenance));
         try {
             Mockito.doThrow(BadHttpRequest.class).when(clientService).saveClient(any(Client.class));
         } catch (BadHttpRequest e) {
             assertThrows(BadHttpRequest.class, () -> clientService.updateClientById(clientDTO,1));
-            verify(provenanceDAO, times(4)).save(any(Provenance.class));
+            verify(provenanceDAO, times(1)).saveAllAndFlush(any(List.class));
         }
     }
 
@@ -204,14 +206,14 @@ public class ClientServiceImplTest {
         Provenance provenance = new Provenance();
         provenance.setId(1);
         when(provenanceDAO.findById(any(Integer.class))).thenReturn(Optional.of(provenance));
-        when(provenanceDAO.save(any(Provenance.class))).thenReturn(provenance);
+        when(provenanceDAO.saveAllAndFlush(any(List.class))).thenReturn(List.of(p3,p4));
         when(clientDAO.save(any(Client.class))).thenReturn(client);
         try {
             clientService.updateClientById(clientDTO, 1);
         } catch (ClientNotFoundException | BadHttpRequest e) {
             e.printStackTrace();
         }
-        verify(provenanceDAO, times(2)).save(any(Provenance.class));
+        verify(provenanceDAO, times(1)).saveAllAndFlush(any(List.class));
         clientDTO.setDeletedProvenances(null);
         clientMapper.updateClientFromDto(clientDTO, client);
         assertEquals(client.getProvenances().size(),2);
