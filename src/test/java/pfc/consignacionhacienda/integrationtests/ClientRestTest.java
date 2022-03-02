@@ -382,13 +382,27 @@ public class ClientRestTest {
     }
 
     @Test
-    void getFiveClientsFirstPage(){
-        String server = "http://localhost:" + puerto + "/api/client?page=0&limit=5";
-        ResponseEntity<String> response = testRestTemplate.getForEntity(server, String.class);
+    void getTwoClientsFirstPage() throws JsonProcessingException {
+        HttpHeaders headers = new HttpHeaders();
+        String server = "http://localhost:" + puerto + "/api/client";
+        String clientJSON = objectMapper.writeValueAsString(client);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<String> newClient = new HttpEntity<>(clientJSON, headers);
+        ResponseEntity<String> response = testRestTemplate.exchange(server, HttpMethod.POST, newClient,
+                String.class);
+        assertEquals(response.getStatusCode(), HttpStatus.OK);
+        headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        newClient = new HttpEntity<>(clientJSON, headers);
+        response = testRestTemplate.exchange(server, HttpMethod.POST, newClient,
+                String.class);
+        assertEquals(response.getStatusCode(), HttpStatus.OK);
+        server = "http://localhost:" + puerto + "/api/client?page=0&limit=2";
+        response = testRestTemplate.getForEntity(server, String.class);
         assertEquals(response.getStatusCode(), HttpStatus.OK);
         try {
             ClientPageDTO clientPageDTO = objectMapper.readValue(response.getBody(), ClientPageDTO.class);
-            assertEquals(clientPageDTO.getContent().size(),5);
+            assertEquals(clientPageDTO.getContent().size(),2);
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }

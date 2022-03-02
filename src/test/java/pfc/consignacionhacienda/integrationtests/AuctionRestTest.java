@@ -32,6 +32,7 @@ import pfc.consignacionhacienda.exceptions.locality.LocalityNotFoundException;
 import pfc.consignacionhacienda.exceptions.user.DuplicateUsernameException;
 import pfc.consignacionhacienda.exceptions.user.UserNotFoundException;
 import pfc.consignacionhacienda.model.Auction;
+import pfc.consignacionhacienda.model.Locality;
 import pfc.consignacionhacienda.model.User;
 import pfc.consignacionhacienda.services.auction.AuctionService;
 import pfc.consignacionhacienda.services.locality.LocalityService;
@@ -69,13 +70,17 @@ public class AuctionRestTest {
 
     private Auction auction;
 
+    private Locality locality1;
+    private Locality locality2;
+
     @Mock
     Collection<? extends GrantedAuthority> list2;
 
     private List<GrantedAuthority> roles;
 
+
     @BeforeEach
-    void initTests() throws DuplicateUsernameException, BadHttpRequest {
+    void initTests() throws DuplicateUsernameException, BadHttpRequest, javassist.tools.web.BadHttpRequest {
         roles = new ArrayList<>();
         roles.add(new SimpleGrantedAuthority("Consignatario"));
         when(list2.toArray()).thenReturn(roles.toArray());
@@ -93,6 +98,16 @@ public class AuctionRestTest {
             u.setUsername(UUID.randomUUID().toString());
             u = userService.saveUser(u);
         }
+        try {
+            locality1 = localityService.getLocalityById(1);
+            locality2 = localityService.getLocalityById(2);
+        }  catch (LocalityNotFoundException e) {
+            Locality locality = new Locality();
+            locality.setName("Marcelino Escalada");
+            locality1 = localityService.saveLocality(locality);
+            locality.setName("San Justo");
+            locality2 = localityService.saveLocality(locality);
+        }
         ArrayList<User> users = new ArrayList<>();
         users.add(u);
         Mockito.doReturn(u).when(userService).getCurrentUser();
@@ -100,11 +115,7 @@ public class AuctionRestTest {
         auction = new Auction();
         auction.setDeleted(false);
         auction.setFinished(false);
-        try {
-            auction.setLocality(localityService.getLocalityById(1));
-        } catch (LocalityNotFoundException e) {
-            e.printStackTrace();
-        }
+        auction.setLocality(locality1);
         auction.setSenasaNumber("aNumber");
         auction.setDate(Instant.now().plus(Period.ofDays(10)));
         auction.setUsers(users);
@@ -155,14 +166,10 @@ public class AuctionRestTest {
     void updateAuctionSuccesfully() throws HttpUnauthorizedException {
         AuctionDTO auctionDTO = new AuctionDTO();
         auction = auctionService.saveAuction(auction);
-        try {
-            assertEquals(auction.getLocality().getId(),1);
-            auctionDTO.setLocality(localityService.getLocalityById(2));
-            logger.debug(auction.toString());
-            logger.debug(auction.toString());
-        } catch (LocalityNotFoundException e) {
-            e.printStackTrace();
-        }
+        assertEquals(auction.getLocality().getId(),1);
+        auctionDTO.setLocality(locality1);
+        logger.debug(auction.toString());
+        logger.debug(auction.toString());
         String server = "http://localhost:" + puerto + "/api/auction/"+auction.getId();
 
         testRestTemplatePatch.setRequestFactory(new HttpComponentsClientHttpRequestFactory(HttpClientBuilder.create().build()));
@@ -172,7 +179,7 @@ public class AuctionRestTest {
 
         assertEquals(response.getStatusCode(), HttpStatus.OK);
         assertEquals(response.getBody().getId(),auction.getId());
-        assertEquals(response.getBody().getLocality().getId(),2);
+        assertEquals(response.getBody().getLocality().getId(),1);
     }
 //
     @Test
@@ -275,8 +282,8 @@ public class AuctionRestTest {
     }
 
     @Test
-    void getFirst10Auctions(){
-        String server = "http://localhost:" + puerto + "/api/auction?page=0&limit=10";
+    void getFirst2Auctions(){
+        String server = "http://localhost:" + puerto + "/api/auction?page=0&limit=2";
 
         ResponseEntity<String> response = testRestTemplate.getForEntity(server, String.class);
         assertEquals(response.getStatusCode(), HttpStatus.OK);
@@ -284,7 +291,7 @@ public class AuctionRestTest {
         objectMapper.registerModule(new JavaTimeModule());
         try {
             AuctionPageDTO auctionPageDTO = objectMapper.readValue(response.getBody(), AuctionPageDTO.class);
-            assertEquals(auctionPageDTO.getContent().size(),10);
+            assertEquals(auctionPageDTO.getContent().size(),2);
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
