@@ -24,6 +24,8 @@ import pfc.consignacionhacienda.dto.ClientDTO;
 import pfc.consignacionhacienda.dto.ProvenanceDTO;
 import pfc.consignacionhacienda.exceptions.BadHttpRequest;
 import pfc.consignacionhacienda.exceptions.client.ClientNotFoundException;
+import pfc.consignacionhacienda.exceptions.user.DuplicateUsernameException;
+import pfc.consignacionhacienda.exceptions.user.UserNotFoundException;
 import pfc.consignacionhacienda.model.Client;
 import pfc.consignacionhacienda.model.Locality;
 import pfc.consignacionhacienda.model.Provenance;
@@ -35,6 +37,7 @@ import pfc.consignacionhacienda.utils.ClientPageDTO;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
@@ -68,14 +71,24 @@ public class ClientRestTest {
     ProvenanceDAO provenanceDAO;
 
     @BeforeEach
-    void initTests(){
+    void initTests() throws DuplicateUsernameException, BadHttpRequest {
         objectMapper = new ObjectMapper();
         roles = new ArrayList<>();
         roles.add(new SimpleGrantedAuthority("Administrador"));
         when(list2.toArray()).thenReturn(roles.toArray());
         Mockito.doReturn(list2).when(userService).getCurrentUserAuthorities();
-
-        User u = userService.findUserById(1);
+        User u;
+        try{
+            u = userService.findUserById(1);
+        } catch (UserNotFoundException e){
+            u = new User();
+            u.setPassword("1234");
+            u.setRol("Administrador");
+            u.setName("testUser");
+            u.setLastname("lastname");
+            u.setUsername(UUID.randomUUID().toString());
+            u = userService.saveUser(u);
+        }
         ArrayList<User> users = new ArrayList<>();
         users.add(u);
         Mockito.doReturn(u).when(userService).getCurrentUser();
@@ -369,13 +382,27 @@ public class ClientRestTest {
     }
 
     @Test
-    void getFiveClientsFirstPage(){
-        String server = "http://localhost:" + puerto + "/api/client?page=0&limit=5";
-        ResponseEntity<String> response = testRestTemplate.getForEntity(server, String.class);
+    void getTwoClientsFirstPage() throws JsonProcessingException {
+        HttpHeaders headers = new HttpHeaders();
+        String server = "http://localhost:" + puerto + "/api/client";
+        String clientJSON = objectMapper.writeValueAsString(client);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<String> newClient = new HttpEntity<>(clientJSON, headers);
+        ResponseEntity<String> response = testRestTemplate.exchange(server, HttpMethod.POST, newClient,
+                String.class);
+        assertEquals(response.getStatusCode(), HttpStatus.OK);
+        headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        newClient = new HttpEntity<>(clientJSON, headers);
+        response = testRestTemplate.exchange(server, HttpMethod.POST, newClient,
+                String.class);
+        assertEquals(response.getStatusCode(), HttpStatus.OK);
+        server = "http://localhost:" + puerto + "/api/client?page=0&limit=2";
+        response = testRestTemplate.getForEntity(server, String.class);
         assertEquals(response.getStatusCode(), HttpStatus.OK);
         try {
             ClientPageDTO clientPageDTO = objectMapper.readValue(response.getBody(), ClientPageDTO.class);
-            assertEquals(clientPageDTO.getContent().size(),5);
+            assertEquals(clientPageDTO.getContent().size(),2);
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }

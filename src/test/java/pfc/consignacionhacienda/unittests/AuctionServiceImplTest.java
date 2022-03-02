@@ -15,7 +15,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import pfc.consignacionhacienda.dao.AuctionDAO;
 import pfc.consignacionhacienda.dto.AuctionDTO;
 import pfc.consignacionhacienda.exceptions.HttpForbidenException;
-import pfc.consignacionhacienda.exceptions.HttpUnauthorizedException;
 import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
 import pfc.consignacionhacienda.exceptions.user.InvalidCredentialsException;
 import pfc.consignacionhacienda.model.Auction;
@@ -31,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -65,10 +65,15 @@ public class AuctionServiceImplTest {
         when(list2.toArray()).thenReturn(roles.toArray());
         Mockito.doReturn(list2).when(userService).getCurrentUserAuthorities();
 
-        User u = userService.findUserById(1);
+        User user = new User();
+        user.setId(1);
+        user.setPassword("$2a$10$.K6U/unji7nI/Xvqfj5Z7efTBTN9/xbGuNj1n96d2ZCeANpJqR2uC");
+        user.setName("testUser");
+        user.setUsername("test");
+        user.setRol("Administrador");
         ArrayList<User> users = new ArrayList<>();
-        users.add(u);
-        Mockito.doReturn(u).when(userService).getCurrentUser();
+        users.add(user);
+        Mockito.doReturn(user).when(userService).getCurrentUser();
         auction = new Auction();
         auction.setId(1);
         auction.setDeleted(false);
@@ -84,7 +89,6 @@ public class AuctionServiceImplTest {
 
         when(auctionDAO.save(any(Auction.class))).thenReturn(auction);
         Optional<Auction> auctionOpt = Optional.of(auction);
-        logger.debug(auctionOpt.toString());
         when(auctionDAO.findById(any(Integer.class))).thenReturn(auctionOpt);
     }
 
@@ -99,15 +103,20 @@ public class AuctionServiceImplTest {
         auction1.setDeleted(auction.getDeleted());
         auction1.setFinished(auction.getFinished());
         auction1.setId(null);
-        logger.debug(String.valueOf(auction.getId()));
-//        auction1.setLocality(locality);
-        try {
-            Auction auctionSaved = auctionService.saveAuction(auction1);
-            assertEquals(auctionSaved.getId(),1);
-//            assertDoesNotThrow(()->auctionService.getAuctionById(auctionSaved.getId()));
-        } catch (HttpUnauthorizedException e) {
-            e.printStackTrace();
-        }
+        Auction auction2 = new Auction();
+        auction2.setUsers(auction.getUsers());
+        auction2.setDate(auction.getDate());
+        auction2.setSenasaNumber(auction.getSenasaNumber());
+        auction2.setLocality(auction.getLocality());
+        auction2.setDeleted(auction.getDeleted());
+        auction2.setFinished(auction.getFinished());
+        auction2.setId(1);
+        when(auctionDAO.save(any(Auction.class))).thenReturn(auction2);
+//      auction1.setLocality(locality);
+        AtomicReference<Auction> auctionSaved = new AtomicReference<>();
+        assertDoesNotThrow(() -> auctionSaved.set(auctionService.saveAuction(auction1)));
+        assertEquals(auctionSaved.get().getId(), 1);
+//      assertDoesNotThrow(()->auctionService.getAuctionById(auctionSaved.getId()));
     }
 
     @Test
@@ -121,21 +130,16 @@ public class AuctionServiceImplTest {
     @Test
     void updateAuctionSuccesfully(){
         AuctionDTO auctionDTO = new AuctionDTO();
-        try {
+
 //            Auction auction = auctionService.getAuctionById(1);
-            assertEquals(auction.getId(),1);
-            assertEquals(auction.getLocality().getId(),1);
-            logger.debug(auction.toString());
-            locality.setId(2);
-            locality.setName("Santa Fe");
-            auctionDTO.setLocality(locality);
-            auction = auctionService.updateAuctionById(1,auctionDTO);
-            logger.debug(auction.toString());
-            assertEquals(auction.getId(),1);
-            assertEquals(auction.getLocality().getId(),2);
-        } catch (HttpUnauthorizedException | AuctionNotFoundException e) {
-            e.printStackTrace();
-        }
+        assertEquals(auction.getId(),1);
+        assertEquals(auction.getLocality().getId(),1);
+        locality.setId(2);
+        locality.setName("Santa Fe");
+        auctionDTO.setLocality(locality);
+        assertDoesNotThrow(() -> auction = auctionService.updateAuctionById(1,auctionDTO));
+        assertEquals(auction.getId(),1);
+        assertEquals(auction.getLocality().getId(),2);
     }
 
     @Test
@@ -162,18 +166,13 @@ public class AuctionServiceImplTest {
     @Test
     void updateAuctionWithValidDate(){
         AuctionDTO auctionDTO = new AuctionDTO();
-
         assertEquals(auction.getId(),1);
         assertEquals(auction.getLocality().getId(),1);
         Instant before = auction.getDate();
         auctionDTO.setDate(auction.getDate().plus(Period.ofDays(10)));
-        try {
-            auction = auctionService.updateAuctionById(1,auctionDTO);
-            assertNotEquals(before, auction.getDate());
-            assertEquals(before.plus(Period.ofDays(10)),auction.getDate());
-        } catch (AuctionNotFoundException | HttpUnauthorizedException e) {
-            e.printStackTrace();
-        }
+        assertDoesNotThrow(() -> auction = auctionService.updateAuctionById(1,auctionDTO));
+        assertNotEquals(before, auction.getDate());
+        assertEquals(before.plus(Period.ofDays(10)),auction.getDate());
     }
 
     @Test
@@ -188,27 +187,19 @@ public class AuctionServiceImplTest {
     //Borrar remates
     @Test
     void deleteNotFinishedAuction(){
-        logger.debug(auction.toString());
         assertEquals(auction.getDeleted(), false);
-        try {
-            auction = auctionService.deleteAuctionById(auction.getId());
-            logger.debug(auction.toString());
-        } catch (AuctionNotFoundException | HttpForbidenException | HttpUnauthorizedException e) {
-            e.printStackTrace();
-        }
+        assertDoesNotThrow(() -> auction = auctionService.deleteAuctionById(auction.getId()));
         assertEquals(auction.getDeleted(), true);
     }
 
     @Test
     void deleteFinishedAuction(){
-        logger.debug(auction.toString());
         auction.setFinished(true);
         assertThrows(HttpForbidenException.class,()->auctionService.deleteAuctionById(auction.getId()));
     }
 
     @Test
     void deleteInexistentAuction(){
-        logger.debug(auction.toString());
         when(auctionDAO.findById(any(Integer.class))).thenReturn(Optional.empty());
         assertThrows(AuctionNotFoundException.class,()->auctionService.deleteAuctionById(auction.getId()));
     }

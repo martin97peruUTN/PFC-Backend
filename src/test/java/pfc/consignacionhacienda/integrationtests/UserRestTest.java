@@ -19,19 +19,14 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.client.RestTemplate;
 import pfc.consignacionhacienda.dto.UserDTO;
 import pfc.consignacionhacienda.exceptions.BadHttpRequest;
-import pfc.consignacionhacienda.exceptions.HttpForbidenException;
 import pfc.consignacionhacienda.exceptions.user.DuplicateUsernameException;
 import pfc.consignacionhacienda.model.User;
 import pfc.consignacionhacienda.services.user.UserService;
 import pfc.consignacionhacienda.utils.ChangePassword;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -52,16 +47,19 @@ public class UserRestTest {
     @Mock
     private Authentication authenticationMock;
 
+    private User u;
     @BeforeEach
     void initTests(){
-        User u = userService.findUserById(1);
+        u = new User();
         //pass encoded: 1234
-        u.setPassword("$2a$10$.K6U/unji7nI/Xvqfj5Z7efTBTN9/xbGuNj1n96d2ZCeANpJqR2uC");
+//        u.setPassword("$2a$10$.K6U/unji7nI/Xvqfj5Z7efTBTN9/xbGuNj1n96d2ZCeANpJqR2uC");
+        u.setPassword("1234");
         u.setName("testUser");
-        u.setUsername("test");
+        u.setLastname("lastname");
+        u.setUsername(UUID.randomUUID().toString());
         u.setRol("Administrador");
         try {
-            userService.saveUser(u);
+            u = userService.saveUser(u);
         } catch (DuplicateUsernameException | BadHttpRequest e) {
             e.printStackTrace();
         }
@@ -73,13 +71,13 @@ public class UserRestTest {
         when(authenticationMock.getAuthorities()).thenReturn((List)authorities);
         User us = new User();
         us.setId(1);
-        Mockito.doReturn(us).when(userService).getCurrentUser();
+        Mockito.doReturn(u).when(userService).getCurrentUser();
     }
 
     //Tests de modificacion de password usuario.
     @Test
     void testChangePasswordSuccesfully(){
-        String server = "http://localhost:" + puerto + "/api/user/profile/1/modificarpass";
+        String server = "http://localhost:" + puerto + "/api/user/profile/"+u.getId()+"/modificarpass";
         String oldPassword = "1234";
         String newPassword = "nueva";
         testRestTemplatePatch.setRequestFactory(new HttpComponentsClientHttpRequestFactory(HttpClientBuilder.create().build()));
@@ -93,7 +91,7 @@ public class UserRestTest {
 
     @Test
     void testChangePasswordSameNewPasswordAndOldPassword(){
-        String server = "http://localhost:" + puerto + "/api/user/profile/1/modificarpass";
+        String server = "http://localhost:" + puerto + "/api/user/profile/"+u.getId()+"/modificarpass";
         String oldPassword = "1234";
         String newPassword = "1234";
         testRestTemplatePatch.setRequestFactory(new HttpComponentsClientHttpRequestFactory(HttpClientBuilder.create().build()));
@@ -107,7 +105,7 @@ public class UserRestTest {
 
     @Test
     void testChangePasswordWithOnlyBlankSpaces(){
-        String server = "http://localhost:" + puerto + "/api/user/profile/1/modificarpass";
+        String server = "http://localhost:" + puerto + "/api/user/profile/" + u.getId() + "/modificarpass";
         String oldPassword = " ";
         String newPassword = "1234";
         testRestTemplatePatch.setRequestFactory(new HttpComponentsClientHttpRequestFactory(HttpClientBuilder.create().build()));
@@ -121,7 +119,7 @@ public class UserRestTest {
 
     @Test
      void testChangePasswordInexistentUser(){
-        String server = "http://localhost:" + puerto + "/api/user/admin-patch/100";
+        String server = "http://localhost:" + puerto + "/api/user/admin-patch/"+(u.getId()+100);
         String oldPassword = "1234";
         String newPassword = "123456";
         testRestTemplatePatch.setRequestFactory(new HttpComponentsClientHttpRequestFactory(HttpClientBuilder.create().build()));
@@ -136,7 +134,7 @@ public class UserRestTest {
     //Tests de modificacion de otros atributos del usuario.
     @Test
     void testChangeUserDataSuccesfully(){
-        String server = "http://localhost:" + puerto + "/api/user/profile/1";
+        String server = "http://localhost:" + puerto + "/api/user/profile/"+u.getId();
         String nameEdited = "userEdited";
         Map<Object, Object> map = new LinkedHashMap<>();
         map.put("name", nameEdited);
@@ -150,7 +148,7 @@ public class UserRestTest {
 
     @Test
     void testChangeUserInexistent(){
-        String server = "http://localhost:" + puerto + "/api/user/admin-patch/2";
+        String server = "http://localhost:" + puerto + "/api/user/admin-patch/"+(u.getId()*-1);
         String nameEdited = "userEdited";
         Map<Object, Object> map = new LinkedHashMap<>();
         map.put("name", nameEdited);
@@ -164,7 +162,7 @@ public class UserRestTest {
 
     @Test
     void testChangeUserRolAndUserID(){
-        String server = "http://localhost:" + puerto + "/api/user/admin-patch/1";
+        String server = "http://localhost:" + puerto + "/api/user/admin-patch/"+u.getId();
         String rolEdited = "OtroRol";
         Map<Object, Object> map = new LinkedHashMap<>();
         map.put("rol", rolEdited);
@@ -175,7 +173,7 @@ public class UserRestTest {
                 String.class);
         assertEquals(response.getStatusCode(), HttpStatus.FORBIDDEN);
 
-        Integer idEdited = 2;
+        Integer idEdited = u.getId()+1;
         Map<Object, Object> map2 = new LinkedHashMap<>();
         map2.put("id", idEdited);
         HttpEntity<Map<Object,Object>> requestChangeUserId = new HttpEntity<>(map2);
@@ -186,8 +184,7 @@ public class UserRestTest {
 
     @Test
     void testChangeUserInexistentAttributes(){
-        String server = "http://localhost:" + puerto + "/api/user/profile/1";
-        User userDB = userService.findUserById(1);
+        String server = "http://localhost:" + puerto + "/api/user/profile/"+u.getId();
         String nameEdited = "userEdited";
         Map<Object, Object> map = new LinkedHashMap<>();
         map.put("inexistent", nameEdited);
@@ -197,8 +194,8 @@ public class UserRestTest {
         ResponseEntity<String> response = testRestTemplate.exchange(server, HttpMethod.PATCH, requestChangeUserData,
                 String.class);
         assertEquals(response.getStatusCode(), HttpStatus.OK);
-        User userEdited = userService.findUserById(1);
-        assertEquals(userDB.toString(), userEdited.toString());
+        User userEdited = userService.findUserById(u.getId());
+        assertEquals(u.toString(), userEdited.toString());
     }
 
     //Historia: CRUD usuarios
@@ -206,25 +203,27 @@ public class UserRestTest {
     //Delete user
     @Test
     void deleteUserByIdSuccesfully(){
-        String server = "http://localhost:" + puerto + "/api/user/5";//primero crear en la base de datos el usuario que tenga ese ID
+        String server = "http://localhost:" + puerto + "/api/user/"+u.getId();
         HttpEntity<User> userHttpEntity = new HttpEntity<>(new User());
         ResponseEntity<User> response = testRestTemplate.exchange(server, HttpMethod.DELETE, userHttpEntity,
                 User.class);
         assertEquals(response.getStatusCode(), HttpStatus.OK);
-        assertEquals(response.getBody().getId(), 5);
-        UserDTO userDTO = new UserDTO();
-        userDTO.setDeleted(false);
-        try {
-            userService.updateUserById(5, userDTO);
-        } catch (DuplicateUsernameException | BadHttpRequest | HttpForbidenException e) {
-            e.printStackTrace();
-        }
+        assertEquals(response.getBody().getId(), u.getId());
+        User user = userService.findUserById(u.getId());
+        assertTrue(user.isDeleted());
+//        UserDTO userDTO = new UserDTO();
+//        userDTO.setDeleted(false);
+//        try {
+//            userService.updateUserById(u.getId(), userDTO);
+//        } catch (DuplicateUsernameException | BadHttpRequest | HttpForbidenException e) {
+//            e.printStackTrace();
+//        }
 //        assertEquals(response.getBody().isDeleted(), true);//no se puede validar Jackson, el atributo deleted no se setea en el JSON devuelto.
     }
 
     @Test
     void deleteInexistentUserById(){
-        String server = "http://localhost:" + puerto + "/api/user/1000";
+        String server = "http://localhost:" + puerto + "/api/user/"+(u.getId()*-1);
         HttpEntity<User> userHttpEntity = new HttpEntity<>(new User());
         ResponseEntity<User> response = testRestTemplate.exchange(server, HttpMethod.DELETE, userHttpEntity,
                 User.class);
@@ -265,7 +264,9 @@ public class UserRestTest {
         User newUser = new User();
         newUser.setName("Nuevo");
         newUser.setLastname("User");
-        newUser.setUsername("test");
+        User user = userService.findUserById(u.getId()-1);
+        assertNotEquals(u.getId(), user.getId());
+        newUser.setUsername(user.getUsername());
         newUser.setRol("Administrador");
         newUser.setPassword("password");
         HttpEntity<User> userHttpEntity = new HttpEntity<>(newUser);
@@ -278,11 +279,11 @@ public class UserRestTest {
     @Test
     void updateUSerSuccessfully(){
         //ojo en esta ruta el id, tener un usuario con id 5.
-        String server = "http://localhost:" + puerto + "/api/user/admin-patch/5";
+        String server = "http://localhost:" + puerto + "/api/user/admin-patch/"+u.getId();
         UserDTO userDTO = new UserDTO();
         userDTO.setName("Nuevo");
         userDTO.setLastname("User");
-        userDTO.setUsername("usernameEditado2");
+        userDTO.setUsername(UUID.randomUUID().toString());
         userDTO.setPassword("password11");
         HttpEntity<UserDTO> userHttpEntity = new HttpEntity<>(userDTO);
         ResponseEntity<User> response = testRestTemplate.exchange(server, HttpMethod.PATCH, userHttpEntity,
@@ -294,18 +295,18 @@ public class UserRestTest {
         userDTO = new UserDTO();
         userDTO.setUsername("testUsername");
         userDTO.setPassword("testPassword");
-        try {
-            userService.updateUserById(5,userDTO);
-        } catch (DuplicateUsernameException | BadHttpRequest |HttpForbidenException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            userService.updateUserById(5,userDTO);
+//        } catch (DuplicateUsernameException | BadHttpRequest |HttpForbidenException e) {
+//            e.printStackTrace();
+//        }
     }
 
     //updateUSer
     @Test
     void updateUserRol(){
         //ojo en esta ruta el id, tener un usuario con id 5.
-        String server = "http://localhost:" + puerto + "/api/user/admin-patch/5";
+        String server = "http://localhost:" + puerto + "/api/user/admin-patch/"+u.getId();
         UserDTO userDTO = new UserDTO();
         userDTO.setRol("Asistente");
         HttpEntity<UserDTO> userHttpEntity = new HttpEntity<>(userDTO);
@@ -316,7 +317,7 @@ public class UserRestTest {
 
     @Test
     void updateInexistentUser(){
-        String server = "http://localhost:" + puerto + "/api/user/admin-patch/500";
+        String server = "http://localhost:" + puerto + "/api/user/admin-patch/"+(u.getId()*-1);
         UserDTO userDTO = new UserDTO();
         userDTO.setName("otro name");
         HttpEntity<UserDTO> userHttpEntity = new HttpEntity<>(userDTO);
@@ -328,7 +329,7 @@ public class UserRestTest {
     @Test
     void updateUserWithSamePassword(){
         //ojo en esta ruta el id, tener un usuario con id 1.
-        String server = "http://localhost:" + puerto + "/api/user/admin-patch/1";
+        String server = "http://localhost:" + puerto + "/api/user/admin-patch/"+u.getId();
         UserDTO userDTO = new UserDTO();
         userDTO.setPassword("1234");
         HttpEntity<UserDTO> userHttpEntity = new HttpEntity<>(userDTO);
@@ -340,9 +341,11 @@ public class UserRestTest {
     @Test
     void updateUserWithExistentUSername(){
         //ojo en esta ruta el id, tener un usuario con id 3.
-        String server = "http://localhost:" + puerto + "/api/user/admin-patch/3";
+        String server = "http://localhost:" + puerto + "/api/user/admin-patch/"+u.getId();
+        User user = userService.findUserById(u.getId()-1);
         UserDTO userDTO = new UserDTO();
-        userDTO.setUsername("test");
+        userDTO.setUsername(user.getUsername());
+        assertNotEquals(user.getId(), u.getId());
         HttpEntity<UserDTO> userHttpEntity = new HttpEntity<>(userDTO);
         ResponseEntity<User> response = testRestTemplate.exchange(server, HttpMethod.PATCH, userHttpEntity,
                 User.class);

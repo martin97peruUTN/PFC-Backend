@@ -3,6 +3,8 @@ package pfc.consignacionhacienda.unittests;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -29,6 +31,9 @@ import static org.mockito.Mockito.*;
 
 @SpringBootTest
 public class ClientServiceImplTest {
+
+    private static final Logger logger = LoggerFactory.getLogger(ClientServiceImplTest.class);
+
     @SpyBean
     private ClientService clientService;
 
@@ -51,6 +56,7 @@ public class ClientServiceImplTest {
         client.setName("client test");
         provenances = new ArrayList<>();
         Provenance p1 = new Provenance();
+        p1.setId(1);
         p1.setReference("reference");
         p1.setRenspaNumber("renspa");
         Locality locality = new Locality();
@@ -59,6 +65,7 @@ public class ClientServiceImplTest {
         locality.setDeleted(false);
         p1.setLocality(locality);
         Provenance p2 = new Provenance();
+        p2.setId(2);
         p2.setReference("reference");
         p2.setRenspaNumber("renspa");
         p2.setLocality(locality);
@@ -68,15 +75,13 @@ public class ClientServiceImplTest {
     }
 
     @Test
-    void createClientSuccesfully(){
+    void createClientSuccesfully() throws BadHttpRequest {
         client.setId(1);
 //        Mockito.doReturn(client).when(clientDAO).save(any(Client.class));
         when(clientDAO.save(any(Client.class))).thenReturn(client);
-        try {
-            assertNotNull(clientService.saveClient(client).getId());
-        } catch (BadHttpRequest e) {
-            e.printStackTrace();
-        }
+        assertDoesNotThrow(() -> clientService.saveClient(client));
+        assertNotNull(clientService.saveClient(client).getId());
+
     }
 
     @Test
@@ -101,11 +106,7 @@ public class ClientServiceImplTest {
         when(clientDAO.save(any(Client.class))).thenReturn(client);
         when(clientDAO.findById(any(Integer.class))).thenReturn(Optional.of(client));
         assertNull(client.getDeleted());
-        try {
-            client = clientService.deleteClientById(1);
-        } catch (ClientNotFoundException e) {
-            e.printStackTrace();
-        }
+        assertDoesNotThrow(() -> client = clientService.deleteClientById(1));
         assertEquals(1, client.getId());
         assertTrue(client.getDeleted());
     }
@@ -122,22 +123,19 @@ public class ClientServiceImplTest {
         client.setId(1);
         when(clientDAO.save(any(Client.class))).thenReturn(client);
         when(clientDAO.findById(any(Integer.class))).thenReturn(Optional.empty());
-        assertThrows(ClientNotFoundException.class, () -> clientService.deleteClientById(2));
+        assertThrows(ClientNotFoundException.class, () -> clientService.deleteClientById(1));
     }
 
     @Test
-    void updateUser(){
+    void updateUser() throws ClientNotFoundException, BadHttpRequest {
         client.setId(1);
         ClientDTO clientDTO = new ClientDTO();
         clientDTO.setName("nuevoNombre");
         client.setName("nuevoNombre");
-        when(clientDAO.findById(any(Integer.class))).thenReturn(Optional.of(client));
-        try {
-            when(clientDAO.save(any(Client.class))).thenReturn(client);
-            client = clientService.updateClientById(clientDTO,1);
-        } catch (ClientNotFoundException| BadHttpRequest e) {
-            e.printStackTrace();
-        }
+        Mockito.doReturn(client).when(clientService).getClientById(any(Integer.class));
+        Mockito.doReturn(client).when(clientService).saveClient(any(Client.class));
+        logger.debug(client.toString());
+        assertDoesNotThrow(()->clientService.updateClientById(clientDTO,1));
         assertEquals(client.getName(),"nuevoNombre");
     }
 
@@ -153,37 +151,35 @@ public class ClientServiceImplTest {
         when(clientDAO.findById(any(Integer.class))).thenReturn(Optional.of(client));
         Provenance provenance = new Provenance();
         provenance.setId(1);
+//        when(provenanceDAO.isBeingUsed(any(Integer.class))).thenReturn(true);
         when(provenanceDAO.findById(any(Integer.class))).thenReturn(Optional.of(provenance));
-        when(provenanceDAO.save(any(Provenance.class))).thenReturn(provenance);
-        try {
-            Mockito.doThrow(BadHttpRequest.class).when(clientService).saveClient(any(Client.class));
-        } catch (BadHttpRequest e) {
+//        when(provenanceDAO.save(any(Provenance.class))).thenReturn(provenance);
+        when(provenanceDAO.saveAllAndFlush(any((List.class)))).thenReturn(List.of(provenance));
+//        try {
+//            Mockito.doThrow(BadHttpRequest.class).when(clientService).saveClient(any(Client.class));
+//        } catch (BadHttpRequest e) {
             assertThrows(BadHttpRequest.class, () -> clientService.updateClientById(clientDTO,1));
-            verify(provenanceDAO, times(4)).save(any(Provenance.class));
-        }
+            verify(provenanceDAO, times(1)).saveAllAndFlush(any(List.class));
+//        }
     }
 
     @Test
-    void updateUserDeleteSomeProvenances(){
+    void updateClientDeleteSomeProvenances() throws BadHttpRequest {
         client.setId(1);
         ClientDTO clientDTO = new ClientDTO();
         ProvenanceDTO p1 = new ProvenanceDTO();
         p1.setId(1);
-        ProvenanceDTO p2 = new ProvenanceDTO();
-        p2.setId(2);
+//        ProvenanceDTO p2 = new ProvenanceDTO();
+//        p2.setId(2);
         clientDTO.setDeletedProvenances(List.of(p1));
         when(clientDAO.findById(any(Integer.class))).thenReturn(Optional.of(client));
         Provenance provenance = new Provenance();
         provenance.setId(1);
         when(provenanceDAO.findById(any(Integer.class))).thenReturn(Optional.of(provenance));
         when(provenanceDAO.save(any(Provenance.class))).thenReturn(provenance);
-        when(clientDAO.save(any(Client.class))).thenReturn(client);
-        try {
-            clientService.updateClientById(clientDTO, 1);
-        } catch (ClientNotFoundException | BadHttpRequest e) {
-            e.printStackTrace();
-        }
-        verify(provenanceDAO, times(1)).save(any(Provenance.class));
+        Mockito.doReturn(client).when(clientService).saveClient(any(Client.class));
+        assertDoesNotThrow(() -> clientService.updateClientById(clientDTO, 1));
+        verify(provenanceDAO, times(1)).saveAllAndFlush(any(List.class));
     }
 
     @Test
@@ -204,14 +200,10 @@ public class ClientServiceImplTest {
         Provenance provenance = new Provenance();
         provenance.setId(1);
         when(provenanceDAO.findById(any(Integer.class))).thenReturn(Optional.of(provenance));
-        when(provenanceDAO.save(any(Provenance.class))).thenReturn(provenance);
+        when(provenanceDAO.saveAllAndFlush(any(List.class))).thenReturn(List.of(p3,p4));
         when(clientDAO.save(any(Client.class))).thenReturn(client);
-        try {
-            clientService.updateClientById(clientDTO, 1);
-        } catch (ClientNotFoundException | BadHttpRequest e) {
-            e.printStackTrace();
-        }
-        verify(provenanceDAO, times(2)).save(any(Provenance.class));
+        assertDoesNotThrow(() -> clientService.updateClientById(clientDTO, 1));
+        verify(provenanceDAO, times(1)).saveAllAndFlush(any(List.class));
         clientDTO.setDeletedProvenances(null);
         clientMapper.updateClientFromDto(clientDTO, client);
         assertEquals(client.getProvenances().size(),2);
