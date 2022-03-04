@@ -22,7 +22,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure( HttpSecurity http ) throws Exception {
         http.cors().and()
             .authorizeRequests()
-            //.antMatchers("/websocket/**").permitAll()
+            .antMatchers("/websocket/**").permitAll()
             .antMatchers(HttpMethod.GET,"/api/test").hasAuthority("Rol")
             .antMatchers(HttpMethod.GET, "/api/locality/**").hasAnyAuthority("Administrador","Consignatario","Asistente")
             .antMatchers(HttpMethod.GET, "/api/category/**").hasAnyAuthority("Administrador","Consignatario","Asistente")
