@@ -35,6 +35,7 @@ public class NotSoldBatchServiceImpl implements NotSoldBatchService{
         List<SoldBatchResponseDTO> responseDTOList = new ArrayList<>();
         for(NotSoldBatch notSoldBatch: soldBatches){
             SoldBatchResponseDTO soldBatchResponseDTO = new SoldBatchResponseDTO();
+            soldBatchResponseDTO.setId(notSoldBatch.getId());
             soldBatchResponseDTO.setAmount(notSoldBatch.getAmount());
             soldBatchResponseDTO.setDteNumber(notSoldBatch.getDteNumber());
             soldBatchResponseDTO.setCategory(notSoldBatch.getAnimalsOnGround().getCategory());
