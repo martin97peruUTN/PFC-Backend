@@ -8,6 +8,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import pfc.consignacionhacienda.dao.AuctionDAO;
 import pfc.consignacionhacienda.dto.AuctionDTO;
+import pfc.consignacionhacienda.dto.SoldBatchResponseDTO;
 import pfc.consignacionhacienda.exceptions.HttpForbidenException;
 import pfc.consignacionhacienda.exceptions.HttpUnauthorizedException;
 import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
@@ -237,7 +238,7 @@ public class AuctionServiceImpl implements AuctionService{
     }
 
     @Override
-    public Auction finishAuctionById(Integer id) throws AuctionNotFoundException, HttpUnauthorizedException {
+    public Auction finishAuctionById(Integer id) throws AuctionNotFoundException, HttpUnauthorizedException, HttpForbidenException {
         Auction thisAuction = getAuctionById(id);
         if(thisAuction.getDeleted()!=null && thisAuction.getDeleted()){
             throw new AuctionNotFoundException("No existe remate con id "+id);
@@ -246,6 +247,13 @@ public class AuctionServiceImpl implements AuctionService{
             boolean userBelongsToAuction = thisAuction.getUsers().stream().anyMatch(u -> u.getId().equals(userService.getCurrentUser().getId()));
             if (!userBelongsToAuction) {
                 throw new HttpUnauthorizedException("Usted no esta autorizado a editar este remate.");
+            }
+        }
+        for(SoldBatchResponseDTO sb: soldBatchService.getAllSoldBatchesByAuctionId(id)){
+            if(sb.getMustWeigh() != null && sb.getMustWeigh()){
+                if(sb.getWeight() == null){
+                    throw new HttpForbidenException("No puede calcularse el resumen hasta que se hayan pesado todos los animales que deben pesarse");
+                }
             }
         }
         List<NotSoldBatch> notSoldBatches = new ArrayList<>();

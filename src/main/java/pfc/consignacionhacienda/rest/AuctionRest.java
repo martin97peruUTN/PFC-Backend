@@ -126,6 +126,9 @@ public class AuctionRest {
         } catch (AuctionNotFoundException e) {
             logger.error(e.getMessage());
             return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.NOT_FOUND);
+        } catch (HttpForbidenException e) {
+            logger.error(e.getMessage());
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.FORBIDDEN);
         } catch (HttpUnauthorizedException e) {
             logger.error(e.getMessage());
             return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.UNAUTHORIZED);

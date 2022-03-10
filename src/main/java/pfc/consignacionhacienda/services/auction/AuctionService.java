@@ -30,7 +30,7 @@ public interface AuctionService {
     Auction removeUserFromAuction(Integer auctionId, Integer UserId) throws AuctionNotFoundException, UserNotFoundException, HttpForbidenException, HttpUnauthorizedException;
     Auction addUserToAuction(Integer auctionId, Integer userId) throws AuctionNotFoundException, UserNotFoundException, HttpUnauthorizedException;
 
-    Auction finishAuctionById(Integer id) throws AuctionNotFoundException, HttpUnauthorizedException;
+    Auction finishAuctionById(Integer id) throws AuctionNotFoundException, HttpUnauthorizedException, HttpForbidenException;
 
     Auction resumeAuctionById(Integer id) throws AuctionNotFoundException, HttpUnauthorizedException;
 
