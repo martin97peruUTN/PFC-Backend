@@ -176,8 +176,8 @@ public class ReportServiceImpl implements ReportService{
         sellers.forEach((id, s) -> s.setTotalAnimalsNotSold(getAnimalsNotSoldBySellerId(id, auctionId, totalSoldByAnimalsOnGroundId, notSoldBatches)));
 
         //Completamos la info general del remate con los datos obtenidos.
-        commonInfo.setBuyers(new ArrayList<>(buyers.values()));
-        commonInfo.setSellers(new ArrayList<>(sellers.values()));
+        commonInfo.setBuyers(buyers.values().stream().sorted(Comparator.comparing(Buyer::getName)).collect(Collectors.toList()));
+        commonInfo.setSellers(sellers.values().stream().sorted(Comparator.comparing(Seller::getName)).collect(Collectors.toList()));
         commonInfo.setTotalAnimalsNotSold(totalAnimalsNotSold);
         commonInfo.setTotalAnimalsSold(totalAnimalsSold);
         commonInfo.setTotalMoneyIncome(totalMoneyIncome);
@@ -464,6 +464,8 @@ public class ReportServiceImpl implements ReportService{
                 aux.setTotalAnimalsNotSold(totalNotSold);
                 categoryList.put(id, aux);
             }
+            categoryList.get(id).setBuyers(categoryList.get(id).getBuyers().stream().sorted(Comparator.comparing(Buyer::getName)).collect(Collectors.toList()));
+            categoryList.get(id).setSellers(categoryList.get(id).getSellers().stream().sorted(Comparator.comparing(Seller::getName)).collect(Collectors.toList()));
         });
         return categoryList;
     }
