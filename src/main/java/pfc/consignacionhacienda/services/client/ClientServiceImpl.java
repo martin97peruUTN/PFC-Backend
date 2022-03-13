@@ -42,7 +42,7 @@ public class ClientServiceImpl implements ClientService{
             c.setProvenances(provenanceDAO.getProvenancesNotDeletedByClientId(c.getId()));
             return c;
         }
-        throw new ClientNotFoundException("El cliente con id: " + id + " no existe." );
+        throw new ClientNotFoundException("El Cliente con id: " + id + " no existe." );
     }
 
     @Override
@@ -58,7 +58,7 @@ public class ClientServiceImpl implements ClientService{
     public Client deleteClientById(Integer id) throws ClientNotFoundException {
         Client c = getClientById(id);
         if(c.getDeleted() != null && c.getDeleted()){
-            throw new ClientNotFoundException("El cliente con id: " + id + " no existe.");
+            throw new ClientNotFoundException("El Cliente con id: " + id + " no existe.");
         }
         c.setDeleted(true);
         return clientDAO.save(c);
@@ -98,7 +98,7 @@ public class ClientServiceImpl implements ClientService{
         clientMapper.updateClientFromDto(clientDTO, c);
         try {
             if(error){
-                throw new BadHttpRequest("No se pueden eliminar procedencias que están siendo utilizadas por remates en progreso");
+                throw new BadHttpRequest("No se pueden eliminar Procedencias que están siendo utilizadas por Remates en progreso");
             }
             return saveClient(c);
         } catch (BadHttpRequest e){
@@ -122,7 +122,7 @@ public class ClientServiceImpl implements ClientService{
         if(client.getProvenances() != null && !client.getProvenances().isEmpty()) {
             return clientDAO.save(client);
         }
-        throw new BadHttpRequest("El cliente debe tener al menos una procedencia.");
+        throw new BadHttpRequest("El Cliente debe tener al menos una Procedencia.");
     }
 
     @Override

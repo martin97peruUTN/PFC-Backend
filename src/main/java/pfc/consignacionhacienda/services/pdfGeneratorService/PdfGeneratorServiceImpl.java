@@ -174,17 +174,17 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService{
         SoldBatch soldBatch = soldBatchService.findSoldBatchById(soldBatchId);
         AnimalsOnGround animalsOnGround = soldBatch.getAnimalsOnGround();
         if(animalsOnGround.getDeleted() != null && animalsOnGround.getDeleted()){
-            throw new AnimalsOnGroundNotFound("Los animales asociados a este lote vendido han sido eliminados.");
+            throw new AnimalsOnGroundNotFound("Los animales asociados a este LoteVendido han sido eliminados.");
         }
 
         Batch batch = batchService.getBatchByAnimalsOnGroundId(animalsOnGround.getId());
         if(batch.getDeleted() != null && batch.getDeleted()){
-            throw new BatchNotFoundException("El 'lote' correspondiente a este 'lote vendido' ha sido eliminado.");
+            throw new BatchNotFoundException("El Lote correspondiente a este LoteVendido ha sido eliminado.");
         }
 
         Auction auction = batch.getAuction();
         if(auction.getDeleted() != null && auction.getDeleted()){
-            throw new AuctionNotFoundException("El remate asociado a este 'lote vendido' ha sido eliminado");
+            throw new AuctionNotFoundException("El Remate asociado a este LoteVendido ha sido eliminado");
         }
 
         String vendedorName = clientService.findByProvenanceId(batch.getProvenance().getId()).getName();
@@ -261,7 +261,7 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService{
         PdfPCell cell = getPdfTableCell("INFORMACIÓN GENERAL", 4, ALIGN_CENTER, ALIGN_MIDDLE, 0, HEIGHT );
         pdfPTable.addCell(cell);
 
-        cell = getPdfTableCell("Lote numero: " + soldBatch.getId(), 4, ALIGN_UNDEFINED, ALIGN_MIDDLE, INDENT,HEIGHT-2);
+        cell = getPdfTableCell("Lote número: " + soldBatch.getId(), 4, ALIGN_UNDEFINED, ALIGN_MIDDLE, INDENT,HEIGHT-2);
         pdfPTable.addCell(cell);
 
         cell = getPdfTableCell("Fecha: " + getDateFormat(auction.getDate()), 1,  ALIGN_UNDEFINED, ALIGN_MIDDLE,INDENT, HEIGHT-2);
@@ -599,7 +599,7 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService{
                 pdfPTable.addCell(getPdfTableCellForReports("No hay lotes vendidos", 2, ALIGN_CENTER, ALIGN_MIDDLE, 0, FIXEDCELLHEIGHTFACTOR, fontBody, BaseColor.WHITE));
             }
             for(SoldBatchResponseDTO soldBatch: soldBatches){
-                cell = getPdfTableCellForReports("Numero de lote: ", 1, ALIGN_UNDEFINED, ALIGN_MIDDLE, INDENT, FIXEDCELLHEIGHTFACTOR, fontHeader, BaseColor.WHITE);
+                cell = getPdfTableCellForReports("Número de lote: ", 1, ALIGN_UNDEFINED, ALIGN_MIDDLE, INDENT, FIXEDCELLHEIGHTFACTOR, fontHeader, BaseColor.WHITE);
                 cell.setBorderWidthRight(0f);
                 cell.setBorderWidthBottom(0f);
                 pdfPTable.addCell(cell);

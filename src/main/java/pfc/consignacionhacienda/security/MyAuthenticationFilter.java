@@ -50,7 +50,7 @@ public class MyAuthenticationFilter extends UsernamePasswordAuthenticationFilter
             }catch (NullPointerException e){
                 try {
                     response.setStatus(HttpStatus.BAD_REQUEST.value());
-                    error = "Existen parametros nulos.";
+                    error = "Existen parámetros nulos.";
                     map.put("error", error);
                     response.getWriter().println(mapper.writeValueAsString(map));
                     response.getWriter().flush();
@@ -62,7 +62,7 @@ public class MyAuthenticationFilter extends UsernamePasswordAuthenticationFilter
         } catch (IOException e) {
             response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
             try {
-                error = "Error al obtener parametros desde la solicitud HTTP.";
+                error = "Error al obtener parámetros desde la solicitud HTTP.";
                 map.put("error", error);
                 response.getWriter().println(mapper.writeValueAsString(map));
                 response.getWriter().flush();

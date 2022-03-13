@@ -117,7 +117,7 @@ public class AnimalsOnGroundServiceImpl implements AnimalsOnGroundService{
         if(animalsOnGroundDTO.getAmount() != null && animalsOnGround.getAmount() < animalsOnGroundDTO.getAmount() && animalsOnGround.getSold() != null && animalsOnGround.getSold()){
             animalsOnGround.setSold(false);
         }
-        if(animalsOnGroundDTO.getAmount() != null && animalsOnGroundDTO.getAmount() == totalVendidos && animalsOnGround.getSold() != null && !animalsOnGround.getSold()){
+        if(animalsOnGroundDTO.getAmount() != null && animalsOnGroundDTO.getAmount().equals(totalVendidos) && animalsOnGround.getSold() != null && !animalsOnGround.getSold()){
             animalsOnGround.setSold(true);
         }
         animalsOnGroundDTO.setSold(null);
@@ -158,7 +158,7 @@ public class AnimalsOnGroundServiceImpl implements AnimalsOnGroundService{
         if(!userService.getCurrentUserAuthorities().toArray()[0].toString().equals("Administrador")) {
             boolean userBelongsToAuction = thisAuction.getUsers().stream().anyMatch(u -> u.getId().equals(userService.getCurrentUser().getId()));
             if (!userBelongsToAuction) {
-                throw new HttpUnauthorizedException("Usted no esta autorizado a editar este remate.");
+                throw new HttpUnauthorizedException("Usted no está autorizado a editar este remate.");
             }
         }
         ArrayList<AnimalsOnGround> updatedAnimalsOnGroundList = new ArrayList<>();

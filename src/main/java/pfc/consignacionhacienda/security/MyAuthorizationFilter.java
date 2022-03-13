@@ -39,7 +39,7 @@ public class MyAuthorizationFilter extends BasicAuthenticationFilter{
             }
             else {
                 if ((header == null || !header.startsWith(SecurityConstants.TOKEN_PREFIX))) {
-                    error = "No se encontro token de acceso";
+                    error = "No se encontró token de acceso";
                     LinkedHashMap<String, String> map = new LinkedHashMap<>();
                     map.put("error", "Acceso denegado. " + error);
                     ObjectMapper objectMapper = new ObjectMapper();
@@ -115,10 +115,10 @@ public class MyAuthorizationFilter extends BasicAuthenticationFilter{
                 error = "JWT mal formado: " + token + " failed: " + exception.getMessage();
             } catch (SignatureException exception){
                 logger.warn("JWT with invalid signature: {} failed: {}", token, exception.getMessage());
-                error = "Firma de JWT invalida: " + token + " failed: " + exception.getMessage();
+                error = "Firma de JWT inválida: " + token + " failed: " + exception.getMessage();
             } catch (IllegalArgumentException exception){
                 logger.warn("Request to parse empty or null JWT: {} failed: {}", token, exception.getMessage());
-                error = "JWT vacio o nulo: "+token+" failed: "+ exception.getMessage();
+                error = "JWT vacío o nulo: "+token+" failed: "+ exception.getMessage();
             } catch (Exception exception){
                 logger.warn("Request to parse other error JWT: {} failed: {}", token, exception.getMessage());
                 error = "Error inesperado: "+token+" failed: "+ exception.getMessage();

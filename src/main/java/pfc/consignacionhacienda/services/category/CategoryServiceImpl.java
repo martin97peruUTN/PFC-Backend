@@ -29,22 +29,21 @@ public class CategoryServiceImpl implements CategoryService{
         if(categoryOpt.isPresent()){
             return categoryOpt.get();
         }
-        throw new CategoryNotFoundException("No existe categoria con id: " + id);
+        throw new CategoryNotFoundException("No existe Categoría con id: " + id);
     }
 
     @Override
     public Page<Category> getAllCategoriesByPages(Integer pageNumber, Integer limit) throws InvalidCredentialsException{
         if(pageNumber < 0 || limit < 0 ){
-            throw new InvalidCredentialsException("Parametros invalidos.");
+            throw new InvalidCredentialsException("Parámetros inválidos.");
         }
-        logger.debug(pageNumber + "   "+limit);
         return categoryDAO.findByDeletedNotNullAndDeletedFalseOrderByName(PageRequest.of(pageNumber,limit));
     }
 
     @Override
     public Page<Category> getCategoriesByName(Integer pageNumber, Integer limit, String name){
         if(pageNumber < 0 || limit < 0){
-            throw new InvalidCredentialsException("Parametros invalidos.");
+            throw new InvalidCredentialsException("Parámetros inválidos.");
         }
         return categoryDAO.findByName(PageRequest.of(pageNumber,limit), name);
     }
@@ -62,7 +61,7 @@ public class CategoryServiceImpl implements CategoryService{
     @Override
     public Category saveCategory(Category category) throws BadHttpRequest {
         if(category.getName()==null){
-            throw new BadHttpRequest("El parametro name no puede ser nulo");
+            throw new BadHttpRequest("El parámetro 'name' no puede ser nulo");
         }
         return categoryDAO.save(category);
     }
@@ -70,11 +69,11 @@ public class CategoryServiceImpl implements CategoryService{
     @Override
     public Category updateCategoryById(Integer id, Category category) throws CategoryNotFoundException, BadHttpRequest {
         if(category.getId() != null && !category.getId().equals(id)){
-            throw new BadHttpRequest("El parametro {id} no coincide con el id de la categoria que se esta por modificar.");
+            throw new BadHttpRequest("El parámetro 'id' no coincide con el id de la Categoría que se está por modificar.");
         }
         Category c = getCategoryById(id);
         if(category.isDeleted()){
-            throw new CategoryNotFoundException("No existe categoria con id: " + id);
+            throw new CategoryNotFoundException("No existe Categoría con id: " + id);
         }
         c.setName(category.getName());
         return saveCategory(c);
@@ -84,7 +83,7 @@ public class CategoryServiceImpl implements CategoryService{
     public Category deleteCategoryById(Integer id) throws CategoryNotFoundException {
         Category c = getCategoryById(id);
         if(c.isDeleted()){
-            throw new CategoryNotFoundException("No existe categoria con id: " + id);
+            throw new CategoryNotFoundException("No existe Categoría con id: " + id);
         }
         c.setDeleted(true);
         return categoryDAO.save(c);

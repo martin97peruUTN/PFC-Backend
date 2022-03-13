@@ -54,7 +54,7 @@ public class AuctionServiceImpl implements AuctionService{
     public Auction saveAuction(Auction auction) throws InvalidCredentialsException, HttpUnauthorizedException{
         logger.debug(Instant.now().plus(Period.ofDays(1)).toString());
         if(Instant.now().isAfter(auction.getDate())){
-            throw new InvalidCredentialsException("La fecha del remate es invalida");
+            throw new InvalidCredentialsException("La fecha del remate es inválida");
         }
         logger.debug(userService.getCurrentUserAuthorities().toArray()[0].toString());
         if(!userService.getCurrentUserAuthorities().toArray()[0].toString().equals("Administrador")) {
@@ -75,7 +75,7 @@ public class AuctionServiceImpl implements AuctionService{
     @Override
     public Page<Auction> getAllAuctionsByPage(Integer page, Integer limit) throws InvalidCredentialsException {
         if(page<0 || limit<0){
-            throw new InvalidCredentialsException("Parametros invalidos.");
+            throw new InvalidCredentialsException("Parámetros inválidos.");
         }
         return auctionDAO.findAll(PageRequest.of(page, limit));
     }
@@ -88,7 +88,7 @@ public class AuctionServiceImpl implements AuctionService{
     @Override
     public Page<Auction> getAllNotDeletedAuctionsByPage(Integer page, Integer limit) throws InvalidCredentialsException {
         if(page<0 || limit<0){
-            throw new InvalidCredentialsException("Parametros invalidos.");
+            throw new InvalidCredentialsException("Parámetros inválidos.");
         }
         return auctionDAO.findByDeletedNullOrDeletedFalse(PageRequest.of(page, limit));
     }
@@ -96,10 +96,10 @@ public class AuctionServiceImpl implements AuctionService{
     @Override
     public Page<Auction> getOwnNotDeletedAuctionsByPageAndId(Integer id, Integer page, Integer limit) throws InvalidCredentialsException, HttpUnauthorizedException {
         if(page<0 || limit<0){
-            throw new InvalidCredentialsException("Parametros invalidos.");
+            throw new InvalidCredentialsException("Parámetros inválidos.");
         }
         if(id!=userService.getCurrentUser().getId()){
-            throw new HttpUnauthorizedException("El usuarion no coincide");
+            throw new HttpUnauthorizedException("El usuario no coincide");
         }
         return auctionDAO.findOwnById(id, PageRequest.of(page, limit));
     }
@@ -107,10 +107,10 @@ public class AuctionServiceImpl implements AuctionService{
     @Override
     public Page<Auction> getOthersNotDeletedAuctionsByPageAndId(Integer id, Integer page, Integer limit) throws InvalidCredentialsException, HttpUnauthorizedException {
         if(page<0 || limit<0){
-            throw new InvalidCredentialsException("Parametros invalidos.");
+            throw new InvalidCredentialsException("Parámetros inválidos.");
         }
         if(id!=userService.getCurrentUser().getId()){
-            throw new HttpUnauthorizedException("El usuarion no coincide");
+            throw new HttpUnauthorizedException("El usuario no coincide");
         }
         return auctionDAO.findOthersById(id, PageRequest.of(page, limit));
     }
@@ -118,7 +118,7 @@ public class AuctionServiceImpl implements AuctionService{
     @Override
     public Page<Auction> getAllNotDeletedAndNotFinishedAuctionsByPage(Integer page, Integer limit) throws InvalidCredentialsException {
         if(page<0 || limit<0){
-            throw new InvalidCredentialsException("Parametros invalidos.");
+            throw new InvalidCredentialsException("Parámetros inválidos.");
         }
         return auctionDAO.findAllAdmin(PageRequest.of(page, limit));
     }
@@ -139,7 +139,7 @@ public class AuctionServiceImpl implements AuctionService{
             throw new AuctionNotFoundException("No existe un remate con id: " + id);
         }
         if(auction.getFinished() != null && auction.getFinished()){
-            throw new HttpForbidenException("No puede eliminarse un remate que ya se realizo.");
+            throw new HttpForbidenException("No puede eliminarse un remate que ya se realizó.");
         }
         auction.setDeleted(true);
         return auctionDAO.save(auction);
@@ -172,7 +172,7 @@ public class AuctionServiceImpl implements AuctionService{
             }
         }
         if (fields.getDate() != null && Instant.now().isAfter(fields.getDate())) {
-            throw new InvalidCredentialsException("La fecha del remate es invalida");
+            throw new InvalidCredentialsException("La fecha del remate es inválida");
         }
         Auction auction = getAuctionById(id);
         auctionMapper.updateAuctionFromDto(fields, auction);
@@ -198,7 +198,7 @@ public class AuctionServiceImpl implements AuctionService{
             }
             List<User> autionUserList = auction.getUsers();
             Optional<User> userOptional = autionUserList.stream().filter(u -> u.getId().equals(userService.getCurrentUser().getId())).findFirst();
-            if(!userOptional.isPresent() && !userService.getCurrentUserAuthorities().toArray()[0].toString().equals("Administrador")){
+            if(userOptional.isEmpty() && !userService.getCurrentUserAuthorities().toArray()[0].toString().equals("Administrador")){
                 throw new HttpUnauthorizedException("Usted no es participante del remate que quiere modificar");
             }
             Optional<User> userOpt = auction.getUsers().stream().filter(u -> u.getId().equals(userId)).findFirst();
@@ -207,7 +207,7 @@ public class AuctionServiceImpl implements AuctionService{
                     auction.getUsers().remove(userOpt.get());
                     return auctionDAO.save(auction);
                 }
-                throw new HttpForbidenException("No puede eliminarse a si mismo");
+                throw new HttpForbidenException("No puede eliminarse a sí mismo");
             }
             throw new UserNotFoundException("El usuario con id: " + userId + " no participa en este remate.");
         }
@@ -246,7 +246,7 @@ public class AuctionServiceImpl implements AuctionService{
         if(!userService.getCurrentUserAuthorities().toArray()[0].toString().equals("Administrador")) {
             boolean userBelongsToAuction = thisAuction.getUsers().stream().anyMatch(u -> u.getId().equals(userService.getCurrentUser().getId()));
             if (!userBelongsToAuction) {
-                throw new HttpUnauthorizedException("Usted no esta autorizado a editar este remate.");
+                throw new HttpUnauthorizedException("Usted no está autorizado a editar este remate.");
             }
         }
         for(SoldBatchResponseDTO sb: soldBatchService.getAllSoldBatchesByAuctionId(id)){
@@ -274,13 +274,13 @@ public class AuctionServiceImpl implements AuctionService{
                     //Otro caso es que se haya eliminado el AOG, que ahi tambien lo elimino
                     if(a.getSold() || (a.getDeleted()!=null && a.getDeleted())){
                         if(amount>0){
-                            throw new IllegalStateException("El animalOnGround esta vendido pero tiene cantidades disponibles para vender");
+                            throw new IllegalStateException("El conjunto de AnimalesEnPista está vendido pero tiene cantidades disponibles para vender");
                         }else{
                             notSoldBatchesToDelete.add(thisNotSoldBatch);
                         }
                     }else{
                         if(amount<=0){
-                            throw new IllegalStateException("El animalOnGround no esta vendido pero no tiene cantidades disponibles para vender");
+                            throw new IllegalStateException("El conjunto de AnimalesEnPista no está vendido pero no tiene cantidades disponibles para vender");
                         }else{
                             //Si hay un NSB en la DB para este AOG, getSold es false y amount>0
                             //tengo que actualizarlo con la nueva cantidad (si es que la misma cambio)
@@ -295,7 +295,7 @@ public class AuctionServiceImpl implements AuctionService{
                     //crear un NSB nuevo
                     if(!a.getSold()){
                         if(amount<=0){
-                            throw new IllegalStateException("El animalOnGround no esta vendido pero no tiene cantidades disponibles para vender");
+                            throw new IllegalStateException("El conjunto de AnimalesEnPista no está vendido pero no tiene cantidades disponibles para vender");
                         }
                         NotSoldBatch notSoldBatch = new NotSoldBatch();
                         notSoldBatch.setAnimalsOnGround(a);
@@ -321,7 +321,7 @@ public class AuctionServiceImpl implements AuctionService{
         if(!userService.getCurrentUserAuthorities().toArray()[0].toString().equals("Administrador")) {
             boolean userBelongsToAuction = thisAuction.getUsers().stream().anyMatch(u -> u.getId().equals(userService.getCurrentUser().getId()));
             if (!userBelongsToAuction) {
-                throw new HttpUnauthorizedException("Usted no esta autorizado a editar este remate.");
+                throw new HttpUnauthorizedException("Usted no está autorizado a editar este remate.");
             }
         }
         thisAuction.setFinished(false);

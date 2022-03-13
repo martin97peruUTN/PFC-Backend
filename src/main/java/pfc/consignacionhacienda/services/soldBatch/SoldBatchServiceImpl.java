@@ -79,11 +79,11 @@ public class SoldBatchServiceImpl implements SoldBatchService{
         }
         Batch batch = batchService.getBatchByAnimalsOnGroundId(animalsOnGroundId);
         if(batch == null || (batch.getDeleted() != null && batch.getDeleted())){
-            throw new BatchNotFoundException("El Lote Vendido pertenece a un Lote de Venta inexistente");
+            throw new BatchNotFoundException("El LoteVendido pertenece a un Lote de Venta inexistente");
         }
         Auction auction = batch.getAuction();
         if(auction.getDeleted() != null && auction.getDeleted()){
-            throw new AuctionNotFoundException("El Lote Vendido pertenece a un Remate inexistente");
+            throw new AuctionNotFoundException("El LoteVendido pertenece a un Remate inexistente");
         }
         if(soldBatch.getAmount() <= 0){
             throw new HttpForbidenException("La cantidad de animales vendidos debe ser mayor a cero.");
@@ -92,12 +92,12 @@ public class SoldBatchServiceImpl implements SoldBatchService{
             throw new HttpForbidenException("La cantidad de animales vendidos supera a la cantidad disponible para la venta.");
         }
         if(auction.getFinished() != null && auction.getFinished()){
-            throw new HttpForbidenException("No puede editarse un remate finalizado .");
+            throw new HttpForbidenException("No puede editarse un Remate finalizado .");
         }
         if(!userService.getCurrentUserAuthorities().toArray()[0].toString().equals("Administrador")) {
             boolean userBelongsToAuction = auction.getUsers().stream().anyMatch(u -> u.getId().equals(userService.getCurrentUser().getId()));
             if (!userBelongsToAuction) {
-                throw new HttpUnauthorizedException("Usted no esta autorizado a editar este remate.");
+                throw new HttpUnauthorizedException("Usted no está autorizado a editar este Remate.");
             }
         }
         soldBatch.setAnimalsOnGround(animalsOnGround);
@@ -125,21 +125,21 @@ public class SoldBatchServiceImpl implements SoldBatchService{
         AnimalsOnGround animalsOnGround = animalsOnGroundService.findByIdNotDeleted(soldBatch.getAnimalsOnGround().getId());
         Batch batch = batchService.getBatchByAnimalsOnGroundId(animalsOnGround.getId());
         if(batch == null || (batch.getDeleted() != null && batch.getDeleted())){
-            throw new BatchNotFoundException("El Lote Vendido pertenece a un Lote de Venta inexistente");
+            throw new BatchNotFoundException("El LoteVendido pertenece a un Lote de Venta inexistente");
         }
         Auction auction = batch.getAuction();
         if(auction.getDeleted() != null && auction.getDeleted()){
-            throw new AuctionNotFoundException("El Lote Vendido pertenece a un Remate inexistente");
+            throw new AuctionNotFoundException("El LoteVendido pertenece a un Remate inexistente");
         }
 
         if(auction.getFinished() != null && auction.getFinished()){
-            throw new HttpForbidenException("No puede editarse un remate finalizado.");
+            throw new HttpForbidenException("No puede editarse un Remate finalizado.");
         }
 
         if(!userService.getCurrentUserAuthorities().toArray()[0].toString().equals("Administrador")) {
             boolean userBelongsToAuction = auction.getUsers().stream().anyMatch(u -> u.getId().equals(userService.getCurrentUser().getId()));
             if (!userBelongsToAuction) {
-                throw new HttpUnauthorizedException("Usted no esta autorizado a editar este remate.");
+                throw new HttpUnauthorizedException("Usted no está autorizado a editar este Remate.");
             }
         }
         if(soldBatchDTO.getAmount() != null){
@@ -197,20 +197,20 @@ public class SoldBatchServiceImpl implements SoldBatchService{
         AnimalsOnGround animalsOnGround = animalsOnGroundService.findByIdNotDeleted(soldBatch.getAnimalsOnGround().getId());
         Batch batch = batchService.getBatchByAnimalsOnGroundId(animalsOnGround.getId());
         if(batch == null || (batch.getDeleted() != null && batch.getDeleted())){
-            throw new BatchNotFoundException("El Lote Vendido pertenece a un Lote de Venta inexistente");
+            throw new BatchNotFoundException("El LoteVendido pertenece a un Lote de Venta inexistente");
         }
         Auction auction = batch.getAuction();
         if(auction.getDeleted() != null && auction.getDeleted()){
-            throw new AuctionNotFoundException("El Lote Vendido pertenece a un Remate inexistente");
+            throw new AuctionNotFoundException("El LoteVendido pertenece a un Remate inexistente");
         }
 
         if(auction.getFinished() != null && auction.getFinished()){
-            throw new HttpForbidenException("No puede editarse un remate finalizado.");
+            throw new HttpForbidenException("No puede editarse un Remate finalizado.");
         }
         if(!userService.getCurrentUserAuthorities().toArray()[0].toString().equals("Administrador")) {
             boolean userBelongsToAuction = auction.getUsers().stream().anyMatch(u -> u.getId().equals(userService.getCurrentUser().getId()));
             if (!userBelongsToAuction) {
-                throw new HttpUnauthorizedException("Usted no esta autorizado a editar este remate.");
+                throw new HttpUnauthorizedException("Usted no está autorizado a editar este Remate.");
             }
         }
         animalsOnGround.setSold(false);
@@ -225,7 +225,7 @@ public class SoldBatchServiceImpl implements SoldBatchService{
         if(soldBatchOpt.isPresent()){
             return soldBatchOpt.get();
         }
-        throw new SoldBatchNotFoundException("No existe Lote Vendido con id: " + soldBatchId);
+        throw new SoldBatchNotFoundException("No existe LoteVendido con id: " + soldBatchId);
     }
 
     @Override

@@ -24,7 +24,7 @@ public class LocalityServiceImpl implements  LocalityService{
         if(localityOpt.isPresent()){
             return localityOpt.get();
         }
-        throw new LocalityNotFoundException("No existe localidad con id: " + id);
+        throw new LocalityNotFoundException("No existe Localidad con id: " + id);
     }
 
     @Override
@@ -35,7 +35,7 @@ public class LocalityServiceImpl implements  LocalityService{
     @Override
     public Page<Locality> getAllLocalitiesByPages(Integer pageNumber, Integer limit) throws InvalidCredentialsException {
         if(pageNumber < 0 || limit < 0){
-            throw new InvalidCredentialsException("Parametros invalidos.");
+            throw new InvalidCredentialsException("Parámetros inválidos.");
         }
         return localityDAO.findByDeletedNullOrDeletedFalseOrderByName(PageRequest.of(pageNumber,limit));
     }
@@ -48,7 +48,7 @@ public class LocalityServiceImpl implements  LocalityService{
     @Override
     public Locality saveLocality(Locality locality) throws BadHttpRequest {
         if(locality.getName()==null){
-            throw new BadHttpRequest("El parametro name no puede ser nulo");
+            throw new BadHttpRequest("El parámetro 'name' no puede ser nulo");
         }
         return localityDAO.save(locality);
     }
@@ -56,11 +56,11 @@ public class LocalityServiceImpl implements  LocalityService{
     @Override
     public Locality updateLocalityById(Integer id, Locality locality) throws LocalityNotFoundException, BadHttpRequest {
         if(locality.getId() != null && !locality.getId().equals(id)){
-            throw new BadHttpRequest("El parametro {id} no coincide con el id de la localidad que se esta por modificar.");
+            throw new BadHttpRequest("El parámetro 'id' no coincide con el id de la Localidad que se está por modificar.");
         }
         Locality l = getLocalityById(id);
         if(l.isDeleted()){
-            throw new LocalityNotFoundException("La localidad con id: " + id + " no existe");
+            throw new LocalityNotFoundException("La Localidad con id: " + id + " no existe");
         }
         l.setName(locality.getName());
         return saveLocality(l);
@@ -70,7 +70,7 @@ public class LocalityServiceImpl implements  LocalityService{
     public Locality deleteLocalityById(Integer id) throws LocalityNotFoundException {
         Locality l = getLocalityById(id);
         if(l.isDeleted()){
-            throw new LocalityNotFoundException("La localidad con id: " + id + " no existe");
+            throw new LocalityNotFoundException("La Localidad con id: " + id + " no existe");
         }
         l.setDeleted(true);
         return localityDAO.save(l);
@@ -79,7 +79,7 @@ public class LocalityServiceImpl implements  LocalityService{
     @Override
     public Page<Locality> getLocalitiesByName(Integer pageNumber, Integer limit, String localitySearchName) throws InvalidCredentialsException{
         if(pageNumber < 0 || limit < 0){
-            throw new InvalidCredentialsException("Parametros invalidos.");
+            throw new InvalidCredentialsException("Parámetros inválidos.");
         }
         return localityDAO.findByName(PageRequest.of(pageNumber,limit), localitySearchName);
     }

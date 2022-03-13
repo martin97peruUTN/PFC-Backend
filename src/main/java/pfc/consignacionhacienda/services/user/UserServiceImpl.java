@@ -53,18 +53,18 @@ public class UserServiceImpl implements UserService {
             logger.debug(user.get().getPassword());
             return user.get();
         }
-        throw new UserNotFoundException("El usuario con id: " + id + " no existe");
+        throw new UserNotFoundException("El Usuario con id: " + id + " no existe");
     }
 
     @Override
     public JwtToken updateUserProfileById(Integer id, Map<Object, Object> fields) throws DuplicateUsernameException, BadHttpRequest {
         if(!getCurrentUser().getId().equals(id)){
-            throw new InvalidCredentialsException("No se puede modificar el perfil de otro usuario.");
+            throw new InvalidCredentialsException("No se puede modificar el perfil de otro Usuario.");
         }
         Optional<User> userOpt = userDAO.findById(id);
         if(fields.containsKey("id")){
             if(!fields.get("id").equals(id)){
-                throw new InvalidCredentialsException("No se puede modificar el id del usuario");
+                throw new InvalidCredentialsException("No se puede modificar el id del Usuario");
             }
         }
         if(userOpt.isPresent()){
@@ -98,13 +98,13 @@ public class UserServiceImpl implements UserService {
             map.put("access_token", token);
             return new JwtToken(map.get("access_token"));
         }
-        throw new UserNotFoundException("El usuario con id: "+ id +" no existe");
+        throw new UserNotFoundException("El Usuario con id: "+ id +" no existe");
     }
 
     @Override
     public void changePasswordById(Integer id, ChangePassword changePassword) throws DuplicateUsernameException {
         if(!getCurrentUser().getId().equals(id)){
-            throw new InvalidCredentialsException("No se puede modificar el perfil de otro usuario.");
+            throw new InvalidCredentialsException("No se puede modificar el perfil de otro Usuario.");
         }
         Optional<User> userOpt = userDAO.findById(id);
         if(userOpt.isPresent()){
@@ -131,9 +131,9 @@ public class UserServiceImpl implements UserService {
                 if(user.getId().equals(u.get().getId())){
                    return userDAO.save(user);
                 }
-                throw new DuplicateUsernameException("Ya existe un usuario con este username.");
+                throw new DuplicateUsernameException("Ya existe un Usuario con este username.");
             }
-            throw new DuplicateUsernameException("Ya existe un usuario con este username.");
+            throw new DuplicateUsernameException("Ya existe un Usuario con este username.");
         }
         //Si estamos creando un nuevo usuario
         user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -154,7 +154,7 @@ public class UserServiceImpl implements UserService {
     public User deleteUserById(Integer id) throws DuplicateUsernameException, UserNotFoundException {
         User u = findUserById(id);
         if(u.isDeleted() != null && u.isDeleted()){
-            throw new UserNotFoundException("No existe usuario con id: " + id);
+            throw new UserNotFoundException("No existe Usuario con id: " + id);
         }
         u.setDeleted(true);
         return saveUser(u);
@@ -164,7 +164,7 @@ public class UserServiceImpl implements UserService {
     public User updateUserById(Integer id, UserDTO fields) throws DuplicateUsernameException, InvalidCredentialsException, HttpForbidenException {
         if(fields.getId() != null){
             if(!fields.getId().equals(id)){
-                throw new InvalidCredentialsException("No se puede modificar el id del usuario");
+                throw new InvalidCredentialsException("No se puede modificar el id del Usuario");
             }
         }
         User user = findUserById(id);

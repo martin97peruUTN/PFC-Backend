@@ -36,13 +36,13 @@ public class ReportServiceImpl implements ReportService{
     @Autowired
     private ClientService clientService;
 
-    private final String notWeightedAnimalsMessage = "No puede calcularse el resumen hasta que se hayan pesado todos los animales que deben pesarse";
+    private final String notWeightedAnimalsMessage = "No puede calcularse el Resumen hasta que se hayan pesado todos los animales que deben pesarse";
 
     @Override
     public Report getReportByAuctionId(Integer auctionId, Boolean withCategoryList) throws AuctionNotFoundException, HttpForbidenException {
         Auction auction = auctionService.getAuctionById(auctionId);
         if(auction.getDeleted() != null && auction.getDeleted()){
-            throw new AuctionNotFoundException("El remate con id: " + auctionId + " no existe.");
+            throw new AuctionNotFoundException("El Remate con id: " + auctionId + " no existe.");
         }
 
         //Inicializacion de variables importantes.
