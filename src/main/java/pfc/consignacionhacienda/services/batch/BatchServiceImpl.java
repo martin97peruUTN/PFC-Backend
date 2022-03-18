@@ -101,6 +101,11 @@ public class BatchServiceImpl implements BatchService{
         if(newBatch.getAnimalsOnGround() == null || newBatch.getAnimalsOnGround().isEmpty()){
             throw new IllegalArgumentException("El Lote debe tener al menos un conjunto de AnimalesEnPista.");
         }
+        for(AnimalsOnGround a: newBatch.getAnimalsOnGround()){
+            if(a.getAmount()==null || (a.getAmount()!=null && a.getAmount()<=0)){
+                throw new IllegalArgumentException("Hay un conjunto de animales con cantidad menor a 1");
+            }
+        }
         newBatch.setAuction(auction);
         logger.debug(newBatch.toString());
         return batchDAO.save(newBatch);

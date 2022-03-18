@@ -112,7 +112,7 @@ public class AnimalsOnGroundServiceImpl implements AnimalsOnGroundService{
 
         Integer totalVendidos = soldBatchService.getTotalSold(animalsId);
         if(animalsOnGroundDTO.getAmount() != null && totalVendidos > animalsOnGroundDTO.getAmount()){
-            throw new HttpForbidenException("La cantidad 'amount' de Animales En Pista no puede ser menor a la cantidad que ya se ha vendido.");
+            throw new HttpForbidenException("La cantidad de animales no puede ser menor a la cantidad que ya se ha vendido.");
         }
         if(animalsOnGroundDTO.getAmount() != null && animalsOnGround.getAmount() < animalsOnGroundDTO.getAmount() && animalsOnGround.getSold() != null && animalsOnGround.getSold()){
             animalsOnGround.setSold(false);
