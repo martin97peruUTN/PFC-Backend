@@ -132,9 +132,11 @@ public class SoldBatchServiceImpl implements SoldBatchService{
             throw new AuctionNotFoundException("El LoteVendido pertenece a un Remate inexistente");
         }
 
+        /* Si puede editarse en este caso, para agregar los numeros de DTe
         if(auction.getFinished() != null && auction.getFinished()){
             throw new HttpForbidenException("No puede editarse un Remate finalizado.");
         }
+        */
 
         if(!userService.getCurrentUserAuthorities().toArray()[0].toString().equals("Administrador")) {
             boolean userBelongsToAuction = auction.getUsers().stream().anyMatch(u -> u.getId().equals(userService.getCurrentUser().getId()));

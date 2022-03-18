@@ -7,11 +7,21 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import pfc.consignacionhacienda.dao.NotSoldBatchDAO;
+import pfc.consignacionhacienda.dto.NotSoldBatchDTO;
+import pfc.consignacionhacienda.dto.SoldBatchDTO;
 import pfc.consignacionhacienda.dto.SoldBatchResponseDTO;
-import pfc.consignacionhacienda.model.NotSoldBatch;
-import pfc.consignacionhacienda.model.SoldBatch;
+import pfc.consignacionhacienda.exceptions.HttpForbidenException;
+import pfc.consignacionhacienda.exceptions.HttpUnauthorizedException;
+import pfc.consignacionhacienda.exceptions.animalsOnGround.AnimalsOnGroundNotFound;
+import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
+import pfc.consignacionhacienda.exceptions.batch.BatchNotFoundException;
+import pfc.consignacionhacienda.exceptions.notSoldBatch.NotSoldBatchNotFoundException;
+import pfc.consignacionhacienda.exceptions.soldBatch.SoldBatchNotFoundException;
+import pfc.consignacionhacienda.model.*;
 import pfc.consignacionhacienda.services.batch.BatchService;
 import pfc.consignacionhacienda.services.client.ClientService;
+import pfc.consignacionhacienda.services.user.UserService;
+import pfc.consignacionhacienda.utils.NotSoldBatchMapper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +37,9 @@ public class NotSoldBatchServiceImpl implements NotSoldBatchService{
 
     @Autowired
     private BatchService batchService;
+
+    @Autowired
+    private NotSoldBatchMapper notSoldBatchMapper;
 
     @Override
     public Page<SoldBatchResponseDTO> getNotSoldBatchesByAuctionAndPage(Integer auctionId, Integer page, Integer limit) {
@@ -64,5 +77,23 @@ public class NotSoldBatchServiceImpl implements NotSoldBatchService{
     public List<NotSoldBatch> deleteAll(List<NotSoldBatch> notSoldBatchesToDelete) {
         notSoldBatchDAO.deleteAll(notSoldBatchesToDelete);
         return notSoldBatchesToDelete;
+    }
+
+    @Override
+    public NotSoldBatch updateNotSoldBatchById(NotSoldBatchDTO notSoldBatchDTO, Integer notSoldBatchId) throws IllegalArgumentException, NotSoldBatchNotFoundException {
+        if(notSoldBatchDTO.getId() != null && !notSoldBatchId.equals(notSoldBatchDTO.getId())){
+            throw new IllegalArgumentException("Los id del path y del objeto a editar son distintos");
+        }
+        NotSoldBatch notSoldBatch = findByIdNotDeleted(notSoldBatchId);
+        notSoldBatchMapper.updateNotSoldBatchFromDto(notSoldBatchDTO, notSoldBatch);
+        return notSoldBatchDAO.save(notSoldBatch);
+    }
+
+    private NotSoldBatch findByIdNotDeleted(Integer notSoldBatchId) throws NotSoldBatchNotFoundException {
+        Optional<NotSoldBatch> notSoldBatchOpt = notSoldBatchDAO.findById(notSoldBatchId);
+        if(notSoldBatchOpt.isPresent()){
+            return notSoldBatchOpt.get();
+        }
+        throw new NotSoldBatchNotFoundException("El lote no vendido con id: " + notSoldBatchId + " no existe.");
     }
 }

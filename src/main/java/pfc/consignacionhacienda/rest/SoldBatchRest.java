@@ -6,12 +6,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import pfc.consignacionhacienda.dto.NotSoldBatchDTO;
 import pfc.consignacionhacienda.dto.SoldBatchDTO;
 import pfc.consignacionhacienda.exceptions.HttpForbidenException;
 import pfc.consignacionhacienda.exceptions.HttpUnauthorizedException;
 import pfc.consignacionhacienda.exceptions.animalsOnGround.AnimalsOnGroundNotFound;
 import pfc.consignacionhacienda.exceptions.auction.AuctionNotFoundException;
 import pfc.consignacionhacienda.exceptions.batch.BatchNotFoundException;
+import pfc.consignacionhacienda.exceptions.notSoldBatch.NotSoldBatchNotFoundException;
 import pfc.consignacionhacienda.exceptions.soldBatch.SoldBatchNotFoundException;
 import pfc.consignacionhacienda.model.SoldBatch;
 import pfc.consignacionhacienda.services.notSoldBatch.NotSoldBatchService;
@@ -69,6 +71,23 @@ public class SoldBatchRest {
         } catch (HttpUnauthorizedException e) {
             logger.error(e.getMessage());
             return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.UNAUTHORIZED);
+        } catch (Exception e){
+            e.printStackTrace();
+            logger.error(e.getMessage());
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PatchMapping("/not-sold/{notSoldBatchId}")
+    ResponseEntity<?> updateNotSoldBatchFromId(@RequestBody NotSoldBatchDTO notSoldBatchDTO, @PathVariable Integer notSoldBatchId){
+        try {
+            return ResponseEntity.ok(notSoldBatchService.updateNotSoldBatchById(notSoldBatchDTO, notSoldBatchId));
+        } catch (NotSoldBatchNotFoundException e) {
+            logger.error(e.getMessage());
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.NOT_FOUND);
+        }  catch (IllegalArgumentException e){
+            logger.error(e.getMessage());
+            return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
         } catch (Exception e){
             e.printStackTrace();
             logger.error(e.getMessage());
