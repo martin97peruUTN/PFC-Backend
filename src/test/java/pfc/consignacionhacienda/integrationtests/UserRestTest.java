@@ -76,7 +76,7 @@ public class UserRestTest {
 
     //Tests de modificacion de password usuario.
     @Test
-    void testChangePasswordSuccesfully(){
+    void changePasswordSuccesfully(){
         String server = "http://localhost:" + puerto + "/api/user/profile/"+u.getId()+"/modificarpass";
         String oldPassword = "1234";
         String newPassword = "nueva";
@@ -90,7 +90,7 @@ public class UserRestTest {
     }
 
     @Test
-    void testChangePasswordSameNewPasswordAndOldPassword(){
+    void changePasswordSameNewPasswordAndOldPassword(){
         String server = "http://localhost:" + puerto + "/api/user/profile/"+u.getId()+"/modificarpass";
         String oldPassword = "1234";
         String newPassword = "1234";
@@ -104,7 +104,7 @@ public class UserRestTest {
     }
 
     @Test
-    void testChangePasswordWithOnlyBlankSpaces(){
+    void changePasswordWithOnlyBlankSpaces(){
         String server = "http://localhost:" + puerto + "/api/user/profile/" + u.getId() + "/modificarpass";
         String oldPassword = " ";
         String newPassword = "1234";
@@ -118,7 +118,7 @@ public class UserRestTest {
     }
 
     @Test
-     void testChangePasswordInexistentUser(){
+     void changePasswordInexistentUser(){
         String server = "http://localhost:" + puerto + "/api/user/admin-patch/"+(u.getId()+100);
         String oldPassword = "1234";
         String newPassword = "123456";
@@ -133,7 +133,7 @@ public class UserRestTest {
 
     //Tests de modificacion de otros atributos del usuario.
     @Test
-    void testChangeUserDataSuccesfully(){
+    void changeUserDataSuccesfully(){
         String server = "http://localhost:" + puerto + "/api/user/profile/"+u.getId();
         String nameEdited = "userEdited";
         Map<Object, Object> map = new LinkedHashMap<>();
@@ -147,8 +147,8 @@ public class UserRestTest {
     }
 
     @Test
-    void testChangeUserInexistent(){
-        String server = "http://localhost:" + puerto + "/api/user/admin-patch/"+(u.getId()*-1);
+    void changeUserInexistent(){
+        String server = "http://localhost:" + puerto + "/api/user/profile/"+(u.getId()*-1);
         String nameEdited = "userEdited";
         Map<Object, Object> map = new LinkedHashMap<>();
         map.put("name", nameEdited);
@@ -157,12 +157,12 @@ public class UserRestTest {
 
         ResponseEntity<String> response = testRestTemplate.exchange(server, HttpMethod.PATCH, requestChangeUserData,
                 String.class);
-        assertEquals(response.getStatusCode(), HttpStatus.NOT_FOUND);
+        assertEquals(response.getStatusCode(), HttpStatus.BAD_REQUEST);
     }
 
     @Test
-    void testChangeUserRolAndUserID(){
-        String server = "http://localhost:" + puerto + "/api/user/admin-patch/"+u.getId();
+    void changeUserRolAndUserID(){
+        String server = "http://localhost:" + puerto + "/api/user/profile/"+u.getId();
         String rolEdited = "OtroRol";
         Map<Object, Object> map = new LinkedHashMap<>();
         map.put("rol", rolEdited);
@@ -171,7 +171,7 @@ public class UserRestTest {
 
         ResponseEntity<String> response = testRestTemplate.exchange(server, HttpMethod.PATCH, requestChangeUserData,
                 String.class);
-        assertEquals(response.getStatusCode(), HttpStatus.FORBIDDEN);
+        assertEquals(response.getStatusCode(), HttpStatus.BAD_REQUEST);
 
         Integer idEdited = u.getId()+1;
         Map<Object, Object> map2 = new LinkedHashMap<>();
@@ -183,7 +183,7 @@ public class UserRestTest {
     }
 
     @Test
-    void testChangeUserInexistentAttributes(){
+    void changeUserInexistentAttributes(){
         String server = "http://localhost:" + puerto + "/api/user/profile/"+u.getId();
         String nameEdited = "userEdited";
         Map<Object, Object> map = new LinkedHashMap<>();

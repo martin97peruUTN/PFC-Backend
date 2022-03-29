@@ -78,7 +78,7 @@ public class UserServiceImplTest {
 
     //Tests de cambio de password
     @Test
-    void testChangePasswordSuccesfully() throws DuplicateUsernameException, BadHttpRequest {
+    void changePasswordSuccesfully() throws DuplicateUsernameException, BadHttpRequest {
         String oldPassword = "1234";
         String newPassword = "nueva";
         ChangePassword changePassword = new ChangePassword(oldPassword, newPassword);
@@ -90,7 +90,7 @@ public class UserServiceImplTest {
     }
 
     @Test
-    void testChangePasswordWithSameOldPasswordAndNewPasswrod() throws DuplicateUsernameException, BadHttpRequest {
+    void changePasswordWithSameOldPasswordAndNewPasswrod() throws DuplicateUsernameException, BadHttpRequest {
         String oldPassword = "1234";
         String newPassword = "1234";
         user.setId(1);
@@ -105,7 +105,7 @@ public class UserServiceImplTest {
         assertEquals("Las contraseñas deben ser distintas", e.getMessage());
     }
     @Test
-    void testChangePasswordWithDifferentOldDBPasswordAndOldPassword() throws DuplicateUsernameException, BadHttpRequest {
+    void changePasswordWithDifferentOldDBPasswordAndOldPassword() throws DuplicateUsernameException, BadHttpRequest {
         String oldPassword = "aPass";
         String newPassword = "1234";
         user.setId(1);
@@ -117,10 +117,19 @@ public class UserServiceImplTest {
         });
         assertEquals("La contraseña antigua ingresada es diferente a su contraseña actual.", e.getMessage());
     }
+    @Test
+    void changePasswordInexistentUser() {
+        String oldPassword = "aPass";
+        String newPassword = "1234";
+        user.setId(1);
+        ChangePassword changePassword = new ChangePassword(oldPassword, newPassword);
+        Mockito.doReturn(Optional.empty()).when(userDAOMock).findById(any(Integer.class));
+        assertThrows(UserNotFoundException.class, ()->userService.changePasswordById(1, changePassword));
+    }
 
     //Tests de modificacion de otros atributos del usuario.
     @Test
-    void testChangeUserDataSuccesfully() throws DuplicateUsernameException, BadHttpRequest {
+    void changeUserDataSuccesfully() throws DuplicateUsernameException, BadHttpRequest {
 //        User userToEdit = userService.findUserById(1);
 //        assertEquals(userToEdit.getName(), "testUser");
         user.setId(1);
@@ -145,7 +154,7 @@ public class UserServiceImplTest {
     }
 
     @Test
-    void testChangeUserDataInexistentUser() throws DuplicateUsernameException, BadHttpRequest {
+    void changeUserDataInexistentUser() throws DuplicateUsernameException, BadHttpRequest {
 //        User userToEdit = userService.findUserById(1);
 //        assertEquals(userToEdit.getName(), "testUser");
         Mockito.doReturn(Optional.empty()).when(userDAOMock).findById(any(Integer.class));
@@ -160,7 +169,7 @@ public class UserServiceImplTest {
     }
 
     @Test
-    void testChangeUserInexistentAttribute() throws DuplicateUsernameException, BadHttpRequest {
+    void changeUserInexistentAttribute() throws DuplicateUsernameException, BadHttpRequest {
         String otherAttribute = "value";
         Map<Object, Object> map = new LinkedHashMap<>();
         map.put("otroAtributo", otherAttribute);
@@ -174,7 +183,7 @@ public class UserServiceImplTest {
 
     //deleteUserById
     @Test
-    void testDeleteUserByIdSuccessfully() throws DuplicateUsernameException, BadHttpRequest {
+    void deleteUserByIdSuccessfully() throws DuplicateUsernameException, BadHttpRequest {
         user.setId(1);
         User userDeleted = new User();
         userDeleted.setId(user.getId());
@@ -191,7 +200,7 @@ public class UserServiceImplTest {
     }
     //deleteUserById inexistent user
     @Test
-    void testDeleteInexistentUserById() {
+    void deleteInexistentUserById() {
         User userDeleted = user;
         userDeleted.setDeleted(true);
         Mockito.doReturn(userDeleted).when(userDAOMock).save(any(User.class));
@@ -202,7 +211,7 @@ public class UserServiceImplTest {
 
     //saveUser
     @Test
-    void testSaveUserSuccesfully() {
+    void saveUserSuccesfully() {
         user.setUsername("nuevo");
         AtomicReference<User> userToSave = new AtomicReference<>(user);
         user.setId(2);
@@ -214,7 +223,7 @@ public class UserServiceImplTest {
 
     //saveUser
     @Test
-    void testSaveUserWithSameUsernameInDB() {
+    void saveUserWithSameUsernameInDB() {
         user.setUsername("nuevo");
         User userToSave = user;
         Mockito.doReturn(Optional.of(user)).when(userDAOMock).findByUsername(any(String.class));
@@ -223,7 +232,7 @@ public class UserServiceImplTest {
 
     //updateUser
     @Test
-    void testUpdateUserSuccessfully() {
+    void updateUserSuccessfully() {
         UserDTO changes = new UserDTO();
         changes.setName("NombreEditado");
         changes.setLastname("ApellidoEditad");
@@ -252,7 +261,7 @@ public class UserServiceImplTest {
 
     //updateUser
     @Test
-    void testUpdateUserWithExistentUsername() {
+    void updateUserWithExistentUsername() {
         UserDTO changes = new UserDTO();
         changes.setName("test");
         Mockito.doReturn(Optional.of(user)).when(userDAOMock).findById(any(Integer.class));
@@ -262,7 +271,7 @@ public class UserServiceImplTest {
 
     //updateUser
     @Test
-    void testUpdateUserRol() {
+    void updateUserRol() {
         UserDTO changes = new UserDTO();
         changes.setRol("Asistente");
         Mockito.doReturn(Optional.of(user)).when(userDAOMock).findById(any(Integer.class));
@@ -272,7 +281,7 @@ public class UserServiceImplTest {
 
     //updateUser
     @Test
-    void testUpdateInexistentUser() {
+    void updateInexistentUser() {
         UserDTO changes = new UserDTO();
         changes.setName("Name");
         Mockito.doReturn(Optional.empty()).when(userDAOMock).findByUsername(any(String.class));
@@ -282,7 +291,7 @@ public class UserServiceImplTest {
 
     //updateUser
     @Test
-    void testUpdateUserWithSamePassword() {
+    void updateUserWithSamePassword() {
         UserDTO changes = new UserDTO();
         changes.setPassword("1234");
         Mockito.doReturn(Optional.of(user)).when(userDAOMock).findByUsername(any(String.class));

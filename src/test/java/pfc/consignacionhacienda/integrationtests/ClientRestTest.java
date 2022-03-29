@@ -285,7 +285,7 @@ public class ClientRestTest {
         }
     }
     @Test
-    void updateClientSomeProvenances(){
+    void updateClientDeleteSomeProvenances(){
         try {
             client = clientService.saveClient(client);
         } catch (BadHttpRequest e) {

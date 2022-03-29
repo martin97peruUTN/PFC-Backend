@@ -101,7 +101,7 @@ public class ClientServiceImplTest {
     }
 
     @Test
-    void deleteExistentUser(){
+    void deleteExistentClient(){
         client.setId(1);
         when(clientDAO.save(any(Client.class))).thenReturn(client);
         when(clientDAO.findById(any(Integer.class))).thenReturn(Optional.of(client));
@@ -111,7 +111,7 @@ public class ClientServiceImplTest {
         assertTrue(client.getDeleted());
     }
     @Test
-    void deleteDeletedUser(){
+    void deleteDeletedClient(){
         client.setId(1);
         client.setDeleted(true);
         when(clientDAO.save(any(Client.class))).thenReturn(client);
@@ -119,7 +119,7 @@ public class ClientServiceImplTest {
         assertThrows(ClientNotFoundException.class, () -> clientService.deleteClientById(1));
     }
     @Test
-    void deleteInexistentUser(){
+    void deleteInexistentClient(){
         client.setId(1);
         when(clientDAO.save(any(Client.class))).thenReturn(client);
         when(clientDAO.findById(any(Integer.class))).thenReturn(Optional.empty());
@@ -127,7 +127,7 @@ public class ClientServiceImplTest {
     }
 
     @Test
-    void updateUser() throws ClientNotFoundException, BadHttpRequest {
+    void updateClientSuccessfully() throws ClientNotFoundException, BadHttpRequest {
         client.setId(1);
         ClientDTO clientDTO = new ClientDTO();
         clientDTO.setName("nuevoNombre");
@@ -140,7 +140,7 @@ public class ClientServiceImplTest {
     }
 
     @Test
-    void updateUserDeleteAllProvenances(){
+    void updateClientDeleteAllProvenances(){
         client.setId(1);
         ClientDTO clientDTO = new ClientDTO();
         ProvenanceDTO p1 = new ProvenanceDTO();
@@ -183,7 +183,7 @@ public class ClientServiceImplTest {
     }
 
     @Test
-    void updateUserDeleteAndAddSomeProvenances(){
+    void updateClientDeleteAndAddSomeProvenances(){
         client.setId(1);
         ClientDTO clientDTO = new ClientDTO();
         ProvenanceDTO p1 = new ProvenanceDTO();
